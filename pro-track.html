@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pro-Track | Enterprise Management</title>
+    <meta name="theme-color" content="#1e293b">
+    <link rel="manifest" id="manifest-link">
+    <style>
+        :root {
+            --primary: #2563eb; --primary-hover: #1d4ed8;
+            --bg: #f8fafc; --card-bg: #ffffff;
+            --text: #1e293b; --text-muted: #64748b;
+            --border: #e2e8f0; --error: #ef4444; --success: #22c55e;
+        }
+        * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg); color: var(--text); margin: 0; }
+        header { background: #1e293b; color: white; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+        nav { background: white; border-bottom: 1px solid var(--border); display: flex; overflow-x: auto; position: sticky; top: 0; z-index: 100; }
+        nav button { padding: 1rem 1.5rem; border: none; background: none; cursor: pointer; font-weight: 600; color: var(--text-muted); border-bottom: 3px solid transparent; }
+        nav button.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .container { padding: 1.5rem; max-width: 1200px; margin: 0 auto; }
+        .screen { display: none; }
+        .screen.active { display: block; }
+        .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 768px) { .grid-2 { grid-template-columns: 1fr; } }
+        label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; color: var(--text-muted); }
+        input, select { width: 100%; padding: 0.7rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; }
+        .btn { padding: 0.7rem 1.2rem; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--error); color: white; padding: 5px 10px; font-size: 0.8rem; }
+        .btn-edit { background: #f59e0b; color: white; padding: 5px 10px; font-size: 0.8rem; margin-right: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #f1f5f9; }
+        .lang-switch { display: flex; align-items: center; gap: 10px; }
+        .lang-btn { background: #334155; color: white; border: 1px solid #475569; padding: 5px 12px; font-size: 0.8rem; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h2 style="margin:0">Pro-Track</h2>
+    <div class="lang-switch">
+        <button class="btn lang-btn" onclick="toggleLang()" id="lang-btn">🌐 English</button>
+        <button class="btn btn-primary" onclick="exportToExcel()" id="btn-export">📊 Excel Aktar</button>
+    </div>
+</header>
+
+<nav>
+    <button onclick="showScreen('dashboard')" id="nav-dashboard">Panel</button>
+    <button onclick="showScreen('teams')" id="nav-teams">Ekipler</button>
+    <button onclick="showScreen('materials')" id="nav-materials">Malzemeler</button>
+    <button onclick="showScreen('equipment')" id="nav-equipment">Ekipman</button>
+    <button onclick="showScreen('poz')" id="nav-poz">Pozlar</button>
+</nav>
+
+<div class="container">
+    <div id="screen-dashboard" class="screen">
+        <div class="grid-2">
+            <div class="card">
+                <h3 id="txt-daily-entry">Günlük Giriş</h3>
+                <form id="entry-form">
+                    <input type="date" id="entry-date" required>
+                    <select id="entry-team" required></select>
+                    <select id="entry-poz" required></select>
+                    <input type="number" id="entry-qty" step="0.01" placeholder="Miktar" required>
+                    <button type="submit" class="btn btn-primary" id="btn-save" style="width:100%">Kaydet</button>
+                </form>
+            </div>
+            <div>
+                <input type="date" id="view-date-filter" onchange="renderDailyView()" class="card">
+                <div id="daily-view-container"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="screen-teams" class="screen">
+        <div class="card">
+            <h3 id="team-form-title">Ekip Ekle / Düzenle</h3>
+            <form id="team-form">
+                <input type="hidden" id="edit-team-index" value="-1">
+                <div class="grid-2">
+                    <input type="text" id="t-code" placeholder="Ekip Kodu" required>
+                    <input type="text" id="t-name" placeholder="Ekip Adı" required>
+                    <input type="text" id="t-super" placeholder="Sorumlu" required>
+                    <select id="t-equip" multiple title="Ekipman Seç"></select>
+                </div>
+                <button type="submit" class="btn btn-primary" id="team-submit-btn">Ekibi Kaydet</button>
+                <button type="button" class="btn" onclick="resetTeamForm()" id="team-cancel-btn" style="display:none">İptal</button>
+            </form>
+        </div>
+        <div class="card"><h3 id="txt-current-teams">Mevcut Ekipler</h3><div id="teams-list"></div></div>
+    </div>
+
+    <div id="screen-materials" class="screen"><div class="card"><h3 id="txt-mat-mgmt">Malzeme Yönetimi</h3><form id="mat-form"><input type="hidden" id="edit-mat-index" value="-1"><div class="grid-2"><input type="text" id="m-code" placeholder="Kod"><input type="text" id="m-name" placeholder="Ad"><input type="number" id="m-price" placeholder="Fiyat"></div><button type="submit" class="btn btn-primary" id="btn-mat-save">Kaydet</button></form></div><div id="materials-list"></div></div>
+    <div id="screen-equipment" class="screen"><div class="card"><h3 id="txt-eq-mgmt">Ekipman Yönetimi</h3><form id="eq-form"><input type="hidden" id="edit-eq-index" value="-1"><div class="grid-2"><input type="text" id="e-code" placeholder="Demirbaş No"><input type="text" id="e-name" placeholder="Cihaz Adı"></div><button type="submit" class="btn btn-primary" id="btn-eq-save">Kaydet</button></form></div><div id="equipment-list"></div></div>
+    <div id="screen-poz" class="screen"><div class="card"><h3 id="txt-poz-mgmt">Poz Yönetimi</h3><form id="poz-form"><input type="hidden" id="edit-poz-index" value="-1"><div class="grid-2"><input type="text" id="p-code" placeholder="Poz Kodu"><input type="number" id="p-price" placeholder="Birim Fiyat"><input type="text" id="p-desc" placeholder="Açıklama" style="grid-column:span 2"></div><button type="submit" class="btn btn-primary" id="btn-poz-save">Kaydet</button></form></div><div id="poz-list"></div></div>
+</div>
+
+<script>
+let db = JSON.parse(localStorage.getItem('pro_track_v3')) || { teams: [], materials: [], equipment: [], poz: [], entries: [] };
+let currentLang = 'tr';
+
+const langData = {
+    tr: {
+        navDash: "Panel", navTeams: "Ekipler", navMats: "Malzemeler", navEq: "Ekipman", navPoz: "Pozlar",
+        dailyEntry: "Günlük Giriş", qty: "Miktar", save: "Kaydet", export: "📊 Excel Aktar",
+        teamAdd: "Ekip Ekle / Düzenle", currentTeams: "Mevcut Ekipler", teamSave: "Ekibi Kaydet",
+        cancel: "İptal", matMgmt: "Malzeme Yönetimi", eqMgmt: "Ekipman Yönetimi", pozMgmt: "Poz Yönetimi",
+        thCode: "Kod", thName: "Ad", thSuper: "Sorumlu", thAction: "İşlem", confirmDel: "Silmek istediğinize emin misiniz?",
+        edit: "Düzenle", delete: "Sil"
+    },
+    en: {
+        navDash: "Dashboard", navTeams: "Teams", navMats: "Materials", navEq: "Equipment", navPoz: "Items",
+        dailyEntry: "Daily Entry", qty: "Quantity", save: "Save", export: "📊 Export Excel",
+        teamAdd: "Add / Edit Team", currentTeams: "Current Teams", teamSave: "Save Team",
+        cancel: "Cancel", matMgmt: "Material Management", eqMgmt: "Equipment Management", pozMgmt: "Item Management",
+        thCode: "Code", thName: "Name", thSuper: "Supervisor", thAction: "Action", confirmDel: "Are you sure you want to delete?",
+        edit: "Edit", delete: "Delete"
+    }
+};
+
+function toggleLang() {
+    currentLang = currentLang === 'tr' ? 'en' : 'tr';
+    const t = langData[currentLang];
+    document.getElementById('lang-btn').innerText = currentLang === 'tr' ? '🌐 English' : '🌐 Türkçe';
+    
+    // UI Güncelleme
+    document.getElementById('nav-dashboard').innerText = t.navDash;
+    document.getElementById('nav-teams').innerText = t.navTeams;
+    document.getElementById('nav-materials').innerText = t.navMats;
+    document.getElementById('nav-equipment').innerText = t.navEq;
+    document.getElementById('nav-poz').innerText = t.navPoz;
+    document.getElementById('btn-export').innerText = t.export;
+    document.getElementById('txt-daily-entry').innerText = t.dailyEntry;
+    document.getElementById('entry-qty').placeholder = t.qty;
+    document.getElementById('btn-save').innerText = t.save;
+    document.getElementById('team-form-title').innerText = t.teamAdd;
+    document.getElementById('team-submit-btn').innerText = t.teamSave;
+    document.getElementById('team-cancel-btn').innerText = t.cancel;
+    document.getElementById('txt-current-teams').innerText = t.currentTeams;
+    document.getElementById('txt-mat-mgmt').innerText = t.matMgmt;
+    document.getElementById('txt-eq-mgmt').innerText = t.eqMgmt;
+    document.getElementById('txt-poz-mgmt').innerText = t.pozMgmt;
+    document.getElementById('btn-mat-save').innerText = t.save;
+    document.getElementById('btn-eq-save').innerText = t.save;
+    document.getElementById('btn-poz-save').innerText = t.save;
+    
+    renderTables();
+}
+
+function save() { localStorage.setItem('pro_track_v3', JSON.stringify(db)); updateDropdowns(); renderTables(); renderDailyView(); }
+
+/** EKİP DÜZENLEME **/
+document.getElementById('team-form').onsubmit = (e) => {
+    e.preventDefault();
+    const idx = parseInt(document.getElementById('edit-team-index').value);
+    const eqs = Array.from(document.getElementById('t-equip').selectedOptions).map(o => o.value);
+    const teamData = {
+        code: document.getElementById('t-code').value,
+        name: document.getElementById('t-name').value,
+        supervisor: document.getElementById('t-super').value,
+        equipment: eqs
+    };
+    if (idx === -1) db.teams.push(teamData);
+    else db.teams[idx] = teamData;
+    resetTeamForm(); save();
+};
+
+function editTeam(index) {
+    const t = db.teams[index];
+    document.getElementById('edit-team-index').value = index;
+    document.getElementById('t-code').value = t.code;
+    document.getElementById('t-name').value = t.name;
+    document.getElementById('t-super').value = t.supervisor;
+    document.getElementById('team-form-title').innerText = langData[currentLang].teamAdd;
+    document.getElementById('team-cancel-btn').style.display = "inline-flex";
+    showScreen('teams');
+}
+
+function deleteItem(type, index) {
+    if(confirm(langData[currentLang].confirmDel)) {
+        db[type].splice(index, 1);
+        save();
+    }
+}
+
+function resetTeamForm() {
+    document.getElementById('team-form').reset();
+    document.getElementById('edit-team-index').value = "-1";
+    document.getElementById('team-form-title').innerText = langData[currentLang].teamAdd;
+    document.getElementById('team-cancel-btn').style.display = "none";
+}
+
+function renderTables() {
+    const t = langData[currentLang];
+    document.getElementById('teams-list').innerHTML = `<table><tr><th>${t.thCode}</th><th>${t.thName}</th><th>${t.thSuper}</th><th>${t.thAction}</th></tr>` + 
+    db.teams.map((t_row, i) => `<tr><td>${t_row.code}</td><td>${t_row.name}</td><td>${t_row.supervisor}</td><td>
+        <button class="btn-edit" onclick="editTeam(${i})">${t.edit}</button>
+        <button class="btn-danger" onclick="deleteItem('teams', ${i})">${t.delete}</button>
+    </td></tr>`).join('') + `</table>`;
+
+    document.getElementById('materials-list').innerHTML = `<div class="card">` + db.materials.map((m, i) => `<div>${m.name} - ${m.price} TL <button onclick="deleteItem('materials',${i})">${t.delete}</button></div>`).join('') + `</div>`;
+    document.getElementById('equipment-list').innerHTML = `<div class="card">` + db.equipment.map((e, i) => `<div>${e.name} <button onclick="deleteItem('equipment',${i})">${t.delete}</button></div>`).join('') + `</div>`;
+    document.getElementById('poz-list').innerHTML = `<div class="card">` + db.poz.map((p, i) => `<div>${p.code}: ${p.desc} <button onclick="deleteItem('poz',${i})">${t.delete}</button></div>`).join('') + `</div>`;
+}
+
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('screen-'+id).classList.add('active');
+    document.getElementById('nav-'+id).classList.add('active');
+}
+
+document.getElementById('entry-form').onsubmit = (e) => {
+    e.preventDefault();
+    const poz = db.poz.find(p => p.code === document.getElementById('entry-poz').value);
+    if(!poz) return alert('Lütfen önce Poz tanımlayın!');
+    db.entries.push({
+        date: document.getElementById('entry-date').value,
+        teamCode: document.getElementById('entry-team').value,
+        pozCode: poz.code, pozDesc: poz.desc,
+        qty: parseFloat(document.getElementById('entry-qty').value),
+        unitPrice: poz.price, total: parseFloat(document.getElementById('entry-qty').value) * poz.price
+    });
+    save(); e.target.reset();
+    document.getElementById('entry-date').valueAsDate = new Date();
+};
+
+function renderDailyView() {
+    const date = document.getElementById('view-date-filter').value;
+    const dayEntries = db.entries.filter(e => e.date === date);
+    document.getElementById('daily-view-container').innerHTML = db.teams.map(t => {
+        const tEntries = dayEntries.filter(e => e.teamCode === t.code);
+        return `<div class="card"><b>${t.name}</b>: ${tEntries.reduce((s,e)=>s+e.total,0).toFixed(2)} TL</div>`;
+    }).join('');
+}
+
+function updateDropdowns() {
+    document.getElementById('entry-team').innerHTML = db.teams.map(t => `<option value="${t.code}">${t.name}</option>`).join('');
+    document.getElementById('entry-poz').innerHTML = db.poz.map(p => `<option value="${p.code}">${p.code}-${p.desc}</option>`).join('');
+    document.getElementById('t-equip').innerHTML = db.equipment.map(e => `<option value="${e.name}">${e.name}</option>`).join('');
+}
+
+function exportToExcel() {
+    let csv = "\uFEFFTarih;Ekip;Poz;Miktar;Birim Fiyat;Toplam\n";
+    db.entries.forEach(e => csv += `${e.date};${e.teamCode};${e.pozCode};${e.qty};${e.unitPrice};${e.total}\n`);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "ProTrack_Report.csv";
+    link.click();
+}
+
+// Init
+document.getElementById('entry-date').valueAsDate = new Date();
+document.getElementById('view-date-filter').valueAsDate = new Date();
+showScreen('dashboard');
+save();
+</script>
+</body>
+</html>

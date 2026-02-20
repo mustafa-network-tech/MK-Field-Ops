@@ -1,0 +1,86 @@
+.page {
+  max-width: 1000px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+}
+
+.error {
+  font-size: 0.9rem;
+  color: #dc2626;
+  margin: 0 0 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.badge,
+.badge_draft,
+.badge_submitted,
+.badge_approved,
+.badge_rejected {
+  font-size: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.badge_draft {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.badge_submitted {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge_approved {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge_rejected {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.smallBtn {
+  padding: 0.35rem 0.65rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.smallBtn:hover {
+  background: #1d4ed8;
+}
+
+.noData {
+  color: #94a3b8;
+  margin: 1rem 0 0;
+}

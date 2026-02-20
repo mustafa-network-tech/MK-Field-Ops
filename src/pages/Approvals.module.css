@@ -1,0 +1,61 @@
+.page {
+  max-width: 900px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+}
+
+.error {
+  font-size: 0.9rem;
+  color: #dc2626;
+  margin: 0 0 1rem;
+}
+
+.muted {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.btnOk,
+.btnDanger {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-right: 0.5rem;
+}
+
+.btnOk {
+  background: #059669;
+  color: white;
+}
+
+.btnDanger {
+  background: #dc2626;
+  color: white;
+}

@@ -1,0 +1,101 @@
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: #0f172a;
+  color: #f1f5f9;
+  font-family: 'DM Sans', sans-serif;
+  flex-shrink: 0;
+}
+
+.left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.role {
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.navBtn,
+.excelBtn,
+.logoutBtn {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+  background: transparent;
+  color: #cbd5e1;
+}
+
+.navBtn:hover,
+.excelBtn:hover {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+.navBtn[data-active="true"] {
+  background: #2563eb;
+  color: white;
+}
+
+.excelBtn {
+  background: #059669;
+  color: white;
+}
+
+.excelBtn:hover {
+  background: #047857;
+}
+
+.logoutBtn {
+  color: #f87171;
+}
+
+.logoutBtn:hover {
+  background: rgba(248, 113, 113, 0.15);
+}
+
+.langGroup {
+  display: flex;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.langBtn {
+  padding: 0.4rem 0.75rem;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.langBtn:hover {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+.langBtn[aria-pressed="true"] {
+  background: #334155;
+  color: #38bdf8;
+}
