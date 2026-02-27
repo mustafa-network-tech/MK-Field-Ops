@@ -66,7 +66,7 @@ function reducePeriod(jobs: JobWithDetails[], filter: (d: string) => boolean): P
  * - teamLeader: only team_total; no gross/company in response at all.
  */
 export function getDashboardSummary(companyId: string, user: User | undefined): DashboardSummary | null {
-  if (!companyId || !user) return null;
+  if (!companyId || !user || !user.role) return null;
 
   const jobs = getJobsForUser(companyId, user);
   const pendingCount = jobs.filter((j) => j.status === 'submitted').length;

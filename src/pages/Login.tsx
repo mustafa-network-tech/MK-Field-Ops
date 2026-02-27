@@ -12,15 +12,12 @@ export function Login() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [companyId, setCompanyId] = useState('');
   const [error, setError] = useState('');
-
-  const companies = store.getCompanies();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const result = authService.login(email, password, companyId || undefined);
+    const result = authService.login(email, password);
     if (!result.ok) {
       setError(t(result.error!));
       return;
@@ -35,21 +32,6 @@ export function Login() {
         <h1 className={styles.title}>{t('app.title')}</h1>
         <h2 className={styles.subtitle}>{t('auth.login')}</h2>
         <form onSubmit={handleSubmit} className={styles.form}>
-          {companies.length > 0 && (
-            <label className={styles.label}>
-              {t('auth.companyName')} (optional – select company)
-              <select
-                value={companyId}
-                onChange={(e) => setCompanyId(e.target.value)}
-                className={styles.input}
-              >
-                <option value="">-- {t('common.search')} --</option>
-                {companies.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </label>
-          )}
           <label className={styles.label}>
             {t('auth.email')}
             <input

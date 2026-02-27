@@ -21,7 +21,7 @@ export function Management() {
   const tabs: { id: TabId; label: string; show: boolean }[] = [
     { id: 'teams', label: t('nav.teams'), show: true },
     { id: 'vehicles', label: t('vehicle.title'), show: canEditCatalog },
-    { id: 'materials', label: t('catalog.materials'), show: canEditCatalog },
+    { id: 'materials', label: t('catalog.materials'), show: true },
     { id: 'equipment', label: t('catalog.equipment'), show: canEditCatalog },
     { id: 'workItems', label: t('catalog.workItems'), show: canEditCatalog },
     { id: 'users', label: t('nav.users'), show: user?.role === 'companyManager' || user?.role === 'projectManager' },

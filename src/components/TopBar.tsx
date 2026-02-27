@@ -4,6 +4,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { exportDashboardToExcel } from '../services/excelExportService';
+import { store } from '../data/store';
 import styles from './TopBar.module.css';
 
 const roleKeys: Record<string, string> = {
@@ -35,12 +36,19 @@ export function TopBar() {
 
   if (!user) return null;
 
+  const companyName = user.companyId ? store.getCompany(user.companyId)?.name ?? '' : '';
+
   return (
     <header className={styles.topBar}>
       <div className={styles.left}>
         <span className={styles.userName}>{user.fullName}</span>
-        <span className={styles.role}> – {t(roleKeys[user.role] ?? user.role)}</span>
+        {user.role && <span className={styles.role}> – {t(roleKeys[user.role] ?? user.role)}</span>}
       </div>
+      {companyName && (
+        <div className={styles.center}>
+          <span className={styles.companyName}>{companyName}</span>
+        </div>
+      )}
       <div className={styles.right}>
         <button type="button" className={styles.navBtn} onClick={goManagement} data-active={isManagement}>
           {t('topBar.managementPanel')}

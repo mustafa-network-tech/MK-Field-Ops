@@ -16,7 +16,8 @@ export interface User {
   email: string;
   passwordHash: string;
   fullName: string;
-  role: Role;
+  /** Set when approved; pending users have no role until company manager assigns. */
+  role?: Role;
   roleApprovalStatus: ApprovalStatus;
   approvedByCompanyManager?: string;
   approvedByProjectManager?: string;
@@ -56,6 +57,80 @@ export interface Team {
   createdAt: string;
 }
 
+/**
+ * Malzeme stok tipi:
+ * - Ana tür + isteğe bağlı alt kategori (kablo iç/yeraltı/havai gibi)
+ * - Esnek ama zor kuralları taşıyacak şekilde tasarlandı.
+ */
+export type MaterialMainType =
+  | 'direk'
+  | 'kablo_ic'
+  | 'kablo_yeraltı'
+  | 'kablo_havai'
+  | 'boru'
+  | 'fiber_bina_kutusu'
+  | 'ofsd'
+  | 'sonlandirma_paneli'
+  | 'daire_sonlandirma_kutusu'
+  | 'menhol'
+  | 'ek_odasi'
+  | 'koruyucu_fider_borusu'
+  | 'custom';
+
+export type CableCategory = 'ic' | 'yeraltı' | 'havai';
+
+export interface MaterialStockItem {
+  id: string;
+  companyId: string;
+  mainType: MaterialMainType;
+  /** Özel malzeme türleri için gruplayıcı isim (ör: "Merdiven", "Kanal Açma Takımı") */
+  customGroupName?: string;
+
+  /** Genel görünen ad / açıklama (direk adı, boru adı, kutu açıklaması vb.) */
+  name: string;
+  /** Ebat / kapasite / çap gibi serbest alan (örn. 6m, 110mm, 1x8) */
+  sizeOrCapacity?: string;
+
+  /** Adet bazlı stok (direk, boru, kutu vb. için). Sıfırdan küçük olamaz. */
+  stockQty?: number;
+
+  /** Kabloya özel alanlar */
+  isCable?: boolean;
+  cableCategory?: CableCategory;
+  /** Örn. 2x4, 4x16 vb. */
+  capacityLabel?: string;
+  /** Makara ID – benzersiz ve zorunlu (kablo için). */
+  spoolId?: string;
+  /** Makaranın toplam metre uzunluğu. */
+  lengthTotal?: number;
+  /** Kalan metre. Hiçbir zaman sıfırın altına düşmemeli. */
+  lengthRemaining?: number;
+
+  /** Harici / mevcut malzeme kullanıldı işaretlemesi. */
+  isExternal?: boolean;
+  externalNote?: string;
+
+  createdAt: string;
+}
+
+/**
+ * Ekip zimmeti: merkezden ekibe dağıtılan malzeme.
+ * Kablo için quantityMeters, diğerleri için quantityPcs kullanılır.
+ * Dağıtım yapılınca merkez stoktan (lengthRemaining / stockQty) düşülür.
+ */
+export interface TeamMaterialAllocation {
+  id: string;
+  companyId: string;
+  teamId: string;
+  materialStockItemId: string;
+  /** Kablo için metre */
+  quantityMeters?: number;
+  /** Adet ile stoklanan malzemeler için */
+  quantityPcs?: number;
+  createdAt: string;
+}
+
+/** Eski basit malzeme kaydı (bazı ekranlarda hâlâ kullanılabilir). */
 export interface Material {
   id: string;
   companyId: string;

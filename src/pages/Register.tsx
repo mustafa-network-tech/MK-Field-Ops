@@ -4,8 +4,9 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { store } from '../data/store';
-import type { Role } from '../types';
 import styles from './Auth.module.css';
+
+type RegisterMode = 'new' | 'existing';
 
 export function Register() {
   const { t } = useI18n();
@@ -14,35 +15,43 @@ export function Register() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [mode, setMode] = useState<RegisterMode>('new');
   const [companyName, setCompanyName] = useState('');
   const [companyId, setCompanyId] = useState('');
-  const [role, setRole] = useState<Role>('teamLeader');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
-
-  const companies = store.getCompanies();
-  const isNewCompany = !companyId;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
-    if (companies.length > 0 && !companyId && !companyName.trim()) {
-      setError(t('validation.required'));
+    if (mode === 'new') {
+      if (!companyName.trim()) {
+        setError(t('validation.required'));
+        return;
+      }
+      const result = authService.registerNewCompany({ email, password, fullName, companyName: companyName.trim() });
+      if (!result.ok) {
+        setError(t(result.error!));
+        return;
+      }
+      setUser(store.getCurrentUser());
+      navigate('/', { replace: true });
       return;
     }
-    const result = isNewCompany
-      ? authService.register({ email, password, fullName, companyName: companyName.trim(), role })
-      : authService.registerExistingCompany({ email, password, fullName, companyId, role });
-    if (!result.ok) {
-      setError(t(result.error!));
-      return;
+    if (mode === 'existing') {
+      if (!companyId.trim()) {
+        setError(t('auth.enterCompanyId'));
+        return;
+      }
+      const result = authService.registerExistingCompany({ email, password, fullName, companyId: companyId.trim() });
+      if (!result.ok) {
+        setError(t(result.error!));
+        return;
+      }
+      setMessage(t('auth.pendingCompanyManagerApproval'));
+      setTimeout(() => navigate('/login', { replace: true }), 2000);
     }
-    setUser(store.getCurrentUser());
-    if (result.needsApproval) {
-      setMessage(t('users.pending'));
-    }
-    navigate('/', { replace: true });
   };
 
   return (
@@ -80,59 +89,54 @@ export function Register() {
               required
             />
           </label>
-          {companies.length > 0 && (
-            <>
-              <label className={styles.label}>
-                Join existing company
-                <select
-                  value={companyId}
-                  onChange={(e) => {
-                    setCompanyId(e.target.value);
-                    if (e.target.value) setCompanyName('');
-                  }}
-                  className={styles.input}
-                >
-                  <option value="">-- New company --</option>
-                  {companies.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
+
+          <div className={styles.label}>
+            {t('auth.company')}
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '0.35rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <input
+                  type="radio"
+                  name="companyMode"
+                  checked={mode === 'new'}
+                  onChange={() => { setMode('new'); setCompanyId(''); }}
+                />
+                {t('auth.newCompany')}
               </label>
-              {!companyId && (
-                <label className={styles.label}>
-                  {t('auth.companyName')} (new company)
-                  <input
-                    value={companyName}
-                    onChange={(e) => setCompanyName(e.target.value)}
-                    className={styles.input}
-                  />
-                </label>
-              )}
-            </>
-          )}
-          {companies.length === 0 && (
+              <label style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <input
+                  type="radio"
+                  name="companyMode"
+                  checked={mode === 'existing'}
+                  onChange={() => { setMode('existing'); setCompanyName(''); }}
+                />
+                {t('auth.existingCompany')}
+              </label>
+            </div>
+          </div>
+
+          {mode === 'new' && (
             <label className={styles.label}>
               {t('auth.companyName')}
               <input
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
                 className={styles.input}
-                required
+                placeholder={t('auth.companyNamePlaceholder')}
               />
             </label>
           )}
-          <label className={styles.label}>
-            {t('auth.role')}
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-              className={styles.input}
-            >
-              <option value="companyManager">{t('roles.companyManager')}</option>
-              <option value="projectManager">{t('roles.projectManager')}</option>
-              <option value="teamLeader">{t('roles.teamLeader')}</option>
-            </select>
-          </label>
+          {mode === 'existing' && (
+            <label className={styles.label}>
+              {t('auth.companyId')}
+              <input
+                value={companyId}
+                onChange={(e) => setCompanyId(e.target.value)}
+                className={styles.input}
+                placeholder={t('auth.companyIdPlaceholder')}
+              />
+            </label>
+          )}
+
           {error && <p className={styles.error}>{error}</p>}
           {message && <p className={styles.message}>{message}</p>}
           <button type="submit" className={styles.primaryBtn}>{t('auth.register')}</button>

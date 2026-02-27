@@ -4,6 +4,8 @@ import type {
   Team,
   Vehicle,
   Material,
+  MaterialStockItem,
+  TeamMaterialAllocation,
   Equipment,
   WorkItem,
   JobRecord,
@@ -18,6 +20,8 @@ const STORAGE_KEYS = {
   teams: 'tf_teams',
   vehicles: 'tf_vehicles',
   materials: 'tf_materials',
+  materialStock: 'tf_material_stock',
+  teamMaterialAllocations: 'tf_team_material_allocations',
   equipment: 'tf_equipment',
   workItems: 'tf_work_items',
   jobs: 'tf_jobs',
@@ -177,6 +181,57 @@ export const store = {
     const list = load<Material[]>(STORAGE_KEYS.materials, []).filter((x) => x.id !== id);
     save(STORAGE_KEYS.materials, list);
     return true;
+  },
+
+  /** Yeni nesil malzeme stok sistemi (Malzeme Stok sekmesi) */
+  getMaterialStock(companyId: string): MaterialStockItem[] {
+    return load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId === companyId);
+  },
+  addMaterialStock(item: Omit<MaterialStockItem, 'id' | 'createdAt'>): MaterialStockItem {
+    const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
+    const newItem: MaterialStockItem = {
+      ...item,
+      id: id(),
+      createdAt: new Date().toISOString(),
+    };
+    list.push(newItem);
+    save(STORAGE_KEYS.materialStock, list);
+    return newItem;
+  },
+  updateMaterialStock(idValue: string, patch: Partial<MaterialStockItem>): MaterialStockItem | undefined {
+    const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
+    const i = list.findIndex((x) => x.id === idValue);
+    if (i === -1) return undefined;
+    list[i] = { ...list[i], ...patch };
+    save(STORAGE_KEYS.materialStock, list);
+    return list[i];
+  },
+  deleteMaterialStock(idValue: string): boolean {
+    const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((x) => x.id !== idValue);
+    save(STORAGE_KEYS.materialStock, list);
+    return true;
+  },
+
+  /** Ekip zimmeti: ekibe dağıtılan malzemeler */
+  getTeamMaterialAllocations(companyId: string, teamId?: string): TeamMaterialAllocation[] {
+    const raw = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []);
+    const byCompany = raw.filter((a) => a.companyId === companyId);
+    return teamId ? byCompany.filter((a) => a.teamId === teamId) : byCompany;
+  },
+  addTeamMaterialAllocation(a: Omit<TeamMaterialAllocation, 'id' | 'createdAt'>): TeamMaterialAllocation {
+    const list = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []);
+    const newA: TeamMaterialAllocation = { ...a, id: id(), createdAt: new Date().toISOString() };
+    list.push(newA);
+    save(STORAGE_KEYS.teamMaterialAllocations, list);
+    return newA;
+  },
+  updateTeamMaterialAllocation(idValue: string, patch: Partial<TeamMaterialAllocation>): TeamMaterialAllocation | undefined {
+    const list = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []);
+    const i = list.findIndex((x) => x.id === idValue);
+    if (i === -1) return undefined;
+    list[i] = { ...list[i], ...patch };
+    save(STORAGE_KEYS.teamMaterialAllocations, list);
+    return list[i];
   },
 
   getEquipment(companyId: string): Equipment[] {

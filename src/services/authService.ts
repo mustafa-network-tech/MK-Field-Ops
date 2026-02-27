@@ -1,5 +1,6 @@
 import { store } from '../data/store';
 import type { Role } from '../types';
+import { supabase } from './supabaseClient';
 
 function hashPassword(p: string): string {
   return btoa(encodeURIComponent(p));
@@ -23,99 +24,161 @@ export const authService = {
     return { ok: true };
   },
 
-  register(params: {
+  /** New company: creator becomes company manager, no role asked. */
+  registerNewCompany(params: {
     email: string;
     password: string;
     fullName: string;
-    companyName?: string;
-    companyId?: string;
-    role: Role;
-  }): { ok: boolean; error?: string; needsApproval?: boolean } {
-    const { email, password, fullName, companyName, companyId, role } = params;
-    let cId = companyId;
-    if (!cId && companyName) {
-      const company = store.addCompany(companyName);
-      cId = company.id;
+    companyName: string;
+  }): { ok: boolean; error?: string } {
+    const { email, password, fullName, companyName } = params;
+    const name = companyName.trim();
+
+    const normalize = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c');
+
+    // 1) Şirket adı benzersiz olmalı (global)
+    const companies = store.getCompanies();
+    const nameNorm = normalize(name);
+    if (companies.some((c) => normalize(c.name) === nameNorm)) {
+      return { ok: false, error: 'auth.companyNameExists' };
     }
-    if (!cId) return { ok: false, error: 'validation.required' };
-    if (store.getUserByEmail(email, cId)) {
+
+    // 2) Bir hesap sadece bir şirket sahibi olabilir (email global benzersiz)
+    if (store.getUserByEmail(email)) {
       return { ok: false, error: 'auth.emailExists' };
     }
-    const isFirstUser = store.getUsers(cId).length === 0;
-    const roleApprovalStatus = isFirstUser ? 'approved' : role === 'companyManager' ? 'approved' : 'pending';
-    const finalRole = isFirstUser ? 'companyManager' : role;
+
+    const company = store.addCompany(name);
+    const cId = company.id;
+
+    // Supabase'e de yaz (isteğe bağlı, hata verse bile localStorage çalışmaya devam eder)
+    if (supabase) {
+      supabase
+        .from('companies')
+        .insert({
+          id: cId,
+          name,
+          created_at: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) {
+            // Tarayıcı konsolunda görebilmen için logluyoruz
+            console.error('Supabase companies insert error', error);
+          }
+        });
+    }
+
     store.addUser({
       companyId: cId,
       email,
       passwordHash: hashPassword(password),
       fullName,
-      role: finalRole,
-      roleApprovalStatus,
+      role: 'companyManager',
+      roleApprovalStatus: 'approved',
       createdAt: new Date().toISOString(),
     });
-    store.setCurrentUserId(store.getUsers(cId).find((u) => u.email === email)!.id);
-    const needsApproval = !isFirstUser && (role === 'projectManager' || role === 'teamLeader');
-    return { ok: true, needsApproval };
+    const newUser = store.getUsers(cId).find((u) => u.email === email)!;
+    store.setCurrentUserId(newUser.id);
+    return { ok: true };
   },
 
+  /** Existing company: user enters company ID, pending until company manager approves and assigns role. */
   registerExistingCompany(params: {
     email: string;
     password: string;
     fullName: string;
     companyId: string;
-    role: Role;
-  }): { ok: boolean; error?: string; needsApproval?: boolean } {
-    const { email, password, fullName, companyId, role } = params;
-    if (store.getUserByEmail(email, companyId)) {
+  }): { ok: boolean; error?: string } {
+    const { email, password, fullName, companyId } = params;
+    const key = companyId.trim();
+
+    const normalize = (value: string) =>
+      value
+        .toLowerCase()
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c');
+
+    // First try by exact ID
+    let company = key ? store.getCompany(key) : undefined;
+
+    const companies = store.getCompanies();
+    if (!company && key) {
+      const keyNorm = normalize(key);
+      company = companies.find((c) => {
+        const nameNorm = normalize(c.name);
+        const idNorm = normalize(c.id);
+        return idNorm === keyNorm || nameNorm === keyNorm || nameNorm.includes(keyNorm);
+      });
+    }
+    if (!company) {
+      return { ok: false, error: 'auth.companyNotFound' };
+    }
+
+    const cId = company.id;
+    if (store.getUserByEmail(email, cId)) {
       return { ok: false, error: 'auth.emailExists' };
     }
-    const roleApprovalStatus = role === 'projectManager' ? 'pending' : role === 'teamLeader' ? 'pending' : 'approved';
+
+    // Supabase'e de yaz
+    if (supabase) {
+      supabase
+        .from('users')
+        .insert({
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          company_id: cId,
+          email,
+          full_name: fullName,
+          role: null,
+          role_approval_status: 'pending',
+          created_at: new Date().toISOString(),
+        })
+        .then(({ error }) => {
+          if (error) {
+            console.error('Supabase users insert error', error);
+          }
+        });
+    }
+
     store.addUser({
-      companyId,
+      companyId: cId,
       email,
       passwordHash: hashPassword(password),
       fullName,
-      role,
-      roleApprovalStatus,
+      role: undefined,
+      roleApprovalStatus: 'pending',
       createdAt: new Date().toISOString(),
     });
-    const newUser = store.getUsers(companyId).find((u) => u.email === email)!;
-    store.setCurrentUserId(newUser.id);
-    const needsApproval = role === 'projectManager' || role === 'teamLeader';
-    return { ok: true, needsApproval };
+    return { ok: true };
   },
 
   logout(): void {
     store.setCurrentUserId(null);
   },
 
-  approveUser(userId: string, approverRole: 'companyManager' | 'projectManager'): boolean {
+  /** Company manager approves pending user and assigns role. Role is required. */
+  approveUser(userId: string, assignedRole: Role): boolean {
     const user = store.getUsers().find((u) => u.id === userId);
-    if (!user || user.roleApprovalStatus !== 'pending') return false;
-    if (user.role === 'projectManager') {
-      if (approverRole !== 'companyManager') return false;
-      store.updateUser(userId, { roleApprovalStatus: 'approved', approvedByCompanyManager: store.getCurrentUserId()! });
-      return true;
-    }
-    if (user.role === 'teamLeader') {
-      if (approverRole === 'companyManager') {
-        store.updateUser(userId, { approvedByCompanyManager: store.getCurrentUserId()! });
-        const u = store.getUsers(user.companyId).find((x) => x.id === userId)!;
-        if (u.approvedByProjectManager) {
-          store.updateUser(userId, { roleApprovalStatus: 'approved' });
-        }
-        return true;
-      }
-      if (approverRole === 'projectManager') {
-        store.updateUser(userId, { approvedByProjectManager: store.getCurrentUserId()! });
-        const u = store.getUsers(user.companyId).find((x) => x.id === userId)!;
-        if (u.approvedByCompanyManager) {
-          store.updateUser(userId, { roleApprovalStatus: 'approved' });
-        }
-        return true;
-      }
-    }
-    return false;
+    const currentUser = store.getCurrentUser();
+    if (!user || user.roleApprovalStatus !== 'pending' || !currentUser || currentUser.role !== 'companyManager') return false;
+    if (user.companyId !== currentUser.companyId) return false;
+    store.updateUser(userId, {
+      role: assignedRole,
+      roleApprovalStatus: 'approved',
+      approvedByCompanyManager: currentUser.id,
+    });
+    return true;
   },
 
   rejectUser(userId: string): boolean {

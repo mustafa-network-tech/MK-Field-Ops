@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { authService } from '../../services/authService';
 import { Card } from '../ui/Card';
-import type { User as UserType } from '../../types';
+import type { User as UserType, Role } from '../../types';
 import styles from './ManagementTabs.module.css';
 
 const roleKeys: Record<string, string> = {
@@ -19,9 +19,10 @@ export function UsersTab() {
   const companyId = currentUser?.companyId ?? '';
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
+  const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
+  const [approveRole, setApproveRole] = useState<Role>('teamLeader');
 
-  const canApprovePM = currentUser?.role === 'companyManager';
-  const canApproveTL = currentUser?.role === 'companyManager' || currentUser?.role === 'projectManager';
+  const isCompanyManager = currentUser?.role === 'companyManager';
   const canGrantPriceVisibility = currentUser?.role === 'companyManager' || currentUser?.role === 'projectManager';
 
   const handleGrantPriceVisibility = (tl: UserType) => {
@@ -33,21 +34,21 @@ export function UsersTab() {
     store.updateUser(tl.id, { canSeePrices: false });
   };
 
-  const handleApprove = (u: UserType) => {
-    if (u.role === 'projectManager' && canApprovePM) {
-      authService.approveUser(u.id, 'companyManager');
-    } else if (u.role === 'teamLeader' && canApproveTL) {
-      authService.approveUser(u.id, currentUser!.role === 'companyManager' ? 'companyManager' : 'projectManager');
+  const handleApproveWithRole = (userId: string) => {
+    const ok = authService.approveUser(userId, approveRole);
+    if (ok) {
+      setApprovingUserId(null);
     }
   };
 
   const handleReject = (userId: string) => {
     authService.rejectUser(userId);
+    setApprovingUserId(null);
   };
 
   return (
     <>
-      {pending.length > 0 && (
+      {isCompanyManager && pending.length > 0 && (
         <Card title={t('users.pendingApprovals')}>
           <table className={styles.table}>
             <thead>
@@ -63,15 +64,36 @@ export function UsersTab() {
                 <tr key={u.id}>
                   <td>{u.fullName}</td>
                   <td>{u.email}</td>
-                  <td>{t(roleKeys[u.role])}</td>
+                  <td>{u.role ? t(roleKeys[u.role]) : t('users.roleToBeAssigned')}</td>
                   <td>
-                    {(u.role === 'projectManager' && canApprovePM) || (u.role === 'teamLeader' && canApproveTL) ? (
+                    {approvingUserId === u.id ? (
                       <>
-                        <button type="button" className={styles.smallBtnOk} onClick={() => handleApprove(u)}>{t('users.approveUser')}</button>
-                        <button type="button" className={styles.smallBtnDanger} onClick={() => handleReject(u.id)}>{t('users.rejectUser')}</button>
+                        <select
+                          value={approveRole}
+                          onChange={(e) => setApproveRole(e.target.value as Role)}
+                          className={styles.input}
+                          style={{ width: 'auto', marginRight: '0.5rem', marginBottom: 0 }}
+                        >
+                          <option value="companyManager">{t('roles.companyManager')}</option>
+                          <option value="projectManager">{t('roles.projectManager')}</option>
+                          <option value="teamLeader">{t('roles.teamLeader')}</option>
+                        </select>
+                        <button type="button" className={styles.smallBtnOk} onClick={() => handleApproveWithRole(u.id)}>
+                          {t('users.approveUser')}
+                        </button>
+                        <button type="button" className={styles.smallBtnDanger} onClick={() => setApprovingUserId(null)}>
+                          {t('common.cancel')}
+                        </button>
                       </>
                     ) : (
-                      <span className={styles.badgePending}>{t('users.pending')}</span>
+                      <>
+                        <button type="button" className={styles.smallBtnOk} onClick={() => setApprovingUserId(u.id)}>
+                          {t('users.approveUser')}
+                        </button>
+                        <button type="button" className={styles.smallBtnDanger} onClick={() => handleReject(u.id)}>
+                          {t('users.rejectUser')}
+                        </button>
+                      </>
                     )}
                   </td>
                 </tr>
@@ -96,7 +118,7 @@ export function UsersTab() {
               <tr key={u.id}>
                 <td>{u.fullName}</td>
                 <td>{u.email}</td>
-                <td>{t(roleKeys[u.role])}</td>
+                <td>{u.role ? t(roleKeys[u.role]) : '–'}</td>
                 <td>
                   {u.roleApprovalStatus === 'approved' && <span className={styles.badgeOk}>{t('users.active')}</span>}
                   {u.roleApprovalStatus === 'pending' && <span className={styles.badgePending}>{t('users.pending')}</span>}
