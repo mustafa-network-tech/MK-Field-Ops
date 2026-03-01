@@ -55,7 +55,7 @@ COMMENT ON FUNCTION compute_payroll_period(int, date) IS
 -- Idempotent: unique on (company_id, start_date, end_date) prevents duplicates.
 
 CREATE OR REPLACE FUNCTION ensure_active_payroll_period(
-  p_company_id uuid,
+  p_company_id text,
   p_today date
 )
 RETURNS uuid
@@ -105,5 +105,5 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION ensure_active_payroll_period(uuid, date) IS
+COMMENT ON FUNCTION ensure_active_payroll_period(text, date) IS
   'Idempotent: ensures one active period for company containing p_today; locks ended period and creates next if needed.';

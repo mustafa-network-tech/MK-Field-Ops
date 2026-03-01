@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
@@ -17,8 +17,17 @@ export function UsersTab() {
   const { t } = useI18n();
   const { user: currentUser } = useApp();
   const companyId = currentUser?.companyId ?? '';
+  const [profilesFetched, setProfilesFetched] = useState(false);
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
+
+  useEffect(() => {
+    if (!companyId || !currentUser) return;
+    const isCMorPM = currentUser.role === 'companyManager' || currentUser.role === 'projectManager';
+    if (isCMorPM) {
+      authService.fetchCompanyProfilesIntoStore(companyId).then(() => setProfilesFetched(true));
+    }
+  }, [companyId, currentUser?.role]);
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
   const [approveRole, setApproveRole] = useState<Role>('teamLeader');
 

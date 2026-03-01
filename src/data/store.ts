@@ -184,13 +184,20 @@ export const store = {
     return this.getUsers().find((u) => u.id === uid);
   },
 
-  /** Set current user from Supabase profile (id, company_id, role, full_name, role_approval_status) + email. Upserts into users list. */
-  setUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string }, email: string): User {
+  /** Set current user from Supabase profile. Upserts into users list and sets current user. */
+  setUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
+    const u = this.mergeUserFromProfile(profile, email);
+    this.setCurrentUserId(profile.id);
+    return u;
+  },
+
+  /** Merge Supabase profile into users list (no current user change). For CM/PM to see pending users. */
+  mergeUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
     const users = this.getUsers();
     const u: User = {
       id: profile.id,
       companyId: profile.company_id,
-      email,
+      email: profile.email ?? email,
       passwordHash: '',
       fullName: profile.full_name ?? email,
       role: (profile.role as User['role']) ?? undefined,
@@ -201,7 +208,6 @@ export const store = {
     if (i >= 0) users[i] = u;
     else users.push(u);
     save(STORAGE_KEYS.users, users);
-    this.setCurrentUserId(profile.id);
     return u;
   },
 

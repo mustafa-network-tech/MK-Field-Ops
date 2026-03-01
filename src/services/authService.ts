@@ -63,24 +63,38 @@ export const authService = {
 
     const companies = store.getCompanies();
     const nameNorm = normalize(name);
-    if (companies.some((c) => normalize(c.name) === nameNorm)) return { ok: false, error: 'auth.companyNameExists' };
+    if (!supabase && companies.some((c) => normalize(c.name) === nameNorm)) return { ok: false, error: 'auth.companyNameExists' };
     if (store.getUserByEmail(email)) return { ok: false, error: 'auth.emailExists' };
 
     if (supabase) {
-      const company = store.addCompany(name);
-      const cId = company.id;
-      const { error: insertCompanyError } = await supabase.from('companies').insert({
-        id: cId,
-        name,
-        language_code: 'en',
-        created_at: new Date().toISOString(),
-      });
-      if (insertCompanyError) console.warn('Supabase companies insert', insertCompanyError);
+      const cId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const { data: insertedCompany, error: insertCompanyError } = await supabase
+        .from('companies')
+        .insert({
+          id: cId,
+          name,
+          language_code: 'en',
+          created_at: new Date().toISOString(),
+        })
+        .select('id, name')
+        .single();
+      if (insertCompanyError) {
+        console.error('[Supabase] companies INSERT failed:', {
+          code: insertCompanyError.code,
+          message: insertCompanyError.message,
+          details: insertCompanyError.details,
+          hint: insertCompanyError.hint,
+        });
+        if (insertCompanyError.code === '23505') return { ok: false, error: 'auth.companyNameExists' };
+        return { ok: false, error: insertCompanyError.message };
+      }
+      if (!insertedCompany) return { ok: false, error: 'auth.loginError' };
+      store.ensureCompany(insertedCompany.id, insertedCompany.name);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName, company_id: cId, role: 'companyManager', role_approval_status: 'approved' } },
+        options: { data: { full_name: fullName, company_id: insertedCompany.id, role: 'companyManager', role_approval_status: 'approved' } },
       });
       if (signUpError) {
         if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
@@ -182,10 +196,21 @@ export const authService = {
     if (!supabase) return false;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user?.id) return false;
-    const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', session.user.id).single();
+    const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email').eq('id', session.user.id).single();
     if (!profile) return false;
-    store.setUserFromProfile(profile, session.user.email ?? '');
+    store.setUserFromProfile(profile, profile.email ?? session.user.email ?? '');
     return true;
+  },
+
+  /** Fetch profiles for company from Supabase (CM/PM only by RLS). Merge into store so pending users appear. */
+  async fetchCompanyProfilesIntoStore(companyId: string): Promise<void> {
+    if (!supabase) return;
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, company_id, role, full_name, role_approval_status, email')
+      .eq('company_id', companyId);
+    if (!profiles) return;
+    profiles.forEach((p) => store.mergeUserFromProfile(p, p.email ?? ''));
   },
 
   approveUser(userId: string, assignedRole: Role): boolean {
