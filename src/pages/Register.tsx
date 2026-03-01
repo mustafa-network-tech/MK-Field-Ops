@@ -20,37 +20,43 @@ export function Register() {
   const [companyId, setCompanyId] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setMessage('');
-    if (mode === 'new') {
-      if (!companyName.trim()) {
-        setError(t('validation.required'));
+    setLoading(true);
+    try {
+      if (mode === 'new') {
+        if (!companyName.trim()) {
+          setError(t('validation.required'));
+          return;
+        }
+        const result = await authService.registerNewCompany({ email, password, fullName, companyName: companyName.trim() });
+        if (!result.ok) {
+          setError(t(result.error ?? 'auth.loginError'));
+          return;
+        }
+        setUser(store.getCurrentUser());
+        navigate('/', { replace: true });
         return;
       }
-      const result = authService.registerNewCompany({ email, password, fullName, companyName: companyName.trim() });
-      if (!result.ok) {
-        setError(t(result.error!));
-        return;
+      if (mode === 'existing') {
+        if (!companyId.trim()) {
+          setError(t('auth.enterCompanyId'));
+          return;
+        }
+        const result = await authService.registerExistingCompany({ email, password, fullName, companyId: companyId.trim() });
+        if (!result.ok) {
+          setError(t(result.error ?? 'auth.loginError'));
+          return;
+        }
+        setMessage(t('auth.pendingCompanyManagerApproval'));
+        setTimeout(() => navigate('/login', { replace: true }), 2000);
       }
-      setUser(store.getCurrentUser());
-      navigate('/', { replace: true });
-      return;
-    }
-    if (mode === 'existing') {
-      if (!companyId.trim()) {
-        setError(t('auth.enterCompanyId'));
-        return;
-      }
-      const result = authService.registerExistingCompany({ email, password, fullName, companyId: companyId.trim() });
-      if (!result.ok) {
-        setError(t(result.error!));
-        return;
-      }
-      setMessage(t('auth.pendingCompanyManagerApproval'));
-      setTimeout(() => navigate('/login', { replace: true }), 2000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,7 +145,7 @@ export function Register() {
 
           {error && <p className={styles.error}>{error}</p>}
           {message && <p className={styles.message}>{message}</p>}
-          <button type="submit" className={styles.primaryBtn}>{t('auth.register')}</button>
+          <button type="submit" className={styles.primaryBtn} disabled={loading}>{loading ? '...' : t('auth.register')}</button>
         </form>
         <p className={styles.footer}>
           {t('auth.login')}? <Link to="/login">{t('auth.login')}</Link>

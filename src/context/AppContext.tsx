@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { store } from '../data/store';
+import { authService } from '../services/authService';
 import { fetchCompanyLanguageFromSupabase } from '../services/companyService';
 import type { User } from '../types';
 import type { Company } from '../types';
@@ -17,6 +18,12 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | undefined>(() => store.getCurrentUser());
   const [companyRefresh, setCompanyRefresh] = useState(0);
+
+  useEffect(() => {
+    authService.restoreSession().then((restored) => {
+      if (restored) setUserState(store.getCurrentUser());
+    });
+  }, []);
 
   const setUser = useCallback((u: User | undefined) => {
     setUserState(u);

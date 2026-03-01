@@ -140,6 +140,14 @@ export const store = {
     return c ? { ...c, language_code: (c.language_code ?? 'en') as Company['language_code'] } : undefined;
   },
 
+  /** Ensure a company exists in store (e.g. from Supabase). Adds if missing. */
+  ensureCompany(id: string, name: string): void {
+    const raw = load<Company[]>(STORAGE_KEYS.companies, []);
+    if (raw.some((c) => c.id === id)) return;
+    raw.push({ id, name, createdAt: new Date().toISOString(), language_code: 'en' });
+    save(STORAGE_KEYS.companies, raw);
+  },
+
   getUsers(companyId?: string): User[] {
     const users = load<User[]>(STORAGE_KEYS.users, []);
     return companyId ? users.filter((u) => u.companyId === companyId) : users;
@@ -174,6 +182,27 @@ export const store = {
     const uid = this.getCurrentUserId();
     if (!uid) return undefined;
     return this.getUsers().find((u) => u.id === uid);
+  },
+
+  /** Set current user from Supabase profile (id, company_id, role, full_name, role_approval_status) + email. Upserts into users list. */
+  setUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string }, email: string): User {
+    const users = this.getUsers();
+    const u: User = {
+      id: profile.id,
+      companyId: profile.company_id,
+      email,
+      passwordHash: '',
+      fullName: profile.full_name ?? email,
+      role: (profile.role as User['role']) ?? undefined,
+      roleApprovalStatus: (profile.role_approval_status as User['roleApprovalStatus']) ?? 'pending',
+      createdAt: new Date().toISOString(),
+    };
+    const i = users.findIndex((x) => x.id === profile.id);
+    if (i >= 0) users[i] = u;
+    else users.push(u);
+    save(STORAGE_KEYS.users, users);
+    this.setCurrentUserId(profile.id);
+    return u;
   },
 
   getTeams(companyId: string): Team[] {

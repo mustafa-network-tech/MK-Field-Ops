@@ -10,73 +10,95 @@ function checkPassword(plain: string, hashed: string): boolean {
   return hashPassword(plain) === hashed;
 }
 
+const normalize = (value: string) =>
+  value
+    .toLowerCase()
+    .replace(/ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/ş/g, 's')
+    .replace(/ı/g, 'i')
+    .replace(/ö/g, 'o')
+    .replace(/ç/g, 'c');
+
+export type AuthResult = { ok: boolean; error?: string };
+
 export const authService = {
-  login(email: string, password: string, companyId?: string): { ok: boolean; error?: string } {
+  /** Login: uses Supabase Auth when configured, else local store. */
+  async login(email: string, password: string, companyId?: string): Promise<AuthResult> {
+    if (supabase) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        if (error.message.includes('Invalid login')) return { ok: false, error: 'auth.loginError' };
+        return { ok: false, error: error.message };
+      }
+      const userId = data.user?.id;
+      if (!userId) return { ok: false, error: 'auth.loginError' };
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id, company_id, role, full_name, role_approval_status')
+        .eq('id', userId)
+        .single();
+      if (profileError || !profile) return { ok: false, error: 'auth.loginError' };
+      if (profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
+      store.setUserFromProfile(profile, data.user?.email ?? email);
+      return { ok: true };
+    }
     const users = companyId ? store.getUsers(companyId) : store.getUsers();
     const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (!user || !checkPassword(password, user.passwordHash)) {
-      return { ok: false, error: 'auth.loginError' };
-    }
-    if (user.roleApprovalStatus !== 'approved') {
-      return { ok: false, error: 'auth.pendingApproval' };
-    }
+    if (!user || !checkPassword(password, user.passwordHash)) return { ok: false, error: 'auth.loginError' };
+    if (user.roleApprovalStatus !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
     store.setCurrentUserId(user.id);
     return { ok: true };
   },
 
-  /** New company: creator becomes company manager, no role asked. */
-  registerNewCompany(params: {
+  /** New company: creator becomes company manager. Uses Supabase Auth when configured. */
+  async registerNewCompany(params: {
     email: string;
     password: string;
     fullName: string;
     companyName: string;
-  }): { ok: boolean; error?: string } {
+  }): Promise<AuthResult> {
     const { email, password, fullName, companyName } = params;
     const name = companyName.trim();
 
-    const normalize = (value: string) =>
-      value
-        .toLowerCase()
-        .replace(/ğ/g, 'g')
-        .replace(/ü/g, 'u')
-        .replace(/ş/g, 's')
-        .replace(/ı/g, 'i')
-        .replace(/ö/g, 'o')
-        .replace(/ç/g, 'c');
-
-    // 1) Şirket adı benzersiz olmalı (global)
     const companies = store.getCompanies();
     const nameNorm = normalize(name);
-    if (companies.some((c) => normalize(c.name) === nameNorm)) {
-      return { ok: false, error: 'auth.companyNameExists' };
-    }
+    if (companies.some((c) => normalize(c.name) === nameNorm)) return { ok: false, error: 'auth.companyNameExists' };
+    if (store.getUserByEmail(email)) return { ok: false, error: 'auth.emailExists' };
 
-    // 2) Bir hesap sadece bir şirket sahibi olabilir (email global benzersiz)
-    if (store.getUserByEmail(email)) {
-      return { ok: false, error: 'auth.emailExists' };
+    if (supabase) {
+      const company = store.addCompany(name);
+      const cId = company.id;
+      const { error: insertCompanyError } = await supabase.from('companies').insert({
+        id: cId,
+        name,
+        language_code: 'en',
+        created_at: new Date().toISOString(),
+      });
+      if (insertCompanyError) console.warn('Supabase companies insert', insertCompanyError);
+
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, company_id: cId, role: 'companyManager', role_approval_status: 'approved' } },
+      });
+      if (signUpError) {
+        if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
+        return { ok: false, error: signUpError.message };
+      }
+      const userId = authData.user?.id;
+      if (!userId) return { ok: false, error: 'auth.loginError' };
+      if (authData.session) {
+        const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', userId).single();
+        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? email);
+      }
+      return { ok: true };
     }
 
     const company = store.addCompany(name);
     const cId = company.id;
-
-    // Supabase'e de yaz (isteğe bağlı, hata verse bile localStorage çalışmaya devam eder)
-    if (supabase) {
-      supabase
-        .from('companies')
-        .insert({
-          id: cId,
-          name,
-          language_code: 'en',
-          created_at: new Date().toISOString(),
-        })
-        .then(({ error }) => {
-          if (error) {
-            // Tarayıcı konsolunda görebilmen için logluyoruz
-            console.error('Supabase companies insert error', error);
-          }
-        });
-    }
-
+    supabase &&
+      supabase.from('companies').insert({ id: cId, name, language_code: 'en', created_at: new Date().toISOString() }).then(({ error }) => { if (error) console.error(error); });
     store.addUser({
       companyId: cId,
       email,
@@ -90,67 +112,67 @@ export const authService = {
     return { ok: true };
   },
 
-  /** Existing company: user enters company ID, pending until company manager approves and assigns role. */
-  registerExistingCompany(params: {
+  /** Existing company: user joins, pending until CM approves. Uses Supabase Auth when configured. */
+  async registerExistingCompany(params: {
     email: string;
     password: string;
     fullName: string;
     companyId: string;
-  }): { ok: boolean; error?: string } {
+  }): Promise<AuthResult> {
     const { email, password, fullName, companyId } = params;
     const key = companyId.trim();
 
-    const normalize = (value: string) =>
-      value
-        .toLowerCase()
-        .replace(/ğ/g, 'g')
-        .replace(/ü/g, 'u')
-        .replace(/ş/g, 's')
-        .replace(/ı/g, 'i')
-        .replace(/ö/g, 'o')
-        .replace(/ç/g, 'c');
-
-    // First try by exact ID
     let company = key ? store.getCompany(key) : undefined;
-
-    const companies = store.getCompanies();
     if (!company && key) {
       const keyNorm = normalize(key);
-      company = companies.find((c) => {
-        const nameNorm = normalize(c.name);
-        const idNorm = normalize(c.id);
-        return idNorm === keyNorm || nameNorm === keyNorm || nameNorm.includes(keyNorm);
-      });
-    }
-    if (!company) {
-      return { ok: false, error: 'auth.companyNotFound' };
+      company = store.getCompanies().find(
+        (c) => normalize(c.id) === keyNorm || normalize(c.name) === keyNorm || normalize(c.name).includes(keyNorm)
+      ) ?? undefined;
     }
 
-    const cId = company.id;
-    if (store.getUserByEmail(email, cId)) {
-      return { ok: false, error: 'auth.emailExists' };
-    }
-
-    // Supabase'e de yaz
     if (supabase) {
-      supabase
-        .from('users')
-        .insert({
-          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-          company_id: cId,
-          email,
-          full_name: fullName,
-          role: null,
-          role_approval_status: 'pending',
-          created_at: new Date().toISOString(),
-        })
-        .then(({ error }) => {
-          if (error) {
-            console.error('Supabase users insert error', error);
-          }
-        });
+      let cId: string;
+      if (company) {
+        cId = company.id;
+      } else {
+        const { data: rows } = await supabase.from('companies').select('id, name').or(`id.eq.${key},name.ilike.%${key}%`).limit(1);
+        const row = rows?.[0];
+        if (!row) return { ok: false, error: 'auth.companyNotFound' };
+        cId = row.id;
+        store.ensureCompany(row.id, row.name ?? '');
+      }
+
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: fullName, company_id: cId, role_approval_status: 'pending' } },
+      });
+      if (signUpError) {
+        if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
+        return { ok: false, error: signUpError.message };
+      }
+      const userId = authData.user?.id;
+      if (!userId) return { ok: false, error: 'auth.loginError' };
+      if (authData.session) {
+        const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', userId).single();
+        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? email);
+      }
+      return { ok: true };
     }
 
+    if (!company) return { ok: false, error: 'auth.companyNotFound' };
+    const cId = company.id;
+    if (store.getUserByEmail(email, cId)) return { ok: false, error: 'auth.emailExists' };
+    supabase &&
+      supabase.from('users').insert({
+        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+        company_id: cId,
+        email,
+        full_name: fullName,
+        role: null,
+        role_approval_status: 'pending',
+        created_at: new Date().toISOString(),
+      }).then(({ error }) => { if (error) console.error(error); });
     store.addUser({
       companyId: cId,
       email,
@@ -163,24 +185,35 @@ export const authService = {
   },
 
   logout(): void {
+    supabase?.auth.signOut();
     store.setCurrentUserId(null);
   },
 
-  /** Company manager approves pending user and assigns role. Role is required. */
+  /** Restore session from Supabase (call on app init). Returns user if session exists. */
+  async restoreSession(): Promise<boolean> {
+    if (!supabase) return false;
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) return false;
+    const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', session.user.id).single();
+    if (!profile) return false;
+    store.setUserFromProfile(profile, session.user.email ?? '');
+    return true;
+  },
+
   approveUser(userId: string, assignedRole: Role): boolean {
     const user = store.getUsers().find((u) => u.id === userId);
     const currentUser = store.getCurrentUser();
     if (!user || user.roleApprovalStatus !== 'pending' || !currentUser || currentUser.role !== 'companyManager') return false;
     if (user.companyId !== currentUser.companyId) return false;
-    store.updateUser(userId, {
-      role: assignedRole,
-      roleApprovalStatus: 'approved',
-      approvedByCompanyManager: currentUser.id,
-    });
+    store.updateUser(userId, { role: assignedRole, roleApprovalStatus: 'approved', approvedByCompanyManager: currentUser.id });
+    supabase &&
+      supabase.from('profiles').update({ role: assignedRole, role_approval_status: 'approved' }).eq('id', userId).then(({ error }) => { if (error) console.warn(error); });
     return true;
   },
 
   rejectUser(userId: string): boolean {
-    return store.updateUser(userId, { roleApprovalStatus: 'rejected' }) != null;
+    const updated = store.updateUser(userId, { roleApprovalStatus: 'rejected' });
+    supabase && supabase.from('profiles').update({ role_approval_status: 'rejected' }).eq('id', userId).then(() => {});
+    return updated != null;
   },
 };

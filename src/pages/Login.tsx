@@ -13,17 +13,23 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    const result = authService.login(email, password);
-    if (!result.ok) {
-      setError(t(result.error!));
-      return;
+    setLoading(true);
+    try {
+      const result = await authService.login(email, password);
+      if (!result.ok) {
+        setError(t(result.error ?? 'auth.loginError'));
+        return;
+      }
+      setUser(store.getCurrentUser());
+      navigate('/', { replace: true });
+    } finally {
+      setLoading(false);
     }
-    setUser(store.getCurrentUser());
-    navigate('/', { replace: true });
   };
 
   return (
@@ -53,7 +59,7 @@ export function Login() {
             />
           </label>
           {error && <p className={styles.error}>{error}</p>}
-          <button type="submit" className={styles.primaryBtn}>{t('auth.login')}</button>
+          <button type="submit" className={styles.primaryBtn} disabled={loading}>{loading ? '...' : t('auth.login')}</button>
         </form>
         <p className={styles.footer}>
           {t('auth.register')}? <Link to="/register">{t('auth.register')}</Link>
