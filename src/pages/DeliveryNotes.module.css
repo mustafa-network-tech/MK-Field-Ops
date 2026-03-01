@@ -1,0 +1,182 @@
+.page {
+  max-width: 960px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.primaryBtn {
+  padding: 0.5rem 1rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.secondaryBtn {
+  padding: 0.5rem 1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-left: 0.5rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.linkBtn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.linkBtn:hover {
+  color: #1d4ed8;
+}
+
+.sectionTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.detailSection {
+  margin-bottom: 1.5rem;
+}
+
+.detailList {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1.5rem;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.detailList dt {
+  font-weight: 600;
+  color: #475569;
+}
+
+.detailList dd {
+  margin: 0;
+}
+
+.form {
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.input {
+  width: 100%;
+  max-width: 400px;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  margin-bottom: 0.75rem;
+}
+
+.error {
+  font-size: 0.9rem;
+  color: #dc2626;
+  margin: 0 0 0.5rem;
+}
+
+.noData {
+  color: #94a3b8;
+  font-size: 0.9rem;
+  margin: 1rem 0 0;
+}
+
+.lineRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.lineRow .input {
+  margin-bottom: 0;
+  max-width: 200px;
+}
+
+.addLineBtn {
+  padding: 0.4rem 0.8rem;
+  background: #e2e8f0;
+  border: 1px dashed #94a3b8;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.removeLineBtn {
+  padding: 0.35rem 0.65rem;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.removeLineBtn:hover {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.formActions {
+  margin-top: 0.75rem;
+}
+
+.muted {
+  color: #94a3b8;
+  margin: 0;
+}

@@ -1,0 +1,105 @@
+.page {
+  max-width: 100%;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1rem;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.loading,
+.error,
+.noData {
+  padding: 1rem;
+  margin: 0;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.tableWrap {
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  font-weight: 600;
+  color: #334155;
+  background: #f8fafc;
+}
+
+.metaToggle {
+  background: none;
+  border: none;
+  color: #2563eb;
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0;
+}
+
+.metaToggle:hover {
+  text-decoration: underline;
+}
+
+.metaCell {
+  background: #f8fafc;
+  padding: 0.75rem !important;
+  vertical-align: top;
+}
+
+.metaPre {
+  margin: 0;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.pageBtn {
+  padding: 0.5rem 1rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.pageBtn:hover:not(:disabled) {
+  background: #f1f5f9;
+}
+
+.pageBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  color: #64748b;
+  font-size: 0.875rem;
+}

@@ -21,6 +21,17 @@
   left: 50%;
   transform: translateX(-50%);
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.companyLogo {
+  height: 65px;
+  width: auto;
+  max-width: 180px;
+  object-fit: contain;
+  display: block;
 }
 
 .companyName {
@@ -86,29 +97,86 @@
   background: rgba(248, 113, 113, 0.15);
 }
 
-.langGroup {
-  display: flex;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  overflow: hidden;
+.langDropdown {
+  position: relative;
 }
 
-.langBtn {
-  padding: 0.4rem 0.75rem;
-  border: none;
+.langTrigger {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid #334155;
+  border-radius: 6px;
   background: transparent;
   color: #94a3b8;
-  font-size: 0.8rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s, color 0.2s, border-color 0.2s;
 }
 
-.langBtn:hover {
+.langGlobe {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.langCode {
+  letter-spacing: 0.02em;
+}
+
+.langTrigger:hover {
   background: #1e293b;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+.langTrigger[aria-expanded="true"] {
+  background: #1e293b;
+  border-color: #475569;
+  color: #38bdf8;
+}
+
+.langChevron {
+  font-size: 0.5rem;
+  opacity: 0.85;
+  line-height: 1;
+}
+
+.langMenu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin: 0.25rem 0 0;
+  padding: 0.25rem 0;
+  min-width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  list-style: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+}
+
+.langOption {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: transparent;
+  color: #cbd5e1;
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.langOption:hover {
+  background: #334155;
   color: #f1f5f9;
 }
 
-.langBtn[aria-pressed="true"] {
-  background: #334155;
+.langMenu li[aria-selected="true"] .langOption {
   color: #38bdf8;
+  font-weight: 600;
 }

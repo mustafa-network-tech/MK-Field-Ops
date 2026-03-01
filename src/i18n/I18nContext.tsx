@@ -1,15 +1,18 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import en from './locales/en.json';
 import tr from './locales/tr.json';
+import es from './locales/es.json';
+import fr from './locales/fr.json';
+import de from './locales/de.json';
 
-export type Locale = 'en' | 'tr';
+export type Locale = 'en' | 'tr' | 'es' | 'fr' | 'de';
 
-const messages: Record<Locale, Record<string, unknown>> = { en, tr };
+const messages: Record<Locale, Record<string, unknown>> = { en, tr, es, fr, de };
 
 type I18nContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, params?: Record<string, string | number>) => string;
 };
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -27,7 +30,8 @@ function getNested(obj: Record<string, unknown>, path: string): string | undefin
 export function I18nProvider({ children }: { children: React.ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
     const saved = localStorage.getItem('locale') as Locale | null;
-    return saved === 'en' || saved === 'tr' ? saved : 'en';
+    const valid: Locale[] = ['en', 'tr', 'es', 'fr', 'de'];
+    return saved && valid.includes(saved) ? saved : 'en';
   });
 
   const setLocale = useCallback((newLocale: Locale) => {
@@ -37,7 +41,10 @@ export function I18nProvider({ children }: { children: React.ReactNode }) {
 
   const t = useCallback(
     (key: string, params?: Record<string, string | number>) => {
-      const msg = getNested(messages[locale] as Record<string, unknown>, key);
+      let msg = getNested(messages[locale] as Record<string, unknown>, key);
+      if (msg == null && locale !== 'en') {
+        msg = getNested(messages.en as Record<string, unknown>, key);
+      }
       let out = msg ?? key;
       if (params) {
         Object.entries(params).forEach(([k, v]) => {

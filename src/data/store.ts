@@ -3,15 +3,23 @@ import type {
   User,
   Team,
   Vehicle,
+  Campaign,
+  Project,
   Material,
   MaterialStockItem,
+  MaterialMainType,
   TeamMaterialAllocation,
+  MaterialAuditLogEntry,
+  MaterialAuditActionType,
   Equipment,
   WorkItem,
   JobRecord,
   Role,
   ApprovalStatus,
   JobStatus,
+  DeliveryNote,
+  DeliveryNoteItem,
+  PayrollPeriodSettings,
 } from '../types';
 
 const STORAGE_KEYS = {
@@ -22,11 +30,73 @@ const STORAGE_KEYS = {
   materials: 'tf_materials',
   materialStock: 'tf_material_stock',
   teamMaterialAllocations: 'tf_team_material_allocations',
+  materialAuditLog: 'tf_material_audit_log',
+  deliveryNotes: 'tf_delivery_notes',
+  deliveryNoteItems: 'tf_delivery_note_items',
   equipment: 'tf_equipment',
   workItems: 'tf_work_items',
+  campaigns: 'tf_campaigns',
+  projects: 'tf_projects',
   jobs: 'tf_jobs',
   currentUserId: 'tf_current_user_id',
+  payrollPeriodSettings: 'tf_payroll_period_settings',
 } as const;
+
+/** Normalize external project ID: trim and collapse multiple spaces. */
+function normalizeExternalProjectId(raw: string): string {
+  return raw.trim().replace(/\s+/g, ' ');
+}
+
+/** Migrate old project shape (projectId) to new (campaignId, projectYear, externalProjectId). */
+function migrateProjects(list: unknown[]): Project[] {
+  const campaigns = load<Campaign[]>(STORAGE_KEYS.campaigns, []);
+  const result: Project[] = [];
+  for (const p of list as Array<Record<string, unknown>>) {
+    if (p.externalProjectId != null && p.projectYear != null && p.campaignId != null) {
+      const existing = p as unknown as Project;
+      const migrated = {
+        ...existing,
+        receivedDate: existing.receivedDate ?? (existing.createdAt ? existing.createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+        completedAt: existing.completedAt ?? undefined,
+        completedBy: existing.completedBy ?? undefined,
+      };
+      result.push(migrated);
+      continue;
+    }
+    const oldId = p.projectId as string | undefined;
+    if (oldId == null || typeof oldId !== 'string') continue;
+    const companyId = p.companyId as string;
+    let campaignId = p.campaignId as string | undefined;
+    if (!campaignId) {
+      let defaultCamp = campaigns.find((c) => c.companyId === companyId && c.name === 'Default');
+      if (!defaultCamp) {
+        defaultCamp = { id: id(), companyId, name: 'Default', createdAt: new Date().toISOString() };
+        campaigns.push(defaultCamp);
+        save(STORAGE_KEYS.campaigns, campaigns);
+      }
+      campaignId = defaultCamp.id;
+    }
+    const createdAt = p.createdAt as string;
+    result.push({
+      ...p,
+      id: p.id as string,
+      companyId,
+      campaignId,
+      projectYear: typeof p.projectYear === 'number' ? p.projectYear : new Date().getFullYear(),
+      externalProjectId: normalizeExternalProjectId(oldId),
+      receivedDate: (p.receivedDate as string) ?? (createdAt ? createdAt.slice(0, 10) : new Date().toISOString().slice(0, 10)),
+      name: p.name ?? undefined,
+      description: p.description ?? undefined,
+      status: (p.status as Project['status']) ?? 'ACTIVE',
+      completedAt: (p.completedAt as string | undefined) ?? undefined,
+      completedBy: (p.completedBy as string | undefined) ?? undefined,
+      createdBy: (p.createdBy as string) ?? '',
+      createdAt,
+      updatedAt: p.updatedAt as string,
+    } as Project);
+  }
+  return result;
+}
 
 function load<T>(key: string, defaultVal: T): T {
   try {
@@ -47,17 +117,27 @@ function id(): string {
 
 export const store = {
   getCompanies(): Company[] {
-    return load(STORAGE_KEYS.companies, []);
+    const raw = load<Company[]>(STORAGE_KEYS.companies, []);
+    return raw.map((c) => ({ ...c, logo_url: c.logo_url ?? null, language_code: c.language_code ?? 'en' }));
   },
   addCompany(name: string): Company {
     const companies = this.getCompanies();
-    const company: Company = { id: id(), name, createdAt: new Date().toISOString() };
+    const company: Company = { id: id(), name, language_code: 'en', createdAt: new Date().toISOString() };
     companies.push(company);
     save(STORAGE_KEYS.companies, companies);
     return company;
   },
+  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code'>>): Company | undefined {
+    const companies = this.getCompanies();
+    const i = companies.findIndex((c) => c.id === companyId);
+    if (i === -1) return undefined;
+    companies[i] = { ...companies[i], ...patch };
+    save(STORAGE_KEYS.companies, companies);
+    return companies[i];
+  },
   getCompany(id: string): Company | undefined {
-    return this.getCompanies().find((c) => c.id === id);
+    const c = this.getCompanies().find((x) => x.id === id);
+    return c ? { ...c, language_code: (c.language_code ?? 'en') as Company['language_code'] } : undefined;
   },
 
   getUsers(companyId?: string): User[] {
@@ -212,6 +292,186 @@ export const store = {
     return true;
   },
 
+  getDeliveryNotes(companyId: string): DeliveryNote[] {
+    return load<DeliveryNote[]>(STORAGE_KEYS.deliveryNotes, []).filter((n) => n.companyId === companyId);
+  },
+  getDeliveryNote(id: string): DeliveryNote | undefined {
+    return load<DeliveryNote[]>(STORAGE_KEYS.deliveryNotes, []).find((n) => n.id === id);
+  },
+  getDeliveryNoteItems(deliveryNoteId: string): DeliveryNoteItem[] {
+    return load<DeliveryNoteItem[]>(STORAGE_KEYS.deliveryNoteItems, []).filter(
+      (i) => i.deliveryNoteId === deliveryNoteId
+    );
+  },
+  addDeliveryNote(note: Omit<DeliveryNote, 'id' | 'createdAt'>): DeliveryNote {
+    const list = load<DeliveryNote[]>(STORAGE_KEYS.deliveryNotes, []);
+    const newNote: DeliveryNote = { ...note, id: id(), createdAt: new Date().toISOString() };
+    list.push(newNote);
+    save(STORAGE_KEYS.deliveryNotes, list);
+    return newNote;
+  },
+  addDeliveryNoteItem(item: Omit<DeliveryNoteItem, 'id' | 'createdAt'>): DeliveryNoteItem {
+    const list = load<DeliveryNoteItem[]>(STORAGE_KEYS.deliveryNoteItems, []);
+    const newItem: DeliveryNoteItem = { ...item, id: id(), createdAt: new Date().toISOString() };
+    list.push(newItem);
+    save(STORAGE_KEYS.deliveryNoteItems, list);
+    return newItem;
+  },
+  /**
+   * İrsaliye teslim al: kalem tanımlarına göre stok bulunur/oluşturulur, miktar eklenir.
+   * Teslim alındıktan sonra ekleme/çıkarma/düzenleme yapılamaz. receivedBy ile teslim alan kullanıcı kaydedilir.
+   */
+  receiveDeliveryNote(
+    companyId: string,
+    payload: {
+      supplier: string;
+      receivedDate: string;
+      irsaliyeNo: string;
+      receivedBy?: string;
+      items: Array<{
+        mainType: MaterialMainType;
+        name?: string;
+        sizeOrCapacity?: string;
+        capacityLabel?: string;
+        quantity: number;
+        quantityUnit: 'm' | 'pcs';
+        spoolId?: string;
+        customGroupName?: string;
+      }>;
+    }
+  ): { note: DeliveryNote; error?: string } {
+    const now = new Date().toISOString();
+    const note = this.addDeliveryNote({
+      companyId,
+      supplier: payload.supplier.trim(),
+      receivedDate: payload.receivedDate,
+      irsaliyeNo: payload.irsaliyeNo.trim(),
+      receivedBy: payload.receivedBy ?? undefined,
+      receivedAt: now,
+    });
+    const stock = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId === companyId);
+    const isCableType = (mt: MaterialMainType) =>
+      mt === 'kablo_ic' || mt === 'kablo_yeraltı' || mt === 'kablo_havai';
+    const findExistingBoru = (def: (typeof payload.items)[0]) => {
+      const nameKey = (def.name ?? '').trim().toLowerCase();
+      const capKey = (def.sizeOrCapacity ?? '').trim().toLowerCase();
+      return stock.find(
+        (m) =>
+          m.companyId === companyId &&
+          m.mainType === 'boru' &&
+          (m.name ?? '').trim().toLowerCase() === nameKey &&
+          (m.sizeOrCapacity ?? '').trim().toLowerCase() === capKey
+      );
+    };
+    const findExistingNonCable = (def: (typeof payload.items)[0]) => {
+      const nameKey = (def.name ?? '').trim().toLowerCase();
+      const capKey = (def.sizeOrCapacity ?? def.capacityLabel ?? '').trim().toLowerCase();
+      return stock.find((m) => {
+        if (m.companyId !== companyId || m.mainType !== def.mainType) return false;
+        if ((m.name ?? '').trim().toLowerCase() !== nameKey) return false;
+        if ((m.sizeOrCapacity ?? m.capacityLabel ?? '').trim().toLowerCase() !== capKey) return false;
+        if (def.mainType === 'custom' && (def.customGroupName ?? '') !== (m.customGroupName ?? '')) return false;
+        return !isCableType(m.mainType) && m.mainType !== 'boru';
+      });
+    };
+    for (const line of payload.items) {
+      if (line.quantity <= 0) continue;
+      const name = (line.name ?? '').trim();
+      const sizeOrCapacity = (line.sizeOrCapacity ?? '').trim();
+      const capacityLabel = (line.capacityLabel ?? '').trim();
+      const spoolId = (line.spoolId ?? '').trim();
+      const customGroupName = (line.customGroupName ?? '').trim();
+      let materialStockItemId: string;
+      if (isCableType(line.mainType)) {
+        const newItem: MaterialStockItem = {
+          id: id(),
+          companyId,
+          mainType: line.mainType,
+          name: name || 'Kablo',
+          capacityLabel: capacityLabel || undefined,
+          sizeOrCapacity: sizeOrCapacity || undefined,
+          spoolId: spoolId || undefined,
+          isCable: true,
+          cableCategory: line.mainType === 'kablo_ic' ? 'ic' : line.mainType === 'kablo_yeraltı' ? 'yeraltı' : 'havai',
+          lengthTotal: line.quantityUnit === 'm' ? line.quantity : 0,
+          lengthRemaining: line.quantityUnit === 'm' ? line.quantity : 0,
+          createdAt: now,
+        };
+        const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
+        list.push(newItem);
+        save(STORAGE_KEYS.materialStock, list);
+        stock.push(newItem);
+        materialStockItemId = newItem.id;
+      } else if (line.mainType === 'boru') {
+        const existing = findExistingBoru(line);
+        if (existing) {
+          const addM = line.quantityUnit === 'm' ? line.quantity : 0;
+          this.updateMaterialStock(existing.id, {
+            lengthTotal: (existing.lengthTotal ?? 0) + addM,
+            lengthRemaining: (existing.lengthRemaining ?? 0) + addM,
+          });
+          const updated = stock.find((m) => m.id === existing.id);
+          if (updated) {
+            updated.lengthTotal = (updated.lengthTotal ?? 0) + addM;
+            updated.lengthRemaining = (updated.lengthRemaining ?? 0) + addM;
+          }
+          materialStockItemId = existing.id;
+        } else {
+          const newItem: MaterialStockItem = {
+            id: id(),
+            companyId,
+            mainType: 'boru',
+            name: name || 'Boru',
+            sizeOrCapacity: sizeOrCapacity || undefined,
+            lengthTotal: line.quantityUnit === 'm' ? line.quantity : 0,
+            lengthRemaining: line.quantityUnit === 'm' ? line.quantity : 0,
+            createdAt: now,
+          };
+          const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
+          list.push(newItem);
+          save(STORAGE_KEYS.materialStock, list);
+          stock.push(newItem);
+          materialStockItemId = newItem.id;
+        }
+      } else {
+        const existing = findExistingNonCable(line);
+        if (existing) {
+          const addQty = line.quantityUnit === 'pcs' ? line.quantity : 0;
+          this.updateMaterialStock(existing.id, {
+            stockQty: (existing.stockQty ?? 0) + addQty,
+          });
+          const updated = stock.find((m) => m.id === existing.id);
+          if (updated) updated.stockQty = (updated.stockQty ?? 0) + addQty;
+          materialStockItemId = existing.id;
+        } else {
+          const newItem: MaterialStockItem = {
+            id: id(),
+            companyId,
+            mainType: line.mainType,
+            name: name || 'Malzeme',
+            sizeOrCapacity: sizeOrCapacity || undefined,
+            capacityLabel: capacityLabel || undefined,
+            customGroupName: line.mainType === 'custom' ? customGroupName || undefined : undefined,
+            stockQty: line.quantityUnit === 'pcs' ? line.quantity : 0,
+            createdAt: now,
+          };
+          const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
+          list.push(newItem);
+          save(STORAGE_KEYS.materialStock, list);
+          stock.push(newItem);
+          materialStockItemId = newItem.id;
+        }
+      }
+      this.addDeliveryNoteItem({
+        deliveryNoteId: note.id,
+        materialStockItemId,
+        quantity: line.quantity,
+        quantityUnit: line.quantityUnit,
+      });
+    }
+    return { note };
+  },
+
   /** Ekip zimmeti: ekibe dağıtılan malzemeler */
   getTeamMaterialAllocations(companyId: string, teamId?: string): TeamMaterialAllocation[] {
     const raw = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []);
@@ -232,6 +492,35 @@ export const store = {
     list[i] = { ...list[i], ...patch };
     save(STORAGE_KEYS.teamMaterialAllocations, list);
     return list[i];
+  },
+  deleteTeamMaterialAllocation(idValue: string): boolean {
+    const list = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []).filter((x) => x.id !== idValue);
+    save(STORAGE_KEYS.teamMaterialAllocations, list);
+    return true;
+  },
+
+  /** Malzeme hareket denetim kaydı */
+  getMaterialAuditLog(
+    companyId: string,
+    opts?: { teamId?: string; actionType?: MaterialAuditActionType; fromDate?: string; toDate?: string }
+  ): MaterialAuditLogEntry[] {
+    let list = load<MaterialAuditLogEntry[]>(STORAGE_KEYS.materialAuditLog, []).filter((e) => e.companyId === companyId);
+    if (opts?.teamId) list = list.filter((e) => e.fromTeamId === opts.teamId || e.toTeamId === opts.teamId);
+    if (opts?.actionType) list = list.filter((e) => e.actionType === opts.actionType);
+    if (opts?.fromDate) list = list.filter((e) => e.createdAt >= opts.fromDate!);
+    if (opts?.toDate) list = list.filter((e) => e.createdAt <= opts.toDate!);
+    return list.sort((a, b) => (b.createdAt.localeCompare(a.createdAt)));
+  },
+  addMaterialAuditLog(entry: Omit<MaterialAuditLogEntry, 'id' | 'createdAt'>): MaterialAuditLogEntry {
+    const list = load<MaterialAuditLogEntry[]>(STORAGE_KEYS.materialAuditLog, []);
+    const newEntry: MaterialAuditLogEntry = {
+      ...entry,
+      id: id(),
+      createdAt: new Date().toISOString(),
+    };
+    list.push(newEntry);
+    save(STORAGE_KEYS.materialAuditLog, list);
+    return newEntry;
   },
 
   getEquipment(companyId: string): Equipment[] {
@@ -282,6 +571,120 @@ export const store = {
     return true;
   },
 
+  getCampaigns(companyId: string): Campaign[] {
+    return load<Campaign[]>(STORAGE_KEYS.campaigns, []).filter((c) => c.companyId === companyId);
+  },
+  getCampaign(id: string): Campaign | undefined {
+    return load<Campaign[]>(STORAGE_KEYS.campaigns, []).find((c) => c.id === id);
+  },
+  addCampaign(campaign: Omit<Campaign, 'id' | 'createdAt'>): Campaign {
+    const list = load<Campaign[]>(STORAGE_KEYS.campaigns, []);
+    const newC: Campaign = { ...campaign, id: id(), createdAt: new Date().toISOString() };
+    list.push(newC);
+    save(STORAGE_KEYS.campaigns, list);
+    return newC;
+  },
+  updateCampaign(id: string, patch: Partial<Pick<Campaign, 'name'>>): Campaign | undefined {
+    const list = load<Campaign[]>(STORAGE_KEYS.campaigns, []);
+    const i = list.findIndex((x) => x.id === id);
+    if (i === -1) return undefined;
+    list[i] = { ...list[i], ...patch };
+    save(STORAGE_KEYS.campaigns, list);
+    return list[i];
+  },
+
+  getProjects(companyId: string, options?: { campaignId?: string; status?: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED' }): Project[] {
+    const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const list = migrateProjects(raw);
+    const needsSave =
+      raw.length !== list.length ||
+      list.some((p, i) => {
+        const r = raw[i] as Record<string, unknown> & Project;
+        return r.externalProjectId !== p.externalProjectId || (r.receivedDate === undefined && p.receivedDate != null);
+      });
+    if (needsSave) save(STORAGE_KEYS.projects, list);
+    let out = list.filter((p) => p.companyId === companyId);
+    if (options?.campaignId) out = out.filter((p) => p.campaignId === options.campaignId);
+    if (options?.status) out = out.filter((p) => p.status === options.status);
+    return out;
+  },
+  getProject(id: string): Project | undefined {
+    const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const list = migrateProjects(raw);
+    return list.find((p) => p.id === id);
+  },
+  addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Project {
+    const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const list = migrateProjects(raw);
+    const year = project.projectYear;
+    if (year == null || !Number.isInteger(year) || year < 2000 || year > 2100) {
+      throw new Error('PROJECT_YEAR_INVALID');
+    }
+    const external = normalizeExternalProjectId(project.externalProjectId);
+    if (!external) throw new Error('PROJECT_EXTERNAL_ID_EMPTY');
+    const keyExists = list.some(
+      (p) =>
+        p.companyId === project.companyId &&
+        p.campaignId === project.campaignId &&
+        p.projectYear === year &&
+        p.externalProjectId === external
+    );
+    if (keyExists) throw new Error('PROJECT_KEY_EXISTS');
+    const now = new Date().toISOString();
+    const receivedDate = (project.receivedDate && /^\d{4}-\d{2}-\d{2}$/.test(project.receivedDate))
+      ? project.receivedDate
+      : now.slice(0, 10);
+    const newP: Project = {
+      ...project,
+      externalProjectId: external,
+      receivedDate,
+      id: id(),
+      createdAt: now,
+      updatedAt: now,
+    };
+    list.push(newP);
+    save(STORAGE_KEYS.projects, list);
+    return newP;
+  },
+  updateProject(id: string, patch: Partial<Pick<Project, 'name' | 'description' | 'status' | 'campaignId' | 'projectYear' | 'externalProjectId' | 'receivedDate' | 'completedAt' | 'completedBy'>>): Project | undefined {
+    const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const list = migrateProjects(raw);
+    const i = list.findIndex((x) => x.id === id);
+    if (i === -1) return undefined;
+    const updated = { ...list[i], ...patch, updatedAt: new Date().toISOString() };
+    if (patch.projectYear != null && (patch.projectYear < 2000 || patch.projectYear > 2100)) {
+      throw new Error('PROJECT_YEAR_INVALID');
+    }
+    if (patch.externalProjectId !== undefined) {
+      const external = normalizeExternalProjectId(patch.externalProjectId);
+      if (!external) throw new Error('PROJECT_EXTERNAL_ID_EMPTY');
+      updated.externalProjectId = external;
+    }
+    const duplicate = list.some(
+      (p, idx) =>
+        idx !== i &&
+        p.companyId === updated.companyId &&
+        p.campaignId === updated.campaignId &&
+        p.projectYear === updated.projectYear &&
+        p.externalProjectId === updated.externalProjectId
+    );
+    if (duplicate) throw new Error('PROJECT_KEY_EXISTS');
+    list[i] = updated;
+    save(STORAGE_KEYS.projects, list);
+    return list[i];
+  },
+  /** Mark project as COMPLETED; sets completedAt and completedBy. Caller must enforce CM/PM only. */
+  completeProject(projectId: string, completedBy: string): Project | undefined {
+    const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const list = migrateProjects(raw);
+    const i = list.findIndex((x) => x.id === projectId);
+    if (i === -1) return undefined;
+    const now = new Date().toISOString();
+    list[i] = { ...list[i], status: 'COMPLETED', completedAt: now, completedBy, updatedAt: now };
+    save(STORAGE_KEYS.projects, list);
+    return list[i];
+  },
+
   getJobs(companyId: string): JobRecord[] {
     return load<JobRecord[]>(STORAGE_KEYS.jobs, []).filter((j) => j.companyId === companyId);
   },
@@ -297,9 +700,38 @@ export const store = {
     const jobs = load<JobRecord[]>(STORAGE_KEYS.jobs, []);
     const i = jobs.findIndex((j) => j.id === jobId);
     if (i === -1) return undefined;
-    jobs[i] = { ...jobs[i], ...patch, updatedAt: new Date().toISOString() };
+    const now = new Date().toISOString();
+    const updated = { ...jobs[i], ...patch, updatedAt: now };
+    if (patch.status === 'approved' && !updated.approvedAt) updated.approvedAt = now;
+    jobs[i] = updated;
     save(STORAGE_KEYS.jobs, jobs);
     return jobs[i];
+  },
+
+  getPayrollPeriodSettings(companyId: string): PayrollPeriodSettings | undefined {
+    const list = load<PayrollPeriodSettings[]>(STORAGE_KEYS.payrollPeriodSettings, []);
+    return list.find((s) => s.companyId === companyId);
+  },
+  setPayrollPeriodSettings(
+    companyId: string,
+    payload: { startDayOfMonth: number; updatedBy: string }
+  ): PayrollPeriodSettings {
+    const list = load<PayrollPeriodSettings[]>(STORAGE_KEYS.payrollPeriodSettings, []);
+    const now = new Date().toISOString();
+    const existing = list.findIndex((s) => s.companyId === companyId);
+    const settings: PayrollPeriodSettings = {
+      companyId,
+      startDayOfMonth: payload.startDayOfMonth,
+      updatedBy: payload.updatedBy,
+      updatedAt: now,
+    };
+    if (existing >= 0) {
+      list[existing] = settings;
+    } else {
+      list.push(settings);
+    }
+    save(STORAGE_KEYS.payrollPeriodSettings, list);
+    return settings;
   },
 };
 

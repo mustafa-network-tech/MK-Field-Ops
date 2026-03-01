@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { TeamsTab } from '../components/management/TeamsTab';
@@ -7,9 +7,11 @@ import { MaterialsTab } from '../components/management/MaterialsTab';
 import { EquipmentTab } from '../components/management/EquipmentTab';
 import { WorkItemsTab } from '../components/management/WorkItemsTab';
 import { UsersTab } from '../components/management/UsersTab';
+import { AuditLogTab } from '../components/management/AuditLogTab';
+import { ProjectsTab } from '../components/management/ProjectsTab';
 import styles from './Management.module.css';
 
-type TabId = 'teams' | 'vehicles' | 'materials' | 'equipment' | 'workItems' | 'users';
+type TabId = 'teams' | 'vehicles' | 'materials' | 'equipment' | 'workItems' | 'projects' | 'users' | 'auditLog';
 
 export function Management() {
   const { t } = useI18n();
@@ -18,14 +20,18 @@ export function Management() {
 
   const canEditCatalog = user?.role === 'companyManager' || user?.role === 'projectManager';
 
-  const tabs: { id: TabId; label: string; show: boolean }[] = [
-    { id: 'teams', label: t('nav.teams'), show: true },
-    { id: 'vehicles', label: t('vehicle.title'), show: canEditCatalog },
-    { id: 'materials', label: t('catalog.materials'), show: true },
-    { id: 'equipment', label: t('catalog.equipment'), show: canEditCatalog },
-    { id: 'workItems', label: t('catalog.workItems'), show: canEditCatalog },
-    { id: 'users', label: t('nav.users'), show: user?.role === 'companyManager' || user?.role === 'projectManager' },
-  ].filter((x) => x.show);
+  const tabs = (
+    [
+      { id: 'teams' as TabId, label: t('nav.teams'), show: true },
+      { id: 'vehicles' as TabId, label: t('vehicle.title'), show: canEditCatalog },
+      { id: 'materials' as TabId, label: t('catalog.materials'), show: true },
+      { id: 'equipment' as TabId, label: t('catalog.equipment'), show: canEditCatalog },
+      { id: 'workItems' as TabId, label: t('catalog.workItems'), show: canEditCatalog },
+      { id: 'projects' as TabId, label: t('nav.projects'), show: canEditCatalog },
+      { id: 'users' as TabId, label: t('nav.users'), show: user?.role === 'companyManager' || user?.role === 'projectManager' },
+      { id: 'auditLog' as TabId, label: t('audit.title'), show: canEditCatalog },
+    ] as { id: TabId; label: string; show: boolean }[]
+  ).filter((x) => x.show);
 
   return (
     <div className={styles.page}>
@@ -48,7 +54,9 @@ export function Management() {
         {tab === 'materials' && <MaterialsTab />}
         {tab === 'equipment' && <EquipmentTab />}
         {tab === 'workItems' && <WorkItemsTab />}
+        {tab === 'projects' && <ProjectsTab />}
         {tab === 'users' && <UsersTab />}
+        {tab === 'auditLog' && <AuditLogTab />}
       </div>
     </div>
   );

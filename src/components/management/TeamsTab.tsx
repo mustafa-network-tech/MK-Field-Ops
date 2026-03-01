@@ -5,6 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { addTeam, updateTeam, getEligibleTeamLeaders } from '../../services/teamService';
 import { getTeamsForUser } from '../../services/teamScopeService';
+import { logEvent, actorFromUser } from '../../services/auditLogService';
 import { Card } from '../ui/Card';
 import type { Team, TeamManualMember } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -91,11 +92,33 @@ export function TeamsTab() {
   };
 
   const handleApprove = (teamId: string) => {
+    const team = store.getTeam(teamId);
     store.updateTeam(teamId, { approvalStatus: 'approved', approvedBy: user!.id });
+    const actor = actorFromUser(user ?? undefined);
+    if (actor && team) {
+      logEvent(actor, {
+        action: 'TEAM_APPROVED',
+        entity_type: 'team',
+        entity_id: teamId,
+        team_code: team.code,
+        meta: {},
+      });
+    }
   };
 
   const handleReject = (teamId: string) => {
+    const team = store.getTeam(teamId);
     store.updateTeam(teamId, { approvalStatus: 'rejected' });
+    const actor = actorFromUser(user ?? undefined);
+    if (actor && team) {
+      logEvent(actor, {
+        action: 'TEAM_REJECTED',
+        entity_type: 'team',
+        entity_id: teamId,
+        team_code: team.code,
+        meta: {},
+      });
+    }
   };
 
   const creatorName = (userId: string) => users.find((u) => u.id === userId)?.fullName ?? userId;

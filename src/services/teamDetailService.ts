@@ -1,7 +1,8 @@
 import { store } from '../data/store';
 import { getTeamJobStatsForUser } from './jobCalculationService';
+import { getLocalWeekRange, getLocalMonthString } from '../utils/localDateUtils';
+import { getActivePeriod, isDateInPeriod } from '../utils/periodUtils';
 import type { User } from '../types';
-import type { JobWithDetails } from '../types';
 
 /** Job row: admin/pm get gross, team, company; TL only team (backend never returns gross/company). */
 export type TeamDetailJobRowAdmin = { id: string; date: string; workItemId: string; quantity: number; gross: number; team: number; company: number };
@@ -62,17 +63,16 @@ export function getTeamDetailSummary(companyId: string, teamId: string, user: Us
   const grossTotal = jobsWithDetails.reduce((s, j) => s + j.totalWorkValue, 0);
   const teamTotal = stats.totalEarnings;
   const companyTotal = jobsWithDetails.reduce((s, j) => s + j.companyShare, 0);
-  const weeklyGross = jobsWithDetails.filter((j) => {
-    const jd = new Date(j.date);
-    const weekStart = new Date();
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekEnd.getDate() + 7);
-    return jd >= weekStart && jd < weekEnd;
-  }).reduce((s, j) => s + j.totalWorkValue, 0);
+  const now = new Date();
+  const weekRange = getLocalWeekRange(now);
+  const payrollSettings = store.getPayrollPeriodSettings(companyId);
+  const inPeriodOrMonth = payrollSettings
+    ? (d: string) => isDateInPeriod(d, getActivePeriod(now, payrollSettings.startDayOfMonth))
+    : (d: string) => d.slice(0, 7) === getLocalMonthString(now);
+  const weeklyGross = jobsWithDetails.filter((j) => j.date >= weekRange.start && j.date <= weekRange.end).reduce((s, j) => s + j.totalWorkValue, 0);
   const weeklyTeam = stats.weeklyEarnings;
   const weeklyCompany = weeklyGross - weeklyTeam;
-  const monthlyGross = jobsWithDetails.filter((j) => j.date.slice(0, 7) === new Date().toISOString().slice(0, 7)).reduce((s, j) => s + j.totalWorkValue, 0);
+  const monthlyGross = jobsWithDetails.filter((j) => inPeriodOrMonth(j.date)).reduce((s, j) => s + j.totalWorkValue, 0);
   const monthlyTeam = stats.monthlyEarnings;
   const monthlyCompany = monthlyGross - monthlyTeam;
 

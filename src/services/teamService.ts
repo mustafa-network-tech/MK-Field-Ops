@@ -1,4 +1,5 @@
 import { store } from '../data/store';
+import { logEvent, actorFromUser } from './auditLogService';
 import type { User } from '../types';
 import type { Team } from '../types';
 
@@ -77,6 +78,16 @@ export function addTeam(
   if (!leaderCheck.ok) return leaderCheck;
 
   const team = store.addTeam(params);
+  const actor = actorFromUser(currentUser);
+  if (actor) {
+    logEvent(actor, {
+      action: 'TEAM_CREATED',
+      entity_type: 'team',
+      entity_id: team.id,
+      team_code: team.code,
+      meta: { code: team.code, percentage: team.percentage },
+    });
+  }
   return { ok: true, team };
 }
 
@@ -106,5 +117,18 @@ export function updateTeam(
   if (!leaderCheck.ok) return leaderCheck;
 
   const updated = store.updateTeam(teamId, patch);
-  return updated ? { ok: true, team: updated } : { ok: false, error: 'teams.validation.updateFailed', statusCode: 500 };
+  if (updated) {
+    const actor = actorFromUser(currentUser);
+    if (actor) {
+      logEvent(actor, {
+        action: 'TEAM_UPDATED',
+        entity_type: 'team',
+        entity_id: teamId,
+        team_code: updated.code,
+        meta: { code: updated.code, patch: Object.keys(patch) },
+      });
+    }
+    return { ok: true, team: updated };
+  }
+  return { ok: false, error: 'teams.validation.updateFailed', statusCode: 500 };
 }

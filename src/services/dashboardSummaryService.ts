@@ -1,6 +1,10 @@
+import { store } from '../data/store';
 import { getApprovedJobsWithDetailsForUser } from './jobCalculationService';
 import { getJobsForUser } from './jobScopeService';
 import { getTeamsForUser } from './teamScopeService';
+import { getActivePeriod } from '../utils/periodUtils';
+import { isDateInPeriod } from '../utils/periodUtils';
+import { getLocalTodayString, getLocalWeekRange, getLocalMonthString } from '../utils/localDateUtils';
 import type { User } from '../types';
 import type { JobWithDetails } from '../types';
 
@@ -23,6 +27,8 @@ export type DashboardSummaryAdmin = {
   pendingCount: number;
   approvedCount: number;
   teamSummary: TeamSummaryRowAdmin[];
+  /** When payroll period is configured, main totals and teamSummary are for this period. */
+  activePayrollPeriod?: { start: string; end: string; label?: string };
 };
 
 export type DashboardSummaryTL = {
@@ -34,21 +40,37 @@ export type DashboardSummaryTL = {
   pendingCount: number;
   approvedCount: number;
   teamSummary: TeamSummaryRowTL[];
+  activePayrollPeriod?: { start: string; end: string; label?: string };
 };
 
 export type DashboardSummary = DashboardSummaryAdmin | DashboardSummaryTL;
 
-const now = new Date();
-const dayFilter = (d: string) => d.slice(0, 10) === now.toISOString().slice(0, 10);
-const weekStart = new Date(now);
-weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-const weekEnd = new Date(weekStart);
-weekEnd.setDate(weekEnd.getDate() + 7);
-const weekFilter = (d: string) => {
-  const j = new Date(d);
-  return j >= weekStart && j < weekEnd;
-};
-const monthFilter = (d: string) => d.slice(0, 7) === now.toISOString().slice(0, 7);
+/** Yerel zaman dilimine göre filtreler (İsveç/Türkiye vb. cihaz saatine göre). */
+function dayFilter(now: Date) {
+  const today = getLocalTodayString(now);
+  return (d: string) => d === today;
+}
+
+function weekFilter(now: Date) {
+  const { start, end } = getLocalWeekRange(now);
+  return (d: string) => d >= start && d <= end;
+}
+
+/** Takvim ayı (hakediş ayarı yoksa yedek). */
+function calendarMonthFilter(now: Date) {
+  const ym = getLocalMonthString(now);
+  return (d: string) => d.slice(0, 7) === ym;
+}
+
+/** Aylık = hakediş dönemi (son gün 23:59'da biter, dahil). Ayar yoksa takvim ayı. */
+function periodOrMonthFilter(
+  now: Date,
+  activePayrollPeriod: { start: string; end: string } | undefined
+) {
+  if (activePayrollPeriod)
+    return (d: string) => isDateInPeriod(d, activePayrollPeriod);
+  return calendarMonthFilter(now);
+}
 
 function reducePeriod(jobs: JobWithDetails[], filter: (d: string) => boolean): PeriodTotalsAdmin {
   const filtered = jobs.filter((j) => filter(j.date));
@@ -70,23 +92,35 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
 
   const jobs = getJobsForUser(companyId, user);
   const pendingCount = jobs.filter((j) => j.status === 'submitted').length;
-  const approvedCount = jobs.filter((j) => j.status === 'approved').length;
-  const approvedWithDetails = getApprovedJobsWithDetailsForUser(companyId, user);
+  const allApprovedWithDetails = getApprovedJobsWithDetailsForUser(companyId, user);
   const teams = getTeamsForUser(companyId, user);
+
+  const payrollSettings = store.getPayrollPeriodSettings(companyId);
+  const now = new Date();
+  let approvedWithDetails = allApprovedWithDetails;
+  let activePayrollPeriod: { start: string; end: string; label?: string } | undefined;
+  if (payrollSettings) {
+    activePayrollPeriod = getActivePeriod(now, payrollSettings.startDayOfMonth);
+    approvedWithDetails = allApprovedWithDetails.filter((j) =>
+      isDateInPeriod(j.date, activePayrollPeriod!)
+    );
+  }
+  const approvedCount = approvedWithDetails.length;
 
   if (user.role === 'teamLeader') {
     const teamTotal = approvedWithDetails.reduce((s, j) => s + j.teamEarnings, 0);
     const daily = {
-      team_total: approvedWithDetails.filter((j) => dayFilter(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
-      count: approvedWithDetails.filter((j) => dayFilter(j.date)).length,
+      team_total: approvedWithDetails.filter((j) => dayFilter(now)(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
+      count: approvedWithDetails.filter((j) => dayFilter(now)(j.date)).length,
     };
     const weekly = {
-      team_total: approvedWithDetails.filter((j) => weekFilter(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
-      count: approvedWithDetails.filter((j) => weekFilter(j.date)).length,
+      team_total: approvedWithDetails.filter((j) => weekFilter(now)(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
+      count: approvedWithDetails.filter((j) => weekFilter(now)(j.date)).length,
     };
+    const monthlyFilter = periodOrMonthFilter(now, activePayrollPeriod);
     const monthly = {
-      team_total: approvedWithDetails.filter((j) => monthFilter(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
-      count: approvedWithDetails.filter((j) => monthFilter(j.date)).length,
+      team_total: approvedWithDetails.filter((j) => monthlyFilter(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
+      count: approvedWithDetails.filter((j) => monthlyFilter(j.date)).length,
     };
     const teamSummary: TeamSummaryRowTL[] = [];
     const acc: Record<string, { team: number; count: number }> = {};
@@ -109,12 +143,13 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
       pendingCount,
       approvedCount,
       teamSummary,
+      activePayrollPeriod,
     };
   }
 
-  const daily = reducePeriod(approvedWithDetails, dayFilter);
-  const weekly = reducePeriod(approvedWithDetails, weekFilter);
-  const monthly = reducePeriod(approvedWithDetails, monthFilter);
+  const daily = reducePeriod(approvedWithDetails, dayFilter(now));
+  const weekly = reducePeriod(approvedWithDetails, weekFilter(now));
+  const monthly = reducePeriod(approvedWithDetails, periodOrMonthFilter(now, activePayrollPeriod));
   const grossTotal = approvedWithDetails.reduce((s, j) => s + j.totalWorkValue, 0);
   const teamTotal = approvedWithDetails.reduce((s, j) => s + j.teamEarnings, 0);
   const companyTotal = approvedWithDetails.reduce((s, j) => s + j.companyShare, 0);
@@ -144,5 +179,6 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
     pendingCount,
     approvedCount,
     teamSummary: teamSummaryAdmin,
+    activePayrollPeriod,
   };
 }

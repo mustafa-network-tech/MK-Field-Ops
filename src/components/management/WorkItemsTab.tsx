@@ -3,12 +3,13 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { validatePrice, formatPriceForUser } from '../../utils/priceRules';
+import { parseDecimalFromLocale } from '../../utils/formatLocale';
 import { Card } from '../ui/Card';
 import type { WorkItem } from '../../types';
 import styles from './ManagementTabs.module.css';
 
 export function WorkItemsTab() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { user: currentUser } = useApp();
   const companyId = currentUser?.companyId ?? '';
   const workItems = store.getWorkItems(companyId);
@@ -58,7 +59,19 @@ export function WorkItemsTab() {
           </label>
           <label className={styles.label}>
             {t('catalog.unitPrice')}
-            <input type="number" step="0.01" min={0} value={form.unitPrice} onChange={(e) => { setForm((f) => ({ ...f, unitPrice: Number(e.target.value) || 0 })); setPriceError(''); }} className={styles.input} required />
+            <input
+              type="text"
+              inputMode="decimal"
+              value={form.unitPrice}
+              onChange={(e) => {
+                const r = parseDecimalFromLocale(e.target.value, locale);
+                if (r.ok && r.value >= 0) setForm((f) => ({ ...f, unitPrice: r.value }));
+                else if (e.target.value.trim() === '') setForm((f) => ({ ...f, unitPrice: 0 }));
+                setPriceError('');
+              }}
+              className={styles.input}
+              required
+            />
           </label>
           {priceError && <p className={styles.saveError}>{priceError}</p>}
           <label className={styles.label}>
@@ -86,7 +99,7 @@ export function WorkItemsTab() {
             <tr key={w.id}>
               <td>{w.code}</td>
               <td>{w.unitType}</td>
-              <td>{formatPriceForUser(w.unitPrice, currentUser, 'companyOrTotal')}</td>
+              <td>{formatPriceForUser(w.unitPrice, currentUser, 'companyOrTotal', locale)}</td>
               <td>{w.description}</td>
               <td>
                 <button type="button" className={styles.smallBtnEdit} onClick={() => { setEditing(w); setForm({ code: w.code, unitType: w.unitType, unitPrice: w.unitPrice, description: w.description }); }}>{t('common.edit')}</button>

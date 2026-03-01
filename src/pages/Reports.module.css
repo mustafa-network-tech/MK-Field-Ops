@@ -33,3 +33,46 @@
 .primaryBtn:hover {
   background: #1d4ed8;
 }
+
+.primaryBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.section {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 0.5rem;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 200px;
+}
+
+.muted {
+  color: #94a3b8;
+  margin: 0 0 0.5rem;
+}

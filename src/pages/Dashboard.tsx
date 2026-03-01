@@ -1,13 +1,13 @@
-import React from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { getDashboardSummary } from '../services/dashboardSummaryService';
 import { formatPriceForUser } from '../utils/priceRules';
+import { formatCurrency } from '../utils/formatLocale';
 import { Card } from '../components/ui/Card';
 import styles from './Dashboard.module.css';
 
 export function Dashboard() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { user } = useApp();
   const companyId = user?.companyId ?? '';
   const summary = getDashboardSummary(companyId, user);
@@ -26,25 +26,30 @@ export function Dashboard() {
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+      {summary.activePayrollPeriod?.label && (
+        <p className={styles.meta} style={{ marginBottom: '1rem' }}>
+          {t('settings.activePeriodLabel')}: {summary.activePayrollPeriod.label}
+        </p>
+      )}
 
       {/* Top cards: admin/pm = 3 (Gross / Team / Company), TL = 1 (Team only) */}
       <div className={styles.grid}>
         {isAdmin ? (
           <>
             <Card title={t('jobs.totalWorkValue')}>
-              <p className={styles.bigNumber}>{summary.grossTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
+              <p className={styles.bigNumber}>{formatCurrency(summary.grossTotal, locale)}</p>
               <p className={styles.meta}>{summary.approvedCount} {t('dashboard.approvedJobs').toLowerCase()}</p>
             </Card>
             <Card title={t('jobs.teamEarnings')}>
-              <p className={styles.bigNumber}>{summary.teamTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
+              <p className={styles.bigNumber}>{formatCurrency(summary.teamTotal, locale)}</p>
             </Card>
             <Card title={t('jobs.companyShare')}>
-              <p className={styles.bigNumber}>{summary.companyTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
+              <p className={styles.bigNumber}>{formatCurrency(summary.companyTotal, locale)}</p>
             </Card>
           </>
         ) : (
           <Card title={t('jobs.teamEarnings')}>
-            <p className={styles.bigNumber}>{formatPriceForUser(summary.teamTotal, user, 'teamOnly')}</p>
+            <p className={styles.bigNumber}>{formatPriceForUser(summary.teamTotal, user, 'teamOnly', locale)}</p>
             <p className={styles.meta}>{summary.approvedCount} {t('dashboard.approvedJobs').toLowerCase()}</p>
           </Card>
         )}
@@ -64,26 +69,26 @@ export function Dashboard() {
       {isAdmin ? (
         <div className={styles.grid}>
           <Card title={t('dashboard.weeklyTotal')}>
-            <p className={styles.meta}>{t('jobs.totalWorkValue')}: {summary.weekly.gross_total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
-            <p className={styles.meta}>{t('jobs.teamEarnings')}: {summary.weekly.team_total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
-            <p className={styles.meta}>{t('jobs.companyShare')}: {summary.weekly.company_total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
+            <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(summary.weekly.gross_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(summary.weekly.team_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(summary.weekly.company_total, locale)}</p>
             <p className={styles.meta}>{summary.weekly.count} jobs</p>
           </Card>
           <Card title={t('dashboard.monthlyTotal')}>
-            <p className={styles.meta}>{t('jobs.totalWorkValue')}: {summary.monthly.gross_total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
-            <p className={styles.meta}>{t('jobs.teamEarnings')}: {summary.monthly.team_total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
-            <p className={styles.meta}>{t('jobs.companyShare')}: {summary.monthly.company_total.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</p>
+            <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(summary.monthly.gross_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(summary.monthly.team_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(summary.monthly.company_total, locale)}</p>
             <p className={styles.meta}>{summary.monthly.count} jobs</p>
           </Card>
         </div>
       ) : (
         <div className={styles.grid}>
           <Card title={t('dashboard.weeklyTotal')}>
-            <p className={styles.bigNumber}>{formatPriceForUser(summary.weekly.team_total, user, 'teamOnly')}</p>
+            <p className={styles.bigNumber}>{formatPriceForUser(summary.weekly.team_total, user, 'teamOnly', locale)}</p>
             <p className={styles.meta}>{summary.weekly.count} jobs</p>
           </Card>
           <Card title={t('dashboard.monthlyTotal')}>
-            <p className={styles.bigNumber}>{formatPriceForUser(summary.monthly.team_total, user, 'teamOnly')}</p>
+            <p className={styles.bigNumber}>{formatPriceForUser(summary.monthly.team_total, user, 'teamOnly', locale)}</p>
             <p className={styles.meta}>{summary.monthly.count} jobs</p>
           </Card>
         </div>
@@ -107,9 +112,9 @@ export function Dashboard() {
                 {summary.teamSummary.map((row) => (
                   <tr key={row.code}>
                     <td><strong>{row.code}</strong></td>
-                    <td>{row.gross.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
-                    <td>{row.team.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
-                    <td>{row.company.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</td>
+                    <td>{formatCurrency(row.gross, locale)}</td>
+                    <td>{formatCurrency(row.team, locale)}</td>
+                    <td>{formatCurrency(row.company, locale)}</td>
                     <td>{row.count}</td>
                   </tr>
                 ))}
@@ -120,7 +125,7 @@ export function Dashboard() {
           <ul className={styles.list}>
             {summary.teamSummary.map((row) => (
               <li key={row.code}>
-                <strong>{row.code}</strong>: {formatPriceForUser(row.team, user, 'teamOnly')} ({row.count} jobs)
+                <strong>{row.code}</strong>: {formatPriceForUser(row.team, user, 'teamOnly', locale)} ({row.count} jobs)
               </li>
             ))}
             {summary.teamSummary.length === 0 && <li className={styles.noData}>{t('common.noData')}</li>}

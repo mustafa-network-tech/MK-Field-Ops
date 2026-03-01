@@ -66,6 +66,7 @@ export const authService = {
         .insert({
           id: cId,
           name,
+          language_code: 'en',
           created_at: new Date().toISOString(),
         })
         .then(({ error }) => {
@@ -83,7 +84,6 @@ export const authService = {
       fullName,
       role: 'companyManager',
       roleApprovalStatus: 'approved',
-      createdAt: new Date().toISOString(),
     });
     const newUser = store.getUsers(cId).find((u) => u.email === email)!;
     store.setCurrentUserId(newUser.id);
@@ -158,7 +158,6 @@ export const authService = {
       fullName,
       role: undefined,
       roleApprovalStatus: 'pending',
-      createdAt: new Date().toISOString(),
     });
     return { ok: true };
   },

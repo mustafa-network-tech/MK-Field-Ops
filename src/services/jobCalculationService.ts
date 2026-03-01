@@ -1,5 +1,8 @@
 import { store } from '../data/store';
 import { getTeamIdsForUser } from './teamScopeService';
+import { getLocalTodayString, getLocalWeekRange, getLocalMonthString } from '../utils/localDateUtils';
+import { getActivePeriod, isDateInPeriod } from '../utils/periodUtils';
+import { roundMoney } from '../utils/formatLocale';
 import type { JobRecord, JobWithDetails } from '../types';
 import type { User } from '../types';
 
@@ -8,9 +11,9 @@ export function computeJobFinancials(
   teamPercentage: number,
   workItemUnitPrice: number
 ): { totalWorkValue: number; teamEarnings: number; companyShare: number } {
-  const totalWorkValue = job.quantity * workItemUnitPrice;
-  const teamEarnings = totalWorkValue * (teamPercentage / 100);
-  const companyShare = totalWorkValue - teamEarnings;
+  const totalWorkValue = roundMoney(job.quantity * workItemUnitPrice);
+  const teamEarnings = roundMoney(totalWorkValue * (teamPercentage / 100));
+  const companyShare = roundMoney(totalWorkValue - teamEarnings);
   return { totalWorkValue, teamEarnings, companyShare };
 }
 
@@ -54,7 +57,7 @@ export function getTotalsByPeriod(
   period: 'day' | 'week' | 'month'
 ): { totalWorkValue: number; teamEarnings: number; companyShare: number; count: number } {
   const jobs = getApprovedJobsWithDetails(companyId);
-  return reduceByPeriod(jobs, period);
+  return reduceByPeriod(jobs, period, companyId);
 }
 
 /** Scope by user for dashboard/totals. */
@@ -64,32 +67,38 @@ export function getTotalsByPeriodForUser(
   user: User | undefined
 ): { totalWorkValue: number; teamEarnings: number; companyShare: number; count: number } {
   const jobs = getApprovedJobsWithDetailsForUser(companyId, user);
-  return reduceByPeriod(jobs, period);
+  return reduceByPeriod(jobs, period, companyId);
 }
 
+/** Gün/hafta yerel; ay = hakediş dönemi (varsa), yoksa takvim ayı. */
 function reduceByPeriod(
   jobs: JobWithDetails[],
-  period: 'day' | 'week' | 'month'
+  period: 'day' | 'week' | 'month',
+  companyId: string
 ): { totalWorkValue: number; teamEarnings: number; companyShare: number; count: number } {
   const now = new Date();
-  const filter =
-    period === 'day'
-      ? (d: string) => d.slice(0, 10) === now.toISOString().slice(0, 10)
-      : period === 'week'
-        ? (d: string) => {
-            const j = new Date(d);
-            const start = new Date(now);
-            start.setDate(start.getDate() - start.getDay());
-            const end = new Date(start);
-            end.setDate(end.getDate() + 7);
-            return j >= start && j < end;
-          }
-        : (d: string) => d.slice(0, 7) === now.toISOString().slice(0, 7);
+  const todayStr = getLocalTodayString(now);
+  const weekRange = getLocalWeekRange(now);
+  let filter: (d: string) => boolean;
+  if (period === 'day') {
+    filter = (d) => d === todayStr;
+  } else if (period === 'week') {
+    filter = (d) => d >= weekRange.start && d <= weekRange.end;
+  } else {
+    const settings = store.getPayrollPeriodSettings(companyId);
+    if (settings) {
+      const periodRange = getActivePeriod(now, settings.startDayOfMonth);
+      filter = (d) => isDateInPeriod(d, periodRange);
+    } else {
+      const monthStr = getLocalMonthString(now);
+      filter = (d) => d.slice(0, 7) === monthStr;
+    }
+  }
   const filtered = jobs.filter((j) => filter(j.date));
   return {
-    totalWorkValue: filtered.reduce((s, j) => s + j.totalWorkValue, 0),
-    teamEarnings: filtered.reduce((s, j) => s + j.teamEarnings, 0),
-    companyShare: filtered.reduce((s, j) => s + j.companyShare, 0),
+    totalWorkValue: roundMoney(filtered.reduce((s, j) => s + j.totalWorkValue, 0)),
+    teamEarnings: roundMoney(filtered.reduce((s, j) => s + j.teamEarnings, 0)),
+    companyShare: roundMoney(filtered.reduce((s, j) => s + j.companyShare, 0)),
     count: filtered.length,
   };
 }
@@ -116,17 +125,14 @@ function computeTeamJobStats(companyId: string, jobs: JobRecord[]) {
     .filter((j): j is JobWithDetails => j != null);
   const totalEarnings = withDetails.reduce((s, j) => s + j.teamEarnings, 0);
   const now = new Date();
-  const weekStart = new Date(now);
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  const weekEnd = new Date(weekStart);
-  weekEnd.setDate(weekEnd.getDate() + 7);
-  const inWeek = (d: string) => {
-    const j = new Date(d);
-    return j >= weekStart && j < weekEnd;
-  };
-  const inMonth = (d: string) => d.slice(0, 7) === now.toISOString().slice(0, 7);
+  const weekRange = getLocalWeekRange(now);
+  const inWeek = (d: string) => d >= weekRange.start && d <= weekRange.end;
+  const settings = store.getPayrollPeriodSettings(companyId);
+  const inPeriodOrMonth = settings
+    ? (d: string) => isDateInPeriod(d, getActivePeriod(now, settings.startDayOfMonth))
+    : (d: string) => d.slice(0, 7) === getLocalMonthString(now);
   const weekly = withDetails.filter((j) => inWeek(j.date)).reduce((s, j) => s + j.teamEarnings, 0);
-  const monthly = withDetails.filter((j) => inMonth(j.date)).reduce((s, j) => s + j.teamEarnings, 0);
+  const monthly = withDetails.filter((j) => inPeriodOrMonth(j.date)).reduce((s, j) => s + j.teamEarnings, 0);
   return {
     totalEarnings,
     totalJobs: jobs.length,

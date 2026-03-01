@@ -73,6 +73,31 @@
   margin-bottom: 0.75rem;
 }
 
+.inputRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.inputRow .input {
+  margin-bottom: 0;
+  max-width: 280px;
+}
+
+.projectKeyPreview {
+  font-size: 0.9rem;
+  color: #475569;
+  margin: 0 0 0.75rem;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0.25rem 0 0.5rem;
+}
+
 .formActions {
   margin-top: 0.75rem;
 }
@@ -179,6 +204,111 @@
 
 .chip input {
   margin: 0;
+}
+
+.chipActive {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.65rem;
+  background: #2563eb;
+  color: white;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border: none;
+}
+
+.segmentGroup {
+  display: inline-flex;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.segment,
+.segmentActive {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: #f8fafc;
+  color: #475569;
+}
+
+.segment:hover {
+  background: #f1f5f9;
+}
+
+.segmentActive {
+  background: #2563eb;
+  color: white;
+}
+
+.segment + .segment,
+.segment + .segmentActive,
+.segmentActive + .segment,
+.segmentActive + .segmentActive {
+  border-left: 1px solid #e2e8f0;
+}
+
+.segmentActive + .segment,
+.segment + .segmentActive {
+  border-left-color: rgba(255, 255, 255, 0.3);
+}
+
+.filterRow {
+  margin-bottom: 0.75rem;
+}
+
+.filterRow .input {
+  max-width: 280px;
+  margin-bottom: 0;
+}
+
+.detailSection {
+  margin-bottom: 1rem;
+}
+
+.detailList {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.35rem 1.5rem;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.detailList dt {
+  font-weight: 600;
+  color: #475569;
+}
+
+.detailList dd {
+  margin: 0;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 400px;
+}
+
+.modal p {
+  margin: 0 0 1rem;
 }
 
 .muted {

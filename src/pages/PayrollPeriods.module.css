@@ -1,0 +1,116 @@
+.page {
+  max-width: 1000px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin: 0 0 1.5rem;
+}
+
+.muted {
+  color: #94a3b8;
+  margin: 0;
+}
+
+.periodSelect {
+  margin-bottom: 1.5rem;
+}
+
+.periodSelect label {
+  display: block;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 0.35rem;
+  font-size: 0.9rem;
+}
+
+.periodSelectRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #059669;
+  background: #d1fae5;
+  border-radius: 9999px;
+}
+
+.select {
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  min-width: 280px;
+  background: white;
+}
+
+.select:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.totalsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.totalsItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.totalsLabel {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.totalsValue {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.table th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #475569;
+}
+
+.noData {
+  color: #94a3b8;
+  margin: 0;
+  padding: 1rem 0;
+}

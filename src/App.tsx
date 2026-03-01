@@ -12,6 +12,10 @@ import { Management } from './pages/Management';
 import { TeamDetail } from './pages/TeamDetail';
 import { Approvals } from './pages/Approvals';
 import { Reports } from './pages/Reports';
+import { DeliveryNotes } from './pages/DeliveryNotes';
+import { Settings } from './pages/Settings';
+import { PayrollPeriods } from './pages/PayrollPeriods';
+import { AuditLogs } from './pages/AuditLogs';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useApp();
@@ -39,6 +43,10 @@ function AppRoutes() {
         <Route path="team/:teamId" element={<TeamDetail />} />
         <Route path="approvals" element={<Approvals />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="delivery-notes" element={<DeliveryNotes />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="payroll" element={<PayrollPeriods />} />
+        <Route path="audit-logs" element={<AuditLogs />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
