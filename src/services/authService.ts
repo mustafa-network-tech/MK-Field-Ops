@@ -97,8 +97,6 @@ export const authService = {
 
     const company = store.addCompany(name);
     const cId = company.id;
-    supabase &&
-      supabase.from('companies').insert({ id: cId, name, language_code: 'en', created_at: new Date().toISOString() }).then(({ error }) => { if (error) console.error(error); });
     store.addUser({
       companyId: cId,
       email,
@@ -163,16 +161,6 @@ export const authService = {
     if (!company) return { ok: false, error: 'auth.companyNotFound' };
     const cId = company.id;
     if (store.getUserByEmail(email, cId)) return { ok: false, error: 'auth.emailExists' };
-    supabase &&
-      supabase.from('users').insert({
-        id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
-        company_id: cId,
-        email,
-        full_name: fullName,
-        role: null,
-        role_approval_status: 'pending',
-        created_at: new Date().toISOString(),
-      }).then(({ error }) => { if (error) console.error(error); });
     store.addUser({
       companyId: cId,
       email,
@@ -206,14 +194,13 @@ export const authService = {
     if (!user || user.roleApprovalStatus !== 'pending' || !currentUser || currentUser.role !== 'companyManager') return false;
     if (user.companyId !== currentUser.companyId) return false;
     store.updateUser(userId, { role: assignedRole, roleApprovalStatus: 'approved', approvedByCompanyManager: currentUser.id });
-    supabase &&
-      supabase.from('profiles').update({ role: assignedRole, role_approval_status: 'approved' }).eq('id', userId).then(({ error }) => { if (error) console.warn(error); });
+    if (supabase) supabase.from('profiles').update({ role: assignedRole, role_approval_status: 'approved' }).eq('id', userId).then((res: { error: Error | null }) => { if (res.error) console.warn(res.error); });
     return true;
   },
 
   rejectUser(userId: string): boolean {
     const updated = store.updateUser(userId, { roleApprovalStatus: 'rejected' });
-    supabase && supabase.from('profiles').update({ role_approval_status: 'rejected' }).eq('id', userId).then(() => {});
+    if (supabase) supabase.from('profiles').update({ role_approval_status: 'rejected' }).eq('id', userId).then(() => {});
     return updated != null;
   },
 };
