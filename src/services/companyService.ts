@@ -33,7 +33,7 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   }
   if (!data) return;
   const language_code = normalizeLanguageCode(data.language_code);
-  const existing = store.getCompany(companyId);
+ 
   store.updateCompany(companyId, {
     language_code,
     ...(data.name != null && { name: data.name }),
