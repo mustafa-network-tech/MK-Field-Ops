@@ -49,3 +49,4 @@ Then open **http://localhost:5173**.
 - `src/pages/` – Login, Register, Dashboard, Job Entry, My Jobs, Management, Approvals, Reports
 
 To add another language: add a new JSON under `src/i18n/locales/` and extend the `Locale` type and `messages` map in `I18nContext.tsx`.
+deploy
