@@ -17,7 +17,7 @@ export function UsersTab() {
   const { t } = useI18n();
   const { user: currentUser } = useApp();
   const companyId = currentUser?.companyId ?? '';
-  const [profilesFetched, setProfilesFetched] = useState(false);
+  const [, setProfilesFetched] = useState(false);
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
 

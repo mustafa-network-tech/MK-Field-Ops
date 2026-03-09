@@ -19,7 +19,11 @@ export function ForgotPassword() {
     try {
       const result = await authService.requestPasswordReset(email.trim());
       if (!result.ok) {
-        setError(result.error === 'auth.forgotPasswordNotConfigured' ? t(result.error) : result.error);
+        const errorMessage =
+          result.error === 'auth.forgotPasswordNotConfigured'
+            ? (t(result.error) ?? 'An error occurred')
+            : (result.error ?? 'An error occurred');
+        setError(errorMessage);
         return;
       }
       setSent(true);
