@@ -40,7 +40,7 @@ Supabase SQL Editor'da **aşağıdaki sırayla** tek tek çalıştırın. Dosya 
 
 ---
 
-## 4) 20250401 – Tam şema + RLS (6 dosya)
+## 4) 20250401 – Tam şema + RLS (7 dosya)
 
 | Sıra | Dosya adı |
 |------|-----------|
@@ -50,6 +50,7 @@ Supabase SQL Editor'da **aşağıdaki sırayla** tek tek çalıştırın. Dosya 
 | 17 | `20250401000004_delivery_notes.sql` |
 | 18 | `20250401000005_jobs_and_payroll_period_settings.sql` |
 | 19 | `20250401000006_rls_all_new_tables.sql` |
+| 20 | `20250401000007_jobs_resolve_payroll_period_function.sql` |
 
 ---
 
@@ -58,6 +59,6 @@ Supabase SQL Editor'da **aşağıdaki sırayla** tek tek çalıştırın. Dosya 
 - **20250101:** 000001 → 000002 → 000003 (2, 4, 5, 6, 7 **yok**).
 - **20250301:** 000001 → 000002 → 000003.
 - **20250302:** 000001 → 000002 → 000003 → 000004 → 000005 → 000006 → 000007.
-- **20250401:** 000001 → 000002 → 000003 → 000004 → 000005 → 000006.
+- **20250401:** 000001 → 000002 → 000003 → 000004 → 000005 → 000006 → 000007.
 
-Toplam **19** migration; hepsini yukarıdaki sırayla çalıştırın.
+Toplam **20** migration; hepsini yukarıdaki sırayla çalıştırın.

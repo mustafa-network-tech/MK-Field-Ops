@@ -228,4 +228,14 @@ export const authService = {
     if (supabase) supabase.from('profiles').update({ role_approval_status: 'rejected' }).eq('id', userId).then(() => {});
     return updated != null;
   },
+
+  /** Request password reset email (Supabase only). Returns ok: false with error key if Supabase not configured or request failed. */
+  async requestPasswordReset(email: string): Promise<AuthResult> {
+    if (!supabase) return { ok: false, error: 'auth.forgotPasswordNotConfigured' };
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login`,
+    });
+    if (error) return { ok: false, error: error.message };
+    return { ok: true };
+  },
 };

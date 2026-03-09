@@ -64,6 +64,9 @@ export function Login() {
         <p className={styles.footer}>
           {t('auth.register')}? <Link to="/register">{t('auth.register')}</Link>
         </p>
+        <p className={styles.forgotBottomRight}>
+          <Link to="/forgot-password" className={styles.footerLink}>{t('auth.forgotPassword')}</Link>
+        </p>
       </div>
     </div>
   );

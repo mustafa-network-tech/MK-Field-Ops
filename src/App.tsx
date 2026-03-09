@@ -5,6 +5,7 @@ import { AppProvider, useApp } from './context/AppContext';
 import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard';
 import { JobEntry } from './pages/JobEntry';
 import { MyJobs } from './pages/MyJobs';
@@ -34,6 +35,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
+      <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="jobs" element={<JobEntry />} />
