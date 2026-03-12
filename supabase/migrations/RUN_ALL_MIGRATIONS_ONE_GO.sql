@@ -181,7 +181,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION ensure_active_payroll_period(text, date) IS
+COMMENT ON FUNCTION ensure_active_payroll_period(uuid, date) IS
   'Idempotent: ensures one active period for company containing p_today; locks ended period and creates next if needed.';
 
 -- Backwards-compatibility overload: accept text company_id and cast to uuid

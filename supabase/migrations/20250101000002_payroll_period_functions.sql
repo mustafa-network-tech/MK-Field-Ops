@@ -47,12 +47,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION compute_payroll_period(int, date) IS
-  'Returns (start_date, end_date) of the payroll period containing p_reference_date for given payroll_start_day (1..31).';
 
--- Ensure exactly one active (unlocked) period for company containing p_today.
--- If active exists and p_today > active.end_date: lock it and create next period.
--- Idempotent: unique on (company_id, start_date, end_date) prevents duplicates.
 
 CREATE OR REPLACE FUNCTION ensure_active_payroll_period(
   p_company_id uuid,
@@ -105,7 +100,7 @@ BEGIN
 END;
 $$;
 
-COMMENT ON FUNCTION ensure_active_payroll_period(text, date) IS
+COMMENT ON FUNCTION ensure_active_payroll_period(uuid, date) IS
   'Idempotent: ensures one active period for company containing p_today; locks ended period and creates next if needed.';
 
 -- Backwards-compatibility overload: accept text company_id and cast to uuid
