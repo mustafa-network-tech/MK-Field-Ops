@@ -28,7 +28,7 @@ export const authService = {
     if (supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) {
-        if (error.message.includes('Invalid login')) return { ok: false, error: 'auth.loginError' };
+      if (error.message.includes('Invalid login')) return { ok: false, error: 'auth.loginError' };
         return { ok: false, error: error.message };
       }
       const userId = data.user?.id;
