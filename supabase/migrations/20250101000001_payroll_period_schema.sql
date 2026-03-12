@@ -30,11 +30,10 @@ EXCEPTION
     );
 END $$;
 
--- 2) Payroll periods table
--- company_id: companies.id tipi text ise text, uuid ise uuid kullanın (sizin DB: companies.id = text)
+-- 2) Payroll periods table (company_id must match companies.id type: uuid)
 CREATE TABLE IF NOT EXISTS payroll_periods (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
   start_date date NOT NULL,
   end_date date NOT NULL,
   is_locked boolean NOT NULL DEFAULT false,

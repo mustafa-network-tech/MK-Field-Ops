@@ -9,7 +9,7 @@
 -- 1) Material stock items – stok kalemleri (kablo metre/adet, spool, harici vb.)
 CREATE TABLE IF NOT EXISTS public.material_stock (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   main_type text NOT NULL,
   custom_group_name text,
   name text NOT NULL,
@@ -32,7 +32,7 @@ COMMENT ON TABLE public.material_stock IS 'Stock items: poles, cables (m/spool),
 -- 2) Team material allocations – ekip zimmeti (dağıtılan miktar)
 CREATE TABLE IF NOT EXISTS public.team_material_allocations (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   team_id uuid NOT NULL REFERENCES public.teams(id) ON DELETE CASCADE,
   material_stock_item_id uuid NOT NULL REFERENCES public.material_stock(id) ON DELETE RESTRICT,
   quantity_meters numeric(12,2) CHECK (quantity_meters IS NULL OR quantity_meters >= 0),
@@ -50,7 +50,7 @@ COMMENT ON TABLE public.team_material_allocations IS 'Material allocated to team
 -- 3) Material audit log – malzeme hareket denetimi
 CREATE TABLE IF NOT EXISTS public.material_audit_log (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   action_type text NOT NULL CHECK (action_type IN (
     'STOCK_ADD', 'STOCK_EDIT', 'STOCK_DELETE', 'DISTRIBUTE_TO_TEAM',
     'RETURN_TO_STOCK', 'TRANSFER_BETWEEN_TEAMS', 'STOCK_ADJUSTMENT'

@@ -7,7 +7,7 @@
 -- 1) Delivery notes – irsaliye başlığı
 CREATE TABLE IF NOT EXISTS public.delivery_notes (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   supplier text NOT NULL,
   received_date date NOT NULL,
   irsaliye_no text NOT NULL,

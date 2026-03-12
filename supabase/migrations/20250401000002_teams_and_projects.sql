@@ -8,7 +8,7 @@
 -- 1) Teams – ekipler (lider, araç, onay durumu, manuel üyeler json)
 CREATE TABLE IF NOT EXISTS public.teams (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   code text NOT NULL,
   description text,
   percentage numeric(5,2) NOT NULL DEFAULT 0 CHECK (percentage >= 0 AND percentage <= 100),
@@ -30,7 +30,7 @@ COMMENT ON TABLE public.teams IS 'Teams; Team Leader sees only rows where leader
 -- 2) Projects – projeler (kampanya, yıl, dış ID, durum, tamamlayan)
 CREATE TABLE IF NOT EXISTS public.projects (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   campaign_id uuid NOT NULL REFERENCES public.campaigns(id) ON DELETE RESTRICT,
   project_year int NOT NULL CHECK (project_year >= 2000 AND project_year <= 2100),
   external_project_id text NOT NULL,

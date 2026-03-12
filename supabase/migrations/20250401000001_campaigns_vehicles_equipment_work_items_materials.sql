@@ -15,7 +15,7 @@ END $$;
 -- 1) Campaigns – şirket kampanyaları (proje grupları)
 CREATE TABLE IF NOT EXISTS public.campaigns (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   name text NOT NULL,
   created_at timestamptz NOT NULL DEFAULT now()
 );
@@ -25,7 +25,7 @@ COMMENT ON TABLE public.campaigns IS 'Company campaigns; projects are linked to 
 -- 2) Vehicles – şirket araçları (ekiplere atanabilir)
 CREATE TABLE IF NOT EXISTS public.vehicles (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   plate_number text NOT NULL,
   brand text NOT NULL,
   model text NOT NULL,
@@ -37,7 +37,7 @@ COMMENT ON TABLE public.vehicles IS 'Company vehicles; can be assigned to teams.
 -- 3) Equipment – ekipman (iş kaydında equipmentIds ile referans)
 CREATE TABLE IF NOT EXISTS public.equipment (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   code text NOT NULL,
   description text NOT NULL DEFAULT ''
 );
@@ -47,7 +47,7 @@ COMMENT ON TABLE public.equipment IS 'Company equipment; referenced in job recor
 -- 4) Work Items – iş kalemleri (birim fiyat, birim türü)
 CREATE TABLE IF NOT EXISTS public.work_items (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   code text NOT NULL,
   unit_type text NOT NULL,
   unit_price numeric(12,2) NOT NULL DEFAULT 0,
@@ -59,7 +59,7 @@ COMMENT ON TABLE public.work_items IS 'Work item definitions; unit price and typ
 -- 5) Materials – basit malzeme kaydı (fiyat; bazı ekranlarda kullanılır)
 CREATE TABLE IF NOT EXISTS public.materials (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   code text NOT NULL,
   price numeric(12,2) NOT NULL DEFAULT 0
 );

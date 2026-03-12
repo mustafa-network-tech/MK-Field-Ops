@@ -17,7 +17,7 @@ BEGIN
     DROP POLICY IF EXISTS companies_select_own ON public.companies;
     CREATE POLICY companies_select_own ON public.companies
       FOR SELECT TO authenticated
-      USING (id = (SELECT company_id::text FROM public.profiles WHERE id = auth.uid()));
+      USING (id = (SELECT company_id FROM public.profiles WHERE id = auth.uid()));
   END IF;
 END $$;
 
@@ -29,9 +29,9 @@ BEGIN
     CREATE POLICY companies_update_cm_pm ON public.companies
       FOR UPDATE TO authenticated
       USING (
-        id = (SELECT company_id::text FROM public.profiles WHERE id = auth.uid())
+        id = (SELECT company_id FROM public.profiles WHERE id = auth.uid())
         AND (SELECT role FROM public.profiles WHERE id = auth.uid()) IN ('companyManager', 'projectManager')
       )
-      WITH CHECK (id = (SELECT company_id::text FROM public.profiles WHERE id = auth.uid()));
+      WITH CHECK (id = (SELECT company_id FROM public.profiles WHERE id = auth.uid()));
   END IF;
 END $$;

@@ -8,7 +8,7 @@
 -- 1) Jobs – iş kayıtları (tarih, proje, ekip, iş kalemi, miktar, malzeme/ekipman, onay)
 CREATE TABLE IF NOT EXISTS public.jobs (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  company_id text NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid NOT NULL REFERENCES public.companies(id) ON DELETE CASCADE,
   job_date date NOT NULL,
   project_id uuid REFERENCES public.projects(id) ON DELETE SET NULL,
   team_id uuid NOT NULL REFERENCES public.teams(id) ON DELETE RESTRICT,
@@ -41,7 +41,7 @@ COMMENT ON TABLE public.jobs IS 'Job records; payroll trigger sets payroll_perio
 
 -- 2) Payroll period settings – şirket başına dönem başlangıç günü (ayın kaçı)
 CREATE TABLE IF NOT EXISTS public.payroll_period_settings (
-  company_id text PRIMARY KEY REFERENCES public.companies(id) ON DELETE CASCADE,
+  company_id uuid PRIMARY KEY REFERENCES public.companies(id) ON DELETE CASCADE,
   start_day_of_month int NOT NULL CHECK (start_day_of_month >= 1 AND start_day_of_month <= 31),
   updated_by uuid REFERENCES public.profiles(id) ON DELETE SET NULL,
   updated_at timestamptz NOT NULL DEFAULT now()
