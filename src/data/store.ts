@@ -188,10 +188,11 @@ export const store = {
     return this.getUsers().find((u) => u.id === uid);
   },
 
-  /** Set current user from Supabase profile. Upserts into users list and sets current user. */
+  /** Set current user from Supabase profile. Upserts into users list and sets current user. Isolates store to this tenant. */
   setUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
     const u = this.mergeUserFromProfile(profile, email);
     this.setCurrentUserId(profile.id);
+    if (profile.company_id) this.isolateTenantData(profile.company_id);
     return u;
   },
 
@@ -792,6 +793,50 @@ export const store = {
     }
     save(STORAGE_KEYS.payrollPeriodSettings, list);
     return settings;
+  },
+
+  /**
+   * Strict tenant isolation: keep only data for this company in storage.
+   * Call after login/restore so the panel never shows another company's data (logo, names, jobs, etc.).
+   */
+  isolateTenantData(companyId: string): void {
+    if (!companyId) return;
+    const companies = load<Company[]>(STORAGE_KEYS.companies, []).filter((c) => c.id === companyId);
+    save(STORAGE_KEYS.companies, companies);
+    const users = load<User[]>(STORAGE_KEYS.users, []).filter((u) => u.companyId === companyId);
+    save(STORAGE_KEYS.users, users);
+    const teams = load<Team[]>(STORAGE_KEYS.teams, []).filter((t) => t.companyId === companyId);
+    save(STORAGE_KEYS.teams, teams);
+    const vehicles = load<Vehicle[]>(STORAGE_KEYS.vehicles, []).filter((v) => v.companyId === companyId);
+    save(STORAGE_KEYS.vehicles, vehicles);
+    const materials = load<Material[]>(STORAGE_KEYS.materials, []).filter((m) => m.companyId === companyId);
+    save(STORAGE_KEYS.materials, materials);
+    const materialStock = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId === companyId);
+    save(STORAGE_KEYS.materialStock, materialStock);
+    const deliveryNotes = load<DeliveryNote[]>(STORAGE_KEYS.deliveryNotes, []).filter((n) => n.companyId === companyId);
+    save(STORAGE_KEYS.deliveryNotes, deliveryNotes);
+    const noteIds = new Set(deliveryNotes.map((n) => n.id));
+    const deliveryNoteItems = load<DeliveryNoteItem[]>(STORAGE_KEYS.deliveryNoteItems, []).filter((i) => noteIds.has(i.deliveryNoteId));
+    save(STORAGE_KEYS.deliveryNoteItems, deliveryNoteItems);
+    const equipment = load<Equipment[]>(STORAGE_KEYS.equipment, []).filter((e) => e.companyId === companyId);
+    save(STORAGE_KEYS.equipment, equipment);
+    const workItems = load<WorkItem[]>(STORAGE_KEYS.workItems, []).filter((w) => w.companyId === companyId);
+    save(STORAGE_KEYS.workItems, workItems);
+    const campaigns = load<Campaign[]>(STORAGE_KEYS.campaigns, []).filter((c) => c.companyId === companyId);
+    save(STORAGE_KEYS.campaigns, campaigns);
+    const campaignIds = new Set(campaigns.map((c) => c.id));
+    const rawProjects = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const projects = migrateProjects(rawProjects).filter((p) => p.companyId === companyId && campaignIds.has(p.campaignId));
+    save(STORAGE_KEYS.projects, projects);
+    const jobs = load<JobRecord[]>(STORAGE_KEYS.jobs, []).filter((j) => j.companyId === companyId);
+    save(STORAGE_KEYS.jobs, jobs);
+    const payrollSettings = load<PayrollPeriodSettings[]>(STORAGE_KEYS.payrollPeriodSettings, []).filter((s) => s.companyId === companyId);
+    save(STORAGE_KEYS.payrollPeriodSettings, payrollSettings);
+    const teamIds = new Set(teams.map((t) => t.id));
+    const teamAllocs = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []).filter((a) => teamIds.has(a.teamId));
+    save(STORAGE_KEYS.teamMaterialAllocations, teamAllocs);
+    const materialAuditLog = load<MaterialAuditLogEntry[]>(STORAGE_KEYS.materialAuditLog, []).filter((e) => e.companyId === companyId);
+    save(STORAGE_KEYS.materialAuditLog, materialAuditLog);
   },
 };
 

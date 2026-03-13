@@ -49,6 +49,7 @@ export const authService = {
     if (!user || !checkPassword(password, user.passwordHash)) return { ok: false, error: 'auth.loginError' };
     if (user.roleApprovalStatus !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
     store.setCurrentUserId(user.id);
+    if (user.companyId) store.isolateTenantData(user.companyId);
     return { ok: true };
   },
 
