@@ -188,7 +188,7 @@ export function DeliveryNotes() {
         sizeLabel: l.materialSize.trim() || undefined,
         materialDetailId: l.materialId.trim() || undefined,
         quantity: Math.floor(Number(l.quantity) || 0),
-        unit: l.unit,
+        unit: (l.unit && ['adet', 'metre', 'kilo', 'metreküp'].includes(l.unit) ? l.unit : 'adet') as 'adet' | 'metre' | 'kilo' | 'metreküp',
       })),
     });
     setForm({ supplier: '', receivedDate: new Date().toISOString().slice(0, 10), irsaliyeNo: '' });

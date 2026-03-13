@@ -1,0 +1,119 @@
+.page {
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: 'DM Sans', sans-serif;
+  color: #0f172a;
+}
+
+.header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+.backLink {
+  color: #475569;
+  text-decoration: none;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.backLink:hover {
+  color: #2563eb;
+}
+
+.doc {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 3rem;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.mainTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.lead {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: #334155;
+  margin: 0 0 1.25rem;
+}
+
+.doc p {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #475569;
+  margin: 0 0 1rem;
+}
+
+.subHeading {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #334155;
+  margin: 1rem 0 0.35rem !important;
+}
+
+.doc .h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 2rem 0 0.75rem;
+}
+
+.doc .h2:first-of-type {
+  margin-top: 1.5rem;
+}
+
+.doc ul {
+  margin: 0 0 1rem;
+  padding-left: 1.5rem;
+}
+
+.doc li {
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.contactBlock {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.5rem 0 1rem;
+}
+
+.contactBlock li {
+  margin-bottom: 0.25rem;
+}
+
+@media (max-width: 640px) {
+  .doc {
+    padding: 1.5rem 1rem 2rem;
+  }
+
+  .mainTitle {
+    font-size: 1.5rem;
+  }
+
+  .doc .h2 {
+    font-size: 1.0625rem;
+  }
+}
