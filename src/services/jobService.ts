@@ -125,8 +125,8 @@ export function addJob(
   }
 ): AddJobResult {
   if (!user) return { ok: false, error: 'jobs.validation.unauthorized' };
-  const project = store.getProject(params.projectId);
-  if (!project || project.companyId !== params.companyId || project.status !== 'ACTIVE') {
+  const project = store.getProject(params.projectId, params.companyId);
+  if (!project || project.status !== 'ACTIVE') {
     return { ok: false, error: 'projects.projectNotFound' };
   }
   if (!canUserUseTeamForJob(user, params.teamId, params.companyId)) {

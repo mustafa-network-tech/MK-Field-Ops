@@ -127,7 +127,9 @@ export const store = {
     save(STORAGE_KEYS.companies, companies);
     return company;
   },
-  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code'>>): Company | undefined {
+  /** Update company. Pass onlyForCompanyId to enforce tenant isolation (update only if companyId === onlyForCompanyId). */
+  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code'>>, onlyForCompanyId?: string): Company | undefined {
+    if (onlyForCompanyId != null && companyId !== onlyForCompanyId) return undefined;
     const companies = this.getCompanies();
     const i = companies.findIndex((c) => c.id === companyId);
     if (i === -1) return undefined;
@@ -135,7 +137,9 @@ export const store = {
     save(STORAGE_KEYS.companies, companies);
     return companies[i];
   },
-  getCompany(id: string): Company | undefined {
+  /** Returns company only if it matches id. Pass onlyForCompanyId to enforce tenant isolation (return undefined if id !== onlyForCompanyId). */
+  getCompany(id: string, onlyForCompanyId?: string): Company | undefined {
+    if (onlyForCompanyId != null && id !== onlyForCompanyId) return undefined;
     const c = this.getCompanies().find((x) => x.id === id);
     return c ? { ...c, language_code: (c.language_code ?? 'en') as Company['language_code'] } : undefined;
   },
@@ -593,8 +597,13 @@ export const store = {
   getCampaigns(companyId: string): Campaign[] {
     return load<Campaign[]>(STORAGE_KEYS.campaigns, []).filter((c) => c.companyId === companyId);
   },
-  getCampaign(id: string): Campaign | undefined {
-    return load<Campaign[]>(STORAGE_KEYS.campaigns, []).find((c) => c.id === id);
+  /** Returns campaign only if it belongs to the given company (ensures tenant isolation). */
+  getCampaign(id: string, companyId?: string): Campaign | undefined {
+    const list = load<Campaign[]>(STORAGE_KEYS.campaigns, []);
+    const c = list.find((x) => x.id === id);
+    if (!c) return undefined;
+    if (companyId != null && c.companyId !== companyId) return undefined;
+    return c;
   },
   addCampaign(campaign: Omit<Campaign, 'id' | 'createdAt'>): Campaign {
     const list = load<Campaign[]>(STORAGE_KEYS.campaigns, []);
@@ -603,10 +612,11 @@ export const store = {
     save(STORAGE_KEYS.campaigns, list);
     return newC;
   },
-  updateCampaign(id: string, patch: Partial<Pick<Campaign, 'name'>>): Campaign | undefined {
+  updateCampaign(id: string, patch: Partial<Pick<Campaign, 'name'>>, companyId?: string): Campaign | undefined {
     const list = load<Campaign[]>(STORAGE_KEYS.campaigns, []);
     const i = list.findIndex((x) => x.id === id);
     if (i === -1) return undefined;
+    if (companyId != null && list[i].companyId !== companyId) return undefined;
     list[i] = { ...list[i], ...patch };
     save(STORAGE_KEYS.campaigns, list);
     return list[i];
@@ -627,10 +637,14 @@ export const store = {
     if (options?.status) out = out.filter((p) => p.status === options.status);
     return out;
   },
-  getProject(id: string): Project | undefined {
+  /** Returns project only if it belongs to the given company (ensures tenant isolation). */
+  getProject(id: string, companyId?: string): Project | undefined {
     const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
     const list = migrateProjects(raw);
-    return list.find((p) => p.id === id);
+    const p = list.find((x) => x.id === id);
+    if (!p) return undefined;
+    if (companyId != null && p.companyId !== companyId) return undefined;
+    return p;
   },
   addProject(project: Omit<Project, 'id' | 'createdAt' | 'updatedAt'>): Project {
     const raw = load<unknown[]>(STORAGE_KEYS.projects, []);

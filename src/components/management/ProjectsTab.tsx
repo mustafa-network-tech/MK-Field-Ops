@@ -157,11 +157,11 @@ export function ProjectsTab() {
   };
 
   const getCampaignName = (campaignId: string): string => {
-    const c = store.getCampaign(campaignId);
+    const c = store.getCampaign(campaignId, companyId);
     return c?.name ?? campaignId;
   };
 
-  const selectedProject = selectedProjectId ? store.getProject(selectedProjectId) : null;
+  const selectedProject = selectedProjectId ? store.getProject(selectedProjectId, companyId) : null;
   const projectJobsAll = selectedProjectId
     ? store.getJobs(companyId).filter((j) => j.projectId === selectedProjectId)
     : [];

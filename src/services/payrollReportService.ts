@@ -49,7 +49,7 @@ export function getPayrollReportData(
   reportType: 'company' | 'team',
   teamId?: string
 ): PayrollReportData {
-  const company = store.getCompany(companyId);
+  const company = store.getCompany(companyId, companyId);
   const companyName = company?.name ?? companyId;
   const teams = store.getTeams(companyId);
   const workItems = store.getWorkItems(companyId);

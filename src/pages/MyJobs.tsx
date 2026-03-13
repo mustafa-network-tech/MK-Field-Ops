@@ -50,7 +50,7 @@ export function MyJobs() {
   const getWorkItemCode = (id: string) => workItems.find((w) => w.id === id)?.code ?? id;
   const getProjectKey = (projectId?: string) => {
     if (!projectId) return '–';
-    const p = store.getProject(projectId);
+    const p = store.getProject(projectId, companyId);
     return p ? getProjectDisplayKey(p) : '–';
   };
   const [actionError, setActionError] = useState('');

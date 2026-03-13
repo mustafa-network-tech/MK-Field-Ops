@@ -55,7 +55,7 @@ export function TopBar() {
 
   if (!user) return null;
 
-  const company = user.companyId ? store.getCompany(user.companyId) : undefined;
+  const company = user.companyId ? store.getCompany(user.companyId, user.companyId) : undefined;
   const companyName = company?.name ?? '';
   const companyLogoUrl = company?.logo_url ?? null;
   const canChangeLanguage = user.role === 'companyManager' || user.role === 'projectManager';

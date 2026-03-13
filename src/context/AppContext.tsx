@@ -39,7 +39,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const company = useMemo(() => {
     if (!user?.companyId) return undefined;
-    return store.getCompany(user.companyId);
+    return store.getCompany(user.companyId, user.companyId);
   }, [user?.companyId, companyRefresh]);
 
   useEffect(() => {

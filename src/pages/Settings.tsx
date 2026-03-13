@@ -17,7 +17,7 @@ export function Settings() {
   const canAccess = user?.role === 'companyManager' || user?.role === 'projectManager';
   const canEditCompany = user?.role === 'companyManager';
 
-  const company = companyId ? store.getCompany(companyId) : undefined;
+  const company = companyId ? store.getCompany(companyId, companyId) : undefined;
   const existing = store.getPayrollPeriodSettings(companyId);
   const [startDay, setStartDay] = useState<string>(
     existing ? String(existing.startDayOfMonth) : '20'
@@ -125,7 +125,7 @@ export function Settings() {
       }
       const prevName = company?.name;
       const prevLogo = company?.logo_url ?? null;
-      store.updateCompany(companyId, { name: companyName.trim() || company?.name, logo_url: newLogoUrl });
+      store.updateCompany(companyId, { name: companyName.trim() || company?.name, logo_url: newLogoUrl }, companyId);
       setLogoUrl(newLogoUrl);
       setPendingFile(null);
       setRemoveLogo(false);

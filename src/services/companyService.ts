@@ -38,7 +38,7 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
     language_code,
     ...(data.name != null && { name: data.name }),
     ...(data.logo_url !== undefined && { logo_url: data.logo_url ?? null }),
-  });
+  }, companyId);
 }
 
 /**
@@ -52,7 +52,7 @@ export async function updateCompanyLanguageInSupabase(
   if (!VALID_LANGUAGE_CODES.includes(language_code)) {
     return { ok: false, error: 'Invalid language code' };
   }
-  const updated = store.updateCompany(companyId, { language_code });
+  const updated = store.updateCompany(companyId, { language_code }, companyId);
   if (!updated) return { ok: false, error: 'Company not found' };
   if (!supabase) return { ok: true };
   const { error } = await supabase

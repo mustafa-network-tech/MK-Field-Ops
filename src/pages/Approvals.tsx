@@ -44,7 +44,7 @@ export function Approvals() {
   const getCreatorName = (id: string) => users.find((u) => u.id === id)?.fullName ?? id;
   const getProjectKey = (projectId?: string) => {
     if (!projectId) return '–';
-    const p = store.getProject(projectId);
+    const p = store.getProject(projectId, companyId);
     return p ? getProjectDisplayKey(p) : '–';
   };
   const [actionError, setActionError] = useState('');
