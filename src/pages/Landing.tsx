@@ -65,6 +65,7 @@ export function Landing() {
   const { t, locale, setLocale } = useI18n();
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const langRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -217,22 +218,249 @@ export function Landing() {
         </div>
       </section>
 
-      {/* 6) FİYATLANDIRMA (demo) */}
+      {/* 6) FİYATLANDIRMA */}
       <section id="pricing" className={styles.section}>
         <div className={styles.sectionInner}>
-          <h2 className={styles.sectionTitle}>{t('landing.pricingTitle')}</h2>
+          <div className={styles.pricingHeader}>
+            <h2 className={styles.sectionTitle}>{t('landing.pricingTitle')}</h2>
+            <div className={styles.pricingSubtitle}>
+              <span className={styles.pricingPill}>
+                <span className={styles.pricingPillIcon} aria-hidden>
+                  ✔
+                </span>
+                <span>{t('landing.pricingBadgeTrial')}</span>
+              </span>
+              <span className={styles.pricingPill}>
+                <span className={styles.pricingPillIcon} aria-hidden>
+                  ✔
+                </span>
+                <span>{t('landing.pricingBadgeCancel')}</span>
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.pricingToggleRow}>
+            <div
+              className={styles.pricingToggle}
+              role="tablist"
+              aria-label={t('landing.pricingToggleAria')}
+            >
+              <button
+                type="button"
+                className={styles.pricingToggleOption}
+                data-active={billingPeriod === 'monthly'}
+                onClick={() => setBillingPeriod('monthly')}
+                role="tab"
+                aria-selected={billingPeriod === 'monthly'}
+              >
+                {t('landing.pricingToggleMonthly')}
+              </button>
+              <button
+                type="button"
+                className={styles.pricingToggleOption}
+                data-active={billingPeriod === 'yearly'}
+                onClick={() => setBillingPeriod('yearly')}
+                role="tab"
+                aria-selected={billingPeriod === 'yearly'}
+              >
+                {t('landing.pricingToggleYearly')}{' '}
+                <span className={styles.pricingToggleBadge}>
+                  {t('landing.pricingToggleYearlyBadge')}
+                </span>
+              </button>
+            </div>
+          </div>
+
           <div className={styles.pricingGrid}>
             <div className={styles.pricingCard}>
               <h3 className={styles.pricingCardTitle}>{t('landing.planStarter')}</h3>
-              <p className={styles.pricingDemo}>—</p>
+              <p className={styles.pricingPrice}>
+                {billingPeriod === 'monthly'
+                  ? t('landing.pricingPriceStarterMonthly')
+                  : t('landing.pricingPriceStarterYearly')}
+              </p>
+              <div className={styles.pricingDivider} />
+              <div className={styles.pricingLists}>
+                <div className={styles.pricingListGroup}>
+                  <p className={styles.pricingListTitle}>
+                    {t('landing.pricingFeaturesTitle')}
+                  </p>
+                  <ul className={styles.pricingList}>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingStarterFeature1')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingStarterFeature2')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingStarterFeature3')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingStarterFeature4')}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className={styles.pricingListGroup}>
+                  <p className={styles.pricingListTitle}>
+                    {t('landing.pricingLimitationsTitle')}
+                  </p>
+                  <ul className={styles.pricingList}>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingMinus} aria-hidden>—</span>
+                      <span>{t('landing.pricingStarterLimit1')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingMinus} aria-hidden>—</span>
+                      <span>{t('landing.pricingStarterLimit2')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingMinus} aria-hidden>—</span>
+                      <span>{t('landing.pricingStarterLimit3')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingMinus} aria-hidden>—</span>
+                      <span>{t('landing.pricingStarterLimit4')}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <button type="button" className={styles.pricingButton}>
+                {t('landing.navStartFree')}
+              </button>
             </div>
             <div className={styles.pricingCardFeatured}>
               <h3 className={styles.pricingCardTitle}>{t('landing.planPro')}</h3>
-              <p className={styles.pricingDemo}>—</p>
+              <p className={styles.pricingBadge}>
+                <span className={styles.pricingBadgeStar} aria-hidden>
+                  ★
+                </span>
+                {t('landing.pricingMostPopularBadge')}
+              </p>
+              <p className={styles.pricingPrice}>
+                {billingPeriod === 'monthly'
+                  ? t('landing.pricingPriceProMonthly')
+                  : t('landing.pricingPriceProYearly')}
+              </p>
+              <div className={styles.pricingDivider} />
+              <div className={styles.pricingLists}>
+                <div className={styles.pricingListGroup}>
+                  <p className={styles.pricingListTitle}>
+                    {t('landing.pricingFeaturesTitle')}
+                  </p>
+                  <ul className={styles.pricingList}>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProFeature1')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProFeature2')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProFeature3')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProFeature4')}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className={styles.pricingListGroup}>
+                  <p className={styles.pricingListTitle}>
+                    {t('landing.pricingOperationsTitle')}
+                  </p>
+                  <ul className={styles.pricingList}>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProOp1')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProOp2')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProOp3')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingProOp4')}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <button type="button" className={styles.pricingButtonPrimary}>
+                {t('landing.navStartFree')}
+              </button>
             </div>
             <div className={styles.pricingCard}>
               <h3 className={styles.pricingCardTitle}>{t('landing.planEnterprise')}</h3>
-              <p className={styles.pricingDemo}>—</p>
+              <p className={styles.pricingPrice}>
+                {billingPeriod === 'monthly'
+                  ? t('landing.pricingPriceEnterpriseMonthly')
+                  : t('landing.pricingPriceEnterpriseYearly')}
+              </p>
+              <div className={styles.pricingDivider} />
+              <div className={styles.pricingLists}>
+                <div className={styles.pricingListGroup}>
+                  <p className={styles.pricingListTitle}>
+                    {t('landing.pricingFeaturesTitle')}
+                  </p>
+                  <ul className={styles.pricingList}>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature1')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature2')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature3')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature4')}</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className={styles.pricingListGroup}>
+                  <p className={styles.pricingListTitle}>
+                    {t('landing.pricingOperationsTitle')}
+                  </p>
+                  <ul className={styles.pricingList}>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseOp1')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseOp2')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseOp3')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseOp4')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseOp5')}</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              <button type="button" className={styles.pricingButton}>
+                {t('landing.navStartFree')}
+              </button>
             </div>
           </div>
         </div>
