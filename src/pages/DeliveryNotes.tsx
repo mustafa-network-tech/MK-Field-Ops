@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
+import { canPlanAccessFeature } from '../services/planGating';
 import { store } from '../data/store';
 import { Card } from '../components/ui/Card';
 import type { DeliveryNote, DeliveryNoteItem } from '../types';
@@ -26,9 +27,21 @@ const emptyLine: LineItem = {
 
 export function DeliveryNotes() {
   const { t } = useI18n();
-  const { user } = useApp();
+  const { user, company } = useApp();
   const companyId = user?.companyId ?? '';
-  const canAccess = user?.role === 'companyManager' || user?.role === 'projectManager';
+  const planAllowsDeliveryNotes = canPlanAccessFeature(company?.plan, 'deliveryNotes');
+  const canAccess = (user?.role === 'companyManager' || user?.role === 'projectManager') && planAllowsDeliveryNotes;
+
+  if (!planAllowsDeliveryNotes) {
+    return (
+      <div className={styles.page}>
+        <h1 className={styles.pageTitle}>{t('deliveryNotes.title')}</h1>
+        <Card title={t('planUpgrade.title')}>
+          <p className={styles.restrictedMessage}>{t('planUpgrade.deliveryNotes')}</p>
+        </Card>
+      </div>
+    );
+  }
 
   const notes = store.getDeliveryNotes(companyId);
   const stockItems = store.getMaterialStock(companyId);

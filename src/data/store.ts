@@ -679,6 +679,33 @@ export const store = {
     save(STORAGE_KEYS.projects, list);
     return newP;
   },
+  /** For Starter plan: ensure one default campaign and one default project exist so job entry can run without project UI. Returns default project id or null. */
+  ensureStarterDefaultProject(companyId: string, plan: string | null | undefined): string | null {
+    if (plan !== 'starter') return null;
+    const campaigns = this.getCampaigns(companyId);
+    let defaultCamp = campaigns.find((c) => c.name === 'Default');
+    if (!defaultCamp) {
+      defaultCamp = this.addCampaign({ companyId, name: 'Default' });
+    }
+    const projects = this.getProjects(companyId, { campaignId: defaultCamp.id, status: 'ACTIVE' });
+    if (projects.length > 0) return projects[0].id;
+    const year = new Date().getFullYear();
+    try {
+      const proj = this.addProject({
+        companyId,
+        campaignId: defaultCamp.id,
+        projectYear: year,
+        externalProjectId: 'STARTER-DEFAULT',
+        receivedDate: new Date().toISOString().slice(0, 10),
+        name: 'Default',
+        status: 'ACTIVE',
+        createdBy: '',
+      });
+      return proj.id;
+    } catch {
+      return null;
+    }
+  },
   updateProject(id: string, patch: Partial<Pick<Project, 'name' | 'description' | 'status' | 'campaignId' | 'projectYear' | 'externalProjectId' | 'receivedDate' | 'completedAt' | 'completedBy'>>): Project | undefined {
     const raw = load<unknown[]>(STORAGE_KEYS.projects, []);
     const list = migrateProjects(raw);

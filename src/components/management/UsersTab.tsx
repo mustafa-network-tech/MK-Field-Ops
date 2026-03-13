@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { authService } from '../../services/authService';
+import { canPlanAddUser } from '../../services/planGating';
 import { Card } from '../ui/Card';
 import type { User as UserType, Role } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -17,12 +18,14 @@ type JoinRequestRow = { id: string; user_id: string; full_name: string | null; e
 
 export function UsersTab() {
   const { t } = useI18n();
-  const { user: currentUser, refreshUser } = useApp();
+  const { user: currentUser, company, refreshUser } = useApp();
   const companyId = currentUser?.companyId ?? '';
   const [, setProfilesFetched] = useState(false);
   const [joinRequests, setJoinRequests] = useState<JoinRequestRow[]>([]);
+  const [limitError, setLimitError] = useState('');
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
+  const canAddMoreUsers = canPlanAddUser(company?.plan, users.length);
 
   const loadJoinRequests = useCallback(async () => {
     if (!companyId) return;
@@ -71,6 +74,11 @@ export function UsersTab() {
   };
 
   const handleApproveJoinRequest = async (reqId: string) => {
+    setLimitError('');
+    if (!canPlanAddUser(company?.plan, users.length)) {
+      setLimitError(t('onboarding.userLimitReached'));
+      return;
+    }
     const ok = await authService.approveJoinRequest(reqId, joinReqRole);
     if (ok) {
       setApprovingReqId(null);
@@ -87,6 +95,10 @@ export function UsersTab() {
 
   return (
     <>
+      {!canAddMoreUsers && users.length > 0 && (
+        <p className={styles.errorText}>{t('onboarding.userLimitReached')}</p>
+      )}
+      {limitError && <p className={styles.errorText}>{limitError}</p>}
       {isCompanyManager && joinRequests.length > 0 && (
         <Card title={t('joinRequests.title')}>
           <table className={styles.table}>
@@ -115,7 +127,7 @@ export function UsersTab() {
                           <option value="projectManager">{t('roles.projectManager')}</option>
                           <option value="teamLeader">{t('roles.teamLeader')}</option>
                         </select>
-                        <button type="button" className={styles.smallBtnOk} onClick={() => handleApproveJoinRequest(req.id)}>
+                        <button type="button" className={styles.smallBtnOk} onClick={() => handleApproveJoinRequest(req.id)} disabled={!canAddMoreUsers}>
                           {t('joinRequests.approve')}
                         </button>
                         <button type="button" className={styles.smallBtnDanger} onClick={() => setApprovingReqId(null)}>
@@ -124,7 +136,7 @@ export function UsersTab() {
                       </>
                     ) : (
                       <>
-                        <button type="button" className={styles.smallBtnOk} onClick={() => setApprovingReqId(req.id)}>
+                        <button type="button" className={styles.smallBtnOk} onClick={() => setApprovingReqId(req.id)} disabled={!canAddMoreUsers}>
                           {t('joinRequests.approve')}
                         </button>
                         <button type="button" className={styles.smallBtnDanger} onClick={() => handleRejectJoinRequest(req.id)}>

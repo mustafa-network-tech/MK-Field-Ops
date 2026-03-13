@@ -91,6 +91,12 @@
     "approve": "Onayla",
     "reject": "Reddet"
   },
+  "planUpgrade": {
+    "title": "Plan yükseltmesi gerekli",
+    "deliveryNotes": "İrsaliye modülü mevcut planınızda yer almıyor. Bu modülü kullanmak için Professional veya Enterprise plana yükseltin.",
+    "projects": "Proje ve kampanya yönetimi mevcut planınızda yok. Professional veya Enterprise plana yükseltin.",
+    "materials": "Malzeme stok takibi mevcut planınızda yok. Professional veya Enterprise plana yükseltin."
+  },
   "landing": {
     "navWhoWeAre": "Biz Kimiz",
     "navFeatures": "Özellikler",

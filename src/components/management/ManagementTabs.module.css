@@ -1,3 +1,9 @@
+.errorText {
+  color: #b91c1c;
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+}
+
 .toolbar {
   display: flex;
   justify-content: space-between;

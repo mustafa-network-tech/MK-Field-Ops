@@ -1,5 +1,6 @@
 import { store } from '../data/store';
 import type { Role } from '../types';
+import { canPlanAddUser } from './planGating';
 import { supabase } from './supabaseClient';
 
 function hashPassword(p: string): string {
@@ -187,6 +188,11 @@ export const authService = {
     if (!company) return { ok: false, error: 'auth.companyNotFound' };
     const cId = company.id;
     if (store.getUserByEmail(email, cId)) return { ok: false, error: 'auth.emailExists' };
+    const existingUsers = store.getUsers(cId);
+    const companyWithPlan = store.getCompany(cId, cId);
+    if (!canPlanAddUser(companyWithPlan?.plan, existingUsers.length)) {
+      return { ok: false, error: 'onboarding.userLimitReached' };
+    }
     store.addUser({
       companyId: cId,
       email,

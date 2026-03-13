@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
+import { canPlanAccessFeature } from '../services/planGating';
 import { store } from '../data/store';
 import { getTeamsForJobEntry } from '../services/teamScopeService';
 import { addJob } from '../services/jobService';
@@ -33,18 +34,29 @@ function isMeterType(mainType: string): boolean {
 
 export function JobEntry() {
   const { t, locale } = useI18n();
-  const { user } = useApp();
+  const { user, company } = useApp();
   const companyId = user?.companyId ?? '';
+  const planAllowsProjects = canPlanAccessFeature(company?.plan, 'projects');
+  const defaultStarterProjectId = useMemo(
+    () => (company?.plan === 'starter' ? store.ensureStarterDefaultProject(companyId, company?.plan) : null),
+    [companyId, company?.plan]
+  );
   const teams = getTeamsForJobEntry(companyId, user);
   const workItems = store.getWorkItems(companyId);
   const equipment = store.getEquipment(companyId);
   const stockItems = store.getMaterialStock(companyId);
-  const campaigns = store.getCampaigns(companyId);
-  const activeProjects = store.getProjects(companyId, { status: 'ACTIVE' });
+  const campaigns = planAllowsProjects ? store.getCampaigns(companyId) : [];
+  const activeProjects = planAllowsProjects ? store.getProjects(companyId, { status: 'ACTIVE' }) : [];
+  const starterProjectId = defaultStarterProjectId ?? (activeProjects.length > 0 ? activeProjects[0].id : '');
 
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [campaignId, setCampaignId] = useState('');
   const [projectId, setProjectId] = useState('');
+  useEffect(() => {
+    if (company?.plan === 'starter' && starterProjectId && !projectId) {
+      setProjectId(starterProjectId);
+    }
+  }, [company?.plan, starterProjectId, projectId]);
   const [teamId, setTeamId] = useState('');
   const [workItemId, setWorkItemId] = useState('');
   const projectsInCampaign = campaignId
@@ -140,7 +152,8 @@ export function JobEntry() {
       setSubmitError('validation.positiveNumber');
       return;
     }
-    if (!projectId) {
+    const effectiveProjectId = planAllowsProjects ? projectId : starterProjectId;
+    if (!effectiveProjectId) {
       setSubmitError('projects.projectNotFound');
       return;
     }
@@ -153,7 +166,7 @@ export function JobEntry() {
     const result = addJob(user, {
       companyId,
       date,
-      projectId,
+      projectId: effectiveProjectId,
       teamId,
       workItemId,
       quantity,
@@ -168,8 +181,10 @@ export function JobEntry() {
       return;
     }
     setQuantity(1);
-    setCampaignId('');
-    setProjectId('');
+    if (planAllowsProjects) {
+      setCampaignId('');
+      setProjectId('');
+    }
     setMaterialUsages([]);
     setEquipmentIds([]);
     setNotes('');
@@ -203,41 +218,45 @@ export function JobEntry() {
               {t('jobs.date')}
               <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={styles.input} required />
             </label>
-            <label className={styles.label}>
-              {t('campaigns.campaign')}
-              <select
-                value={campaignId}
-                onChange={(e) => { setCampaignId(e.target.value); setProjectId(''); }}
-                className={styles.input}
-                required
-              >
-                <option value="">-- {t('campaigns.selectCampaign')} --</option>
-                {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              {campaigns.length === 0 && <p className={styles.hint}>{t('campaigns.noCampaigns')}</p>}
-            </label>
+            {planAllowsProjects && (
+              <label className={styles.label}>
+                {t('campaigns.campaign')}
+                <select
+                  value={campaignId}
+                  onChange={(e) => { setCampaignId(e.target.value); setProjectId(''); }}
+                  className={styles.input}
+                  required
+                >
+                  <option value="">-- {t('campaigns.selectCampaign')} --</option>
+                  {campaigns.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+                {campaigns.length === 0 && <p className={styles.hint}>{t('campaigns.noCampaigns')}</p>}
+              </label>
+            )}
           </div>
           <div className={styles.row}>
-            <label className={styles.label}>
-              {t('projects.projectKey')}
-              <select
-                value={projectId}
-                onChange={(e) => setProjectId(e.target.value)}
-                className={styles.input}
-                required
-                disabled={!campaignId}
-              >
-                <option value="">-- {t('projects.selectProject')} --</option>
-                {projectsInCampaign.map((proj) => (
-                  <option key={proj.id} value={proj.id}>
-                    {getProjectDisplayKey(proj)}{proj.name ? ` — ${proj.name}` : ''}
-                  </option>
-                ))}
-              </select>
-              {campaignId && projectsInCampaign.length === 0 && <p className={styles.hint}>{t('projects.projectNotFound')}</p>}
-            </label>
+            {planAllowsProjects && (
+              <label className={styles.label}>
+                {t('projects.projectKey')}
+                <select
+                  value={projectId}
+                  onChange={(e) => setProjectId(e.target.value)}
+                  className={styles.input}
+                  required
+                  disabled={!campaignId}
+                >
+                  <option value="">-- {t('projects.selectProject')} --</option>
+                  {projectsInCampaign.map((proj) => (
+                    <option key={proj.id} value={proj.id}>
+                      {getProjectDisplayKey(proj)}{proj.name ? ` — ${proj.name}` : ''}
+                    </option>
+                  ))}
+                </select>
+                {campaignId && projectsInCampaign.length === 0 && <p className={styles.hint}>{t('projects.projectNotFound')}</p>}
+              </label>
+            )}
             <label className={styles.label}>
               {t('jobs.team')}
               <select value={teamId} onChange={(e) => { setTeamId(e.target.value); setAddMaterialId(''); }} className={styles.input} required>

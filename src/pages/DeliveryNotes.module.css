@@ -9,6 +9,11 @@
   margin: 0 0 1rem;
 }
 
+.restrictedMessage {
+  color: #64748b;
+  margin: 0;
+}
+
 .toolbar {
   display: flex;
   justify-content: space-between;

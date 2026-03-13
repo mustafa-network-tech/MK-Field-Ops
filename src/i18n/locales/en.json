@@ -91,6 +91,12 @@
     "approve": "Approve",
     "reject": "Reject"
   },
+  "planUpgrade": {
+    "title": "Plan upgrade required",
+    "deliveryNotes": "Delivery notes are not included in your current plan. Upgrade to Professional or Enterprise to use this module.",
+    "projects": "Project and campaign management are not included in your current plan. Upgrade to Professional or Enterprise.",
+    "materials": "Material stock tracking is not included in your current plan. Upgrade to Professional or Enterprise."
+  },
   "landing": {
     "navWhoWeAre": "Who We Are",
     "navFeatures": "Features",
