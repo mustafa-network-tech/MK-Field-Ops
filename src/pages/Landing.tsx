@@ -96,7 +96,7 @@ export function Landing() {
             <span className={styles.logoText}>MK-OPS</span>
           </a>
           <nav className={styles.navLinks}>
-            <a href="#who-we-are">{t('landing.navWhoWeAre')}</a>
+            <a href="#hero">{t('landing.navWhoWeAre')}</a>
             <a href="#features">{t('landing.navFeatures')}</a>
             <a href="#benefits">{t('landing.navBenefits')}</a>
             <a href="#pricing">{t('landing.navPricing')}</a>
