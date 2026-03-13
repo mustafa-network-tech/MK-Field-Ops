@@ -25,8 +25,9 @@ export function Login() {
         setError(t(result.error ?? 'auth.loginError'));
         return;
       }
-      setUser(store.getCurrentUser());
-      navigate('/', { replace: true });
+      const loggedUser = store.getCurrentUser();
+      setUser(loggedUser);
+      navigate(loggedUser?.companyId ? '/' : '/pending-join', { replace: true });
     } finally {
       setLoading(false);
     }

@@ -34,6 +34,9 @@
     "companyIdPlaceholder": "Enter company ID",
     "enterCompanyId": "Please enter company ID.",
     "companyNotFound": "Company not found.",
+    "joinCode": "Company join code",
+    "joinCodePlaceholder": "4 digits (e.g. 1234)",
+    "joinCodeInvalid": "Join code must be exactly 4 digits.",
     "pendingCompanyManagerApproval": "Your account was created. You cannot log in until a company manager approves you; after approval you can log in.",
     "role": "Role",
     "loginSuccess": "Login successful",
@@ -69,7 +72,24 @@
     "companyType": "Company Type",
     "country": "Country",
     "nextStep": "Next →",
-    "userLimitReached": "User limit reached. Please contact your company administrator to upgrade the plan."
+    "userLimitReached": "User limit reached. Please contact your company administrator to upgrade the plan.",
+    "plan": "Plan",
+    "planStarter": "Starter",
+    "planProfessional": "Professional",
+    "planEnterprise": "Enterprise",
+    "billingCycle": "Billing cycle",
+    "billingMonthly": "Monthly",
+    "billingYearly": "Yearly"
+  },
+  "pendingJoin": {
+    "title": "Join request pending",
+    "message": "Your request to join the company has been sent. The company manager will approve or reject it. You can log out and check back later."
+  },
+  "joinRequests": {
+    "title": "Join requests",
+    "noPending": "No pending join requests.",
+    "approve": "Approve",
+    "reject": "Reject"
   },
   "landing": {
     "navWhoWeAre": "Who We Are",
@@ -588,6 +608,8 @@
     "removeLogo": "Remove logo",
     "companySaved": "Company profile saved.",
     "companyProfileRestricted": "Only Company Manager can edit company profile.",
+    "joinCode": "Company join code",
+    "joinCodeHint": "4 digits. Used only when new members join your company during registration. Do not share publicly.",
     "logoUploadError": "Logo upload failed.",
     "logoBucketMissing": "Storage bucket \"company-logos\" does not exist. In Supabase Dashboard go to Storage → New bucket → name \"company-logos\" → set to Public → Create.",
     "logoFileLimit": "PNG, JPG or SVG, max 2MB.",

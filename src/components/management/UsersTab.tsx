@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
@@ -13,13 +13,22 @@ const roleKeys: Record<string, string> = {
   teamLeader: 'roles.teamLeader',
 };
 
+type JoinRequestRow = { id: string; user_id: string; full_name: string | null; email: string | null };
+
 export function UsersTab() {
   const { t } = useI18n();
-  const { user: currentUser } = useApp();
+  const { user: currentUser, refreshUser } = useApp();
   const companyId = currentUser?.companyId ?? '';
   const [, setProfilesFetched] = useState(false);
+  const [joinRequests, setJoinRequests] = useState<JoinRequestRow[]>([]);
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
+
+  const loadJoinRequests = useCallback(async () => {
+    if (!companyId) return;
+    const list = await authService.fetchJoinRequestsWithProfiles(companyId);
+    setJoinRequests(list);
+  }, [companyId]);
 
   useEffect(() => {
     if (!companyId || !currentUser) return;
@@ -27,9 +36,15 @@ export function UsersTab() {
     if (isCMorPM) {
       authService.fetchCompanyProfilesIntoStore(companyId).then(() => setProfilesFetched(true));
     }
-  }, [companyId, currentUser?.role]);
+    if (currentUser.role === 'companyManager') {
+      loadJoinRequests();
+    }
+  }, [companyId, currentUser?.role, loadJoinRequests]);
+
   const [approvingUserId, setApprovingUserId] = useState<string | null>(null);
   const [approveRole, setApproveRole] = useState<Role>('teamLeader');
+  const [approvingReqId, setApprovingReqId] = useState<string | null>(null);
+  const [joinReqRole, setJoinReqRole] = useState<Role>('teamLeader');
 
   const isCompanyManager = currentUser?.role === 'companyManager';
   const canGrantPriceVisibility = currentUser?.role === 'companyManager' || currentUser?.role === 'projectManager';
@@ -55,8 +70,75 @@ export function UsersTab() {
     setApprovingUserId(null);
   };
 
+  const handleApproveJoinRequest = async (reqId: string) => {
+    const ok = await authService.approveJoinRequest(reqId, joinReqRole);
+    if (ok) {
+      setApprovingReqId(null);
+      await authService.fetchCompanyProfilesIntoStore(companyId);
+      refreshUser();
+      loadJoinRequests();
+    }
+  };
+
+  const handleRejectJoinRequest = async (reqId: string) => {
+    const ok = await authService.rejectJoinRequest(reqId);
+    if (ok) loadJoinRequests();
+  };
+
   return (
     <>
+      {isCompanyManager && joinRequests.length > 0 && (
+        <Card title={t('joinRequests.title')}>
+          <table className={styles.table}>
+            <thead>
+              <tr>
+                <th>{t('auth.fullName')}</th>
+                <th>{t('auth.email')}</th>
+                <th>{t('common.actions')}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {joinRequests.map((req) => (
+                <tr key={req.id}>
+                  <td>{req.full_name ?? '–'}</td>
+                  <td>{req.email ?? '–'}</td>
+                  <td>
+                    {approvingReqId === req.id ? (
+                      <>
+                        <select
+                          value={joinReqRole}
+                          onChange={(e) => setJoinReqRole(e.target.value as Role)}
+                          className={styles.input}
+                          style={{ width: 'auto', marginRight: '0.5rem', marginBottom: 0 }}
+                        >
+                          <option value="companyManager">{t('roles.companyManager')}</option>
+                          <option value="projectManager">{t('roles.projectManager')}</option>
+                          <option value="teamLeader">{t('roles.teamLeader')}</option>
+                        </select>
+                        <button type="button" className={styles.smallBtnOk} onClick={() => handleApproveJoinRequest(req.id)}>
+                          {t('joinRequests.approve')}
+                        </button>
+                        <button type="button" className={styles.smallBtnDanger} onClick={() => setApprovingReqId(null)}>
+                          {t('common.cancel')}
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button type="button" className={styles.smallBtnOk} onClick={() => setApprovingReqId(req.id)}>
+                          {t('joinRequests.approve')}
+                        </button>
+                        <button type="button" className={styles.smallBtnDanger} onClick={() => handleRejectJoinRequest(req.id)}>
+                          {t('joinRequests.reject')}
+                        </button>
+                      </>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Card>
+      )}
       {isCompanyManager && pending.length > 0 && (
         <Card title={t('users.pendingApprovals')}>
           <table className={styles.table}>

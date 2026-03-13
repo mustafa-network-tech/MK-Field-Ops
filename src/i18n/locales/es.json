@@ -34,6 +34,9 @@
     "companyIdPlaceholder": "Introduzca el ID de empresa",
     "enterCompanyId": "Introduzca el ID de empresa.",
     "companyNotFound": "Empresa no encontrada.",
+    "joinCode": "Código de unión a empresa",
+    "joinCodePlaceholder": "4 dígitos (ej. 1234)",
+    "joinCodeInvalid": "El código debe ser exactamente 4 dígitos numéricos.",
     "pendingCompanyManagerApproval": "Su cuenta fue creada. No podrá iniciar sesión hasta que un responsable la apruebe.",
     "role": "Rol",
     "loginSuccess": "Sesión iniciada correctamente",
@@ -69,7 +72,24 @@
     "companyType": "Tipo de empresa",
     "country": "País",
     "nextStep": "Siguiente →",
-    "userLimitReached": "Límite de usuarios alcanzado. Contacte al administrador de su empresa para actualizar el plan."
+    "userLimitReached": "Límite de usuarios alcanzado. Contacte al administrador de su empresa para actualizar el plan.",
+    "plan": "Plan",
+    "planStarter": "Inicial",
+    "planProfessional": "Profesional",
+    "planEnterprise": "Empresarial",
+    "billingCycle": "Ciclo de facturación",
+    "billingMonthly": "Mensual",
+    "billingYearly": "Anual"
+  },
+  "pendingJoin": {
+    "title": "Solicitud de unión pendiente",
+    "message": "Su solicitud de unión a la empresa ha sido enviada. El responsable la aprobará o rechazará. Puede cerrar sesión y volver a entrar más tarde."
+  },
+  "joinRequests": {
+    "title": "Solicitudes de unión",
+    "noPending": "No hay solicitudes de unión pendientes.",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
   },
   "landing": {
     "navWhoWeAre": "Quiénes somos",
@@ -586,6 +606,8 @@
     "removeLogo": "Quitar logo",
     "companySaved": "Perfil de empresa guardado.",
     "companyProfileRestricted": "Solo el Responsable de Empresa puede editar el perfil.",
+    "joinCode": "Código de unión a empresa",
+    "joinCodeHint": "4 dígitos. Solo se usa cuando nuevos miembros se unen a su empresa durante el registro. No compartir públicamente.",
     "logoUploadError": "Error al subir el logo.",
     "logoBucketMissing": "El bucket \"company-logos\" no existe. En Supabase Dashboard: Storage → New bucket → nombre \"company-logos\" → Public → Create.",
     "logoFileLimit": "PNG, JPG o SVG, máx. 2MB.",

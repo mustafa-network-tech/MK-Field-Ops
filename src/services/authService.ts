@@ -51,15 +51,20 @@ export const authService = {
     return { ok: true };
   },
 
-  /** New company: creator becomes company manager. Uses Supabase Auth when configured. */
+  /** New company: creator becomes company manager. Requires join code (4 digits) and plan. */
   async registerNewCompany(params: {
     email: string;
     password: string;
     fullName: string;
     companyName: string;
+    joinCode: string;
+    plan: 'starter' | 'professional' | 'enterprise';
+    billingCycle?: 'monthly' | 'yearly';
   }): Promise<AuthResult> {
-    const { email, password, fullName, companyName } = params;
+    const { email, password, fullName, companyName, joinCode, plan, billingCycle = 'monthly' } = params;
     const name = companyName.trim();
+    const code = joinCode.trim();
+    if (!/^\d{4}$/.test(code)) return { ok: false, error: 'auth.joinCodeInvalid' };
 
     const companies = store.getCompanies();
     const nameNorm = normalize(name);
@@ -68,11 +73,18 @@ export const authService = {
 
     if (supabase) {
       const cId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 7);
       const { data: insertedCompany, error: insertCompanyError } = await supabase
         .from('companies')
         .insert({
           id: cId,
           name,
+          join_code: code,
+          plan,
+          billing_cycle: billingCycle,
+          plan_status: 'trial',
+          trial_end_date: trialEnd.toISOString().slice(0, 10),
           language_code: 'en',
           created_at: new Date().toISOString(),
         })
@@ -90,6 +102,7 @@ export const authService = {
       }
       if (!insertedCompany) return { ok: false, error: 'auth.loginError' };
       store.ensureCompany(insertedCompany.id, insertedCompany.name);
+      store.updateCompany(insertedCompany.id, { plan }, insertedCompany.id);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -102,6 +115,7 @@ export const authService = {
       }
       const userId = authData.user?.id;
       if (!userId) return { ok: false, error: 'auth.loginError' };
+      await supabase.from('companies').update({ owner_user_id: userId }).eq('id', insertedCompany.id);
       if (authData.session) {
         const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', userId).single();
         if (profile) store.setUserFromProfile(profile, authData.user?.email ?? email);
@@ -124,40 +138,36 @@ export const authService = {
     return { ok: true };
   },
 
-  /** Existing company: user joins, pending until CM approves. Uses Supabase Auth when configured. */
+  /** Existing company: verify by company name + join code, create join request (pending). User not added until CM approves. */
   async registerExistingCompany(params: {
     email: string;
     password: string;
     fullName: string;
-    companyId: string;
+    companyName: string;
+    joinCode: string;
   }): Promise<AuthResult> {
-    const { email, password, fullName, companyId } = params;
-    const key = companyId.trim();
-
-    let company = key ? store.getCompany(key) : undefined;
-    if (!company && key) {
-      const keyNorm = normalize(key);
-      company = store.getCompanies().find(
-        (c) => normalize(c.id) === keyNorm || normalize(c.name) === keyNorm || normalize(c.name).includes(keyNorm)
-      ) ?? undefined;
-    }
+    const { email, password, fullName, companyName, joinCode } = params;
+    const name = companyName.trim();
+    const code = joinCode.trim();
+    if (!/^\d{4}$/.test(code)) return { ok: false, error: 'auth.joinCodeInvalid' };
 
     if (supabase) {
-      let cId: string;
-      if (company) {
-        cId = company.id;
-      } else {
-        const { data: rows } = await supabase.from('companies').select('id, name').or(`id.eq.${key},name.ilike.%${key}%`).limit(1);
-        const row = rows?.[0];
-        if (!row) return { ok: false, error: 'auth.companyNotFound' };
-        cId = row.id;
-        store.ensureCompany(row.id, row.name ?? '');
-      }
+      const { data: cId, error: rpcError } = await supabase.rpc('get_company_id_by_join', {
+        p_company_name: name,
+        p_join_code: code,
+      });
+      if (rpcError || cId == null) return { ok: false, error: 'auth.companyNotFound' };
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
-        options: { data: { full_name: fullName, company_id: cId, role_approval_status: 'pending' } },
+        options: {
+          data: {
+            full_name: fullName,
+            join_company_id: cId,
+            role_approval_status: 'pending',
+          },
+        },
       });
       if (signUpError) {
         if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
@@ -172,6 +182,8 @@ export const authService = {
       return { ok: true };
     }
 
+    const companies = store.getCompanies();
+    const company = companies.find((c) => normalize(c.name) === normalize(name) && (c as { join_code?: string }).join_code === code);
     if (!company) return { ok: false, error: 'auth.companyNotFound' };
     const cId = company.id;
     if (store.getUserByEmail(email, cId)) return { ok: false, error: 'auth.emailExists' };
@@ -227,6 +239,45 @@ export const authService = {
     const updated = store.updateUser(userId, { roleApprovalStatus: 'rejected' });
     if (supabase) supabase.from('profiles').update({ role_approval_status: 'rejected' }).eq('id', userId).then(() => {});
     return updated != null;
+  },
+
+  /** Fetch pending join requests for current company (CM/PM). */
+  async fetchJoinRequests(companyId: string): Promise<{ id: string; user_id: string; company_id: string; status: string; created_at: string }[]> {
+    if (!supabase) return [];
+    const { data } = await supabase.from('join_requests').select('id, user_id, company_id, status, created_at').eq('company_id', companyId).eq('status', 'pending');
+    return data ?? [];
+  },
+
+  /** Fetch pending join requests with user full_name and email (for CM approval UI). */
+  async fetchJoinRequestsWithProfiles(companyId: string): Promise<{ id: string; user_id: string; full_name: string | null; email: string | null }[]> {
+    if (!supabase) return [];
+    const requests = await this.fetchJoinRequests(companyId);
+    if (requests.length === 0) return [];
+    const userIds = requests.map((r) => r.user_id);
+    const { data: profiles } = await supabase.from('profiles').select('id, full_name, email').in('id', userIds);
+    const profileMap = new Map((profiles ?? []).map((p) => [p.id, p]));
+    return requests.map((r) => ({
+      id: r.id,
+      user_id: r.user_id,
+      full_name: profileMap.get(r.user_id)?.full_name ?? null,
+      email: profileMap.get(r.user_id)?.email ?? null,
+    }));
+  },
+
+  /** Approve a join request: attach user to company and set role. CM only. */
+  async approveJoinRequest(requestId: string, assignedRole: Role): Promise<boolean> {
+    if (!supabase) return false;
+    const { data, error } = await supabase.rpc('approve_join_request', { req_id: requestId, assigned_role: assignedRole });
+    if (error) return false;
+    return data === true;
+  },
+
+  /** Reject a join request. CM only. */
+  async rejectJoinRequest(requestId: string): Promise<boolean> {
+    if (!supabase) return false;
+    const { data, error } = await supabase.rpc('reject_join_request', { req_id: requestId });
+    if (error) return false;
+    return data === true;
   },
 
   /** Request password reset email (Supabase only). Returns ok: false with error key if Supabase not configured or request failed. */

@@ -7,6 +7,9 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 /** Supported company UI language. Only CM/PM can change; TL sees company setting. */
 export type CompanyLanguageCode = 'en' | 'tr' | 'es' | 'fr' | 'de';
 
+/** Plan tier; stored on company, not user. */
+export type CompanyPlan = 'starter' | 'professional' | 'enterprise';
+
 export interface Company {
   id: string;
   name: string;
@@ -14,6 +17,14 @@ export interface Company {
   logo_url?: string | null;
   /** Company-wide UI language. Default 'en'. Only Company Manager / Project Manager can change. */
   language_code?: CompanyLanguageCode;
+  /** 4-digit join code; only used in onboarding and by company manager in settings. Not shown in panel UI. */
+  join_code?: string | null;
+  /** Plan tied to company. */
+  plan?: CompanyPlan | null;
+  billing_cycle?: 'monthly' | 'yearly' | null;
+  plan_status?: string | null;
+  trial_end_date?: string | null;
+  owner_user_id?: string | null;
   createdAt: string;
 }
 

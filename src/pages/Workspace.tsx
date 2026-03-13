@@ -7,6 +7,7 @@ import { store } from '../data/store';
 import styles from './Workspace.module.css';
 
 type WorkspaceMode = 'choose' | 'new' | 'existing';
+type PlanKey = 'starter' | 'professional' | 'enterprise';
 
 export function Workspace() {
   const { t } = useI18n();
@@ -17,7 +18,11 @@ export function Workspace() {
 
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
-  const [companyId, setCompanyId] = useState('');
+  const [joinCode, setJoinCode] = useState('');
+  const [existingCompanyName, setExistingCompanyName] = useState('');
+  const [existingJoinCode, setExistingJoinCode] = useState('');
+  const [plan, setPlan] = useState<PlanKey>('professional');
+  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,8 +38,14 @@ export function Workspace() {
     e.preventDefault();
     setError('');
     setMessage('');
-    if (!companyName.trim()) {
+    const name = companyName.trim();
+    const code = joinCode.trim();
+    if (!name) {
       setError(t('validation.required'));
+      return;
+    }
+    if (!/^\d{4}$/.test(code)) {
+      setError(t('auth.joinCodeInvalid'));
       return;
     }
     setLoading(true);
@@ -43,7 +54,10 @@ export function Workspace() {
         email,
         password,
         fullName,
-        companyName: companyName.trim(),
+        companyName: name,
+        joinCode: code,
+        plan,
+        billingCycle,
       });
       if (!result.ok) {
         setError(t(result.error ?? 'auth.loginError'));
@@ -60,8 +74,14 @@ export function Workspace() {
     e.preventDefault();
     setError('');
     setMessage('');
-    if (!companyId.trim()) {
-      setError(t('auth.enterCompanyId'));
+    const name = existingCompanyName.trim();
+    const code = existingJoinCode.trim();
+    if (!name) {
+      setError(t('validation.required'));
+      return;
+    }
+    if (!/^\d{4}$/.test(code)) {
+      setError(t('auth.joinCodeInvalid'));
       return;
     }
     setLoading(true);
@@ -70,7 +90,8 @@ export function Workspace() {
         email,
         password,
         fullName,
-        companyId: companyId.trim(),
+        companyName: name,
+        joinCode: code,
       });
       if (!result.ok) {
         setError(t(result.error ?? 'auth.loginError'));
@@ -115,6 +136,42 @@ export function Workspace() {
                 required
               />
             </label>
+            <label className={styles.label}>
+              {t('auth.joinCode')}
+              <input
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className={styles.input}
+                placeholder={t('auth.joinCodePlaceholder')}
+                maxLength={4}
+                inputMode="numeric"
+                required
+              />
+            </label>
+            <label className={styles.label}>
+              {t('onboarding.plan')}
+              <select
+                value={plan}
+                onChange={(e) => setPlan(e.target.value as PlanKey)}
+                className={styles.input}
+                required
+              >
+                <option value="starter">{t('onboarding.planStarter')}</option>
+                <option value="professional">{t('onboarding.planProfessional')}</option>
+                <option value="enterprise">{t('onboarding.planEnterprise')}</option>
+              </select>
+            </label>
+            <label className={styles.label}>
+              {t('onboarding.billingCycle')}
+              <select
+                value={billingCycle}
+                onChange={(e) => setBillingCycle(e.target.value as 'monthly' | 'yearly')}
+                className={styles.input}
+              >
+                <option value="monthly">{t('onboarding.billingMonthly')}</option>
+                <option value="yearly">{t('onboarding.billingYearly')}</option>
+              </select>
+            </label>
             {error && <p className={styles.error}>{error}</p>}
             {message && <p className={styles.message}>{message}</p>}
             <div className={styles.formActions}>
@@ -131,12 +188,24 @@ export function Workspace() {
         {mode === 'existing' && (
           <form onSubmit={handleJoinExisting} className={styles.form}>
             <label className={styles.label}>
-              {t('auth.companyId')}
+              {t('auth.companyName')}
               <input
-                value={companyId}
-                onChange={(e) => setCompanyId(e.target.value)}
+                value={existingCompanyName}
+                onChange={(e) => setExistingCompanyName(e.target.value)}
                 className={styles.input}
-                placeholder={t('auth.companyIdPlaceholder')}
+                placeholder={t('auth.companyNamePlaceholder')}
+                required
+              />
+            </label>
+            <label className={styles.label}>
+              {t('auth.joinCode')}
+              <input
+                value={existingJoinCode}
+                onChange={(e) => setExistingJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+                className={styles.input}
+                placeholder={t('auth.joinCodePlaceholder')}
+                maxLength={4}
+                inputMode="numeric"
                 required
               />
             </label>

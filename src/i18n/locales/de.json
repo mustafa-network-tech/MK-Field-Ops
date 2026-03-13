@@ -34,6 +34,9 @@
     "companyIdPlaceholder": "Unternehmens-ID eingeben",
     "enterCompanyId": "Bitte Unternehmens-ID eingeben.",
     "companyNotFound": "Unternehmen nicht gefunden.",
+    "joinCode": "Unternehmens-Beitrittscode",
+    "joinCodePlaceholder": "4 Ziffern (z. B. 1234)",
+    "joinCodeInvalid": "Der Code muss genau 4 Ziffern haben.",
     "pendingCompanyManagerApproval": "Ihr Konto wurde erstellt. Sie können sich erst anmelden, wenn ein Unternehmensleiter Sie freigibt.",
     "role": "Rolle",
     "loginSuccess": "Anmeldung erfolgreich",
@@ -69,7 +72,24 @@
     "companyType": "Unternehmenstyp",
     "country": "Land",
     "nextStep": "Weiter →",
-    "userLimitReached": "Benutzerlimit erreicht. Bitte wenden Sie sich an Ihren Unternehmensadministrator, um den Plan zu erweitern."
+    "userLimitReached": "Benutzerlimit erreicht. Bitte wenden Sie sich an Ihren Unternehmensadministrator, um den Plan zu erweitern.",
+    "plan": "Plan",
+    "planStarter": "Starter",
+    "planProfessional": "Professional",
+    "planEnterprise": "Unternehmen",
+    "billingCycle": "Abrechnungszeitraum",
+    "billingMonthly": "Monatlich",
+    "billingYearly": "Jährlich"
+  },
+  "pendingJoin": {
+    "title": "Beitrittsanfrage ausstehend",
+    "message": "Ihre Beitrittsanfrage wurde gesendet. Der Unternehmensleiter wird sie genehmigen oder ablehnen. Sie können sich abmelden und später erneut anmelden."
+  },
+  "joinRequests": {
+    "title": "Beitrittsanfragen",
+    "noPending": "Keine ausstehenden Beitrittsanfragen.",
+    "approve": "Genehmigen",
+    "reject": "Ablehnen"
   },
   "landing": {
     "navWhoWeAre": "Wer wir sind",
@@ -586,6 +606,8 @@
     "removeLogo": "Logo entfernen",
     "companySaved": "Unternehmensprofil gespeichert.",
     "companyProfileRestricted": "Nur Unternehmensleiter kann das Unternehmensprofil bearbeiten.",
+    "joinCode": "Unternehmens-Beitrittscode",
+    "joinCodeHint": "4 Ziffern. Wird nur bei der Registrierung neuer Mitglieder verwendet. Nicht öffentlich teilen.",
     "logoUploadError": "Logo-Upload fehlgeschlagen.",
     "logoBucketMissing": "Storage-Bucket \"company-logos\" existiert nicht. Im Supabase-Dashboard: Storage → New bucket → Name \"company-logos\" → Public → Create.",
     "logoFileLimit": "PNG, JPG oder SVG, max. 2 MB.",

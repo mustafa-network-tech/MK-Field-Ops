@@ -128,7 +128,7 @@ export const store = {
     return company;
   },
   /** Update company. Pass onlyForCompanyId to enforce tenant isolation (update only if companyId === onlyForCompanyId). */
-  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code'>>, onlyForCompanyId?: string): Company | undefined {
+  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code' | 'plan'>>, onlyForCompanyId?: string): Company | undefined {
     if (onlyForCompanyId != null && companyId !== onlyForCompanyId) return undefined;
     const companies = this.getCompanies();
     const i = companies.findIndex((c) => c.id === companyId);
@@ -195,12 +195,12 @@ export const store = {
     return u;
   },
 
-  /** Merge Supabase profile into users list (no current user change). For CM/PM to see pending users. */
-  mergeUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
+  /** Merge Supabase profile into users list (no current user change). For CM/PM to see pending users. company_id can be null for pending join. */
+  mergeUserFromProfile(profile: { id: string; company_id: string | null; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
     const users = this.getUsers();
     const u: User = {
       id: profile.id,
-      companyId: profile.company_id,
+      companyId: profile.company_id ?? '',
       email: profile.email ?? email,
       passwordHash: '',
       fullName: profile.full_name ?? email,

@@ -21,6 +21,12 @@ const langKeys: Record<string, string> = {
   de: 'topBar.langDe',
 };
 
+const planKeys: Record<string, string> = {
+  starter: 'onboarding.planStarter',
+  professional: 'onboarding.planProfessional',
+  enterprise: 'onboarding.planEnterprise',
+};
+
 const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 
 export function TopBar() {
@@ -58,6 +64,7 @@ export function TopBar() {
   const company = user.companyId ? store.getCompany(user.companyId, user.companyId) : undefined;
   const companyName = company?.name ?? '';
   const companyLogoUrl = company?.logo_url ?? null;
+  const planLabel = company?.plan ? t(planKeys[company.plan] ?? company.plan) : null;
   const canChangeLanguage = user.role === 'companyManager' || user.role === 'projectManager';
 
   return (
@@ -66,12 +73,15 @@ export function TopBar() {
         <span className={styles.userName}>{user.fullName}</span>
         {user.role && <span className={styles.role}> – {t(roleKeys[user.role] ?? user.role)}</span>}
       </div>
-      {(companyName || companyLogoUrl) && (
+      {user.companyId && (
         <div className={styles.center}>
           {companyLogoUrl && (
             <img src={companyLogoUrl} alt="" className={styles.companyLogo} />
           )}
-          {companyName && <span className={styles.companyName}>{companyName}</span>}
+          <span className={styles.companyName}>
+            {companyName || '…'}
+            {planLabel && <span className={styles.companyPlan}> ({planLabel})</span>}
+          </span>
         </div>
       )}
       <div className={styles.right}>

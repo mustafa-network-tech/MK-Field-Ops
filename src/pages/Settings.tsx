@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
 import { Card } from '../components/ui/Card';
 import { uploadCompanyLogo, isAllowedLogoFile } from '../services/companyLogoService';
+import { fetchCompanyJoinCodeFromSupabase, updateCompanyJoinCodeInSupabase } from '../services/companyService';
 import { logEvent, actorFromUser } from '../services/auditLogService';
 import styles from './Settings.module.css';
 
@@ -34,12 +35,20 @@ export function Settings() {
   const [logoError, setLogoError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [joinCode, setJoinCode] = useState('');
+  const [joinCodeMessage, setJoinCodeMessage] = useState<'saved' | 'error' | null>(null);
+
   useEffect(() => {
     if (company) {
       setCompanyName(company.name);
       setLogoUrl(company.logo_url ?? null);
     }
   }, [company?.id, company?.name, company?.logo_url]);
+
+  useEffect(() => {
+    if (!canEditCompany || !companyId) return;
+    fetchCompanyJoinCodeFromSupabase(companyId).then((code) => setJoinCode(code ?? ''));
+  }, [canEditCompany, companyId]);
 
   useEffect(() => {
     if (!pendingFile) {
@@ -109,6 +118,7 @@ export function Settings() {
   const handleSaveCompany = async () => {
     if (!companyId || !canEditCompany) return;
     setCompanyMessage(null);
+    setJoinCodeMessage(null);
     setLogoError('');
     try {
       let newLogoUrl: string | null = logoUrl;
@@ -129,6 +139,11 @@ export function Settings() {
       setLogoUrl(newLogoUrl);
       setPendingFile(null);
       setRemoveLogo(false);
+      if (/^\d{4}$/.test(joinCode.trim())) {
+        const res = await updateCompanyJoinCodeInSupabase(companyId, joinCode.trim());
+        if (res.ok) setJoinCodeMessage('saved');
+        else setJoinCodeMessage('error');
+      }
       setCompanyMessage('saved');
       const actor = actorFromUser(user);
       if (actor) {
@@ -213,6 +228,22 @@ export function Settings() {
             {logoError && <p className={styles.error}>{logoError}</p>}
             {companyMessage === 'saved' && <p className={styles.success}>{t('settings.companySaved')}</p>}
             {companyMessage === 'error' && <p className={styles.error}>{t('settings.logoUploadError')}</p>}
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="joinCode">{t('settings.joinCode')}</label>
+            <p className={styles.hint}>{t('settings.joinCodeHint')}</p>
+            <input
+              id="joinCode"
+              type="text"
+              inputMode="numeric"
+              maxLength={4}
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.replace(/\D/g, '').slice(0, 4))}
+              placeholder="1234"
+              className={styles.inputFull}
+            />
+            {joinCodeMessage === 'saved' && <p className={styles.success}>{t('settings.saved')}</p>}
+            {joinCodeMessage === 'error' && <p className={styles.error}>{t('auth.joinCodeInvalid')}</p>}
           </div>
           <button type="button" className={styles.btnPrimary} onClick={handleSaveCompany}>
             {t('settings.save')}

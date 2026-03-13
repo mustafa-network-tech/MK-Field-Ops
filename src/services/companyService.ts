@@ -4,7 +4,7 @@
  */
 
 import { store } from '../data/store';
-import type { CompanyLanguageCode } from '../types';
+import type { CompanyLanguageCode, CompanyPlan } from '../types';
 import { supabase } from './supabaseClient';
 
 const VALID_LANGUAGE_CODES: CompanyLanguageCode[] = ['en', 'tr', 'es', 'fr', 'de'];
@@ -24,7 +24,7 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   if (!supabase) return;
   const { data, error } = await supabase
     .from('companies')
-    .select('language_code, name, logo_url')
+    .select('language_code, name, logo_url, plan')
     .eq('id', companyId)
     .maybeSingle();
   if (error) {
@@ -33,11 +33,16 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   }
   if (!data) return;
   const language_code = normalizeLanguageCode(data.language_code);
- 
+  const plan: CompanyPlan | null = data.plan && ['starter', 'professional', 'enterprise'].includes(data.plan) ? (data.plan as CompanyPlan) : null;
+  const name = (data.name != null && String(data.name).trim()) ? String(data.name).trim() : 'Company';
+  if (!store.getCompany(companyId, companyId)) {
+    store.ensureCompany(companyId, name);
+  }
   store.updateCompany(companyId, {
     language_code,
-    ...(data.name != null && { name: data.name }),
+    name,
     ...(data.logo_url !== undefined && { logo_url: data.logo_url ?? null }),
+    ...(plan != null && { plan }),
   }, companyId);
 }
 
@@ -63,5 +68,40 @@ export async function updateCompanyLanguageInSupabase(
     console.warn('updateCompanyLanguageInSupabase', error);
     return { ok: false, error: error.message };
   }
+  return { ok: true };
+}
+
+/**
+ * Fetch company join code from Supabase. Only Company Manager should call this; used in Settings only.
+ * Join code is not merged into store so it is never shown in normal panel UI.
+ */
+export async function fetchCompanyJoinCodeFromSupabase(companyId: string): Promise<string | null> {
+  if (!supabase) return null;
+  const { data, error } = await supabase
+    .from('companies')
+    .select('join_code')
+    .eq('id', companyId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data.join_code ?? null;
+}
+
+/**
+ * Update company join code in Supabase. Only Company Manager; 4 digits only.
+ */
+export async function updateCompanyJoinCodeInSupabase(
+  companyId: string,
+  joinCode: string
+): Promise<{ ok: boolean; error?: string }> {
+  const trimmed = joinCode.trim();
+  if (!/^\d{4}$/.test(trimmed)) {
+    return { ok: false, error: 'Join code must be exactly 4 digits.' };
+  }
+  if (!supabase) return { ok: true };
+  const { error } = await supabase
+    .from('companies')
+    .update({ join_code: trimmed })
+    .eq('id', companyId);
+  if (error) return { ok: false, error: error.message };
   return { ok: true };
 }

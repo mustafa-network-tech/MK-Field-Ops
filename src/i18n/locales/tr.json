@@ -34,6 +34,9 @@
     "companyIdPlaceholder": "Şirket ID'sini girin",
     "enterCompanyId": "Şirket ID girin.",
     "companyNotFound": "Bu şirket bulunamadı.",
+    "joinCode": "Şirket katılım kodu",
+    "joinCodePlaceholder": "4 rakam (örn. 1234)",
+    "joinCodeInvalid": "Katılım kodu tam 4 rakam olmalıdır.",
     "pendingCompanyManagerApproval": "Hesabınız oluşturuldu. Şirket yöneticisi sizi onaylayana kadar giriş yapamazsınız; onay sonrası giriş yapabilirsiniz.",
     "role": "Rol",
     "loginSuccess": "Giriş başarılı",
@@ -69,7 +72,24 @@
     "companyType": "Şirket Türü",
     "country": "Ülke",
     "nextStep": "İleri →",
-    "userLimitReached": "Kullanıcı limiti doldu. Plan yükseltmek için şirket yöneticinizle iletişime geçin."
+    "userLimitReached": "Kullanıcı limiti doldu. Plan yükseltmek için şirket yöneticinizle iletişime geçin.",
+    "plan": "Plan",
+    "planStarter": "Başlangıç",
+    "planProfessional": "Profesyonel",
+    "planEnterprise": "Kurumsal",
+    "billingCycle": "Fatura dönemi",
+    "billingMonthly": "Aylık",
+    "billingYearly": "Yıllık"
+  },
+  "pendingJoin": {
+    "title": "Katılım talebi bekleniyor",
+    "message": "Şirkete katılım talebiniz gönderildi. Şirket yöneticisi onaylayacak veya reddedecektir. Çıkış yapıp daha sonra tekrar giriş yapabilirsiniz."
+  },
+  "joinRequests": {
+    "title": "Katılım talepleri",
+    "noPending": "Bekleyen katılım talebi yok.",
+    "approve": "Onayla",
+    "reject": "Reddet"
   },
   "landing": {
     "navWhoWeAre": "Biz Kimiz",
@@ -590,6 +610,8 @@
     "removeLogo": "Logoyu kaldır",
     "companySaved": "Şirket bilgileri kaydedildi.",
     "companyProfileRestricted": "Şirket bilgilerini yalnızca Şirket Yöneticisi düzenleyebilir.",
+    "joinCode": "Şirket katılım kodu",
+    "joinCodeHint": "4 rakam. Sadece yeni üyeler kayıt sırasında şirketinize katılırken kullanılır. Herkese açık paylaşmayın.",
     "logoUploadError": "Logo yüklemesi başarısız.",
     "logoBucketMissing": "Depolama alanı \"company-logos\" mevcut değil. Supabase Dashboard'da Storage → New bucket → ad \"company-logos\" → Public seçin → Create.",
     "logoFileLimit": "PNG, JPG veya SVG, en fazla 2MB.",

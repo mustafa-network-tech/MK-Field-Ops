@@ -7,6 +7,7 @@ import { Landing } from './pages/Landing';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Workspace } from './pages/Workspace';
+import { PendingJoin } from './pages/PendingJoin';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { Dashboard } from './pages/Dashboard';
 import { JobEntry } from './pages/JobEntry';
@@ -27,7 +28,15 @@ import { TermsOfUse } from './pages/TermsOfUse';
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
+  if (!user.companyId) return <Navigate to="/pending-join" replace />;
   return <>{children}</>;
+}
+
+function PendingJoinRoute() {
+  const { user } = useApp();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.companyId) return <Navigate to="/" replace />;
+  return <PendingJoin />;
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
@@ -48,6 +57,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/workspace" element={<PublicOnlyRoute><Workspace /></PublicOnlyRoute>} />
+      <Route path="/pending-join" element={<PendingJoinRoute />} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />
       <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />
