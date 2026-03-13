@@ -1,3 +1,7 @@
+/**
+ * Workspace step after register: choose Create New Company or Join Existing.
+ * Uses Company Name + 4-digit Join Code (no Company ID). New company requires Plan.
+ */
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';

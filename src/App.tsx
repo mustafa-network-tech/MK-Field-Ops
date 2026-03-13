@@ -1,29 +1,38 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { I18nProvider } from './i18n/I18nContext';
 import { AppProvider, useApp } from './context/AppContext';
 import { Layout } from './components/Layout';
-import { Landing } from './pages/Landing';
-import { Login } from './pages/Login';
-import { Register } from './pages/Register';
-import { Workspace } from './pages/Workspace';
-import { PendingJoin } from './pages/PendingJoin';
-import { ForgotPassword } from './pages/ForgotPassword';
-import { Dashboard } from './pages/Dashboard';
-import { JobEntry } from './pages/JobEntry';
-import { MyJobs } from './pages/MyJobs';
-import { Management } from './pages/Management';
-import { TeamDetail } from './pages/TeamDetail';
-import { Approvals } from './pages/Approvals';
-import { Reports } from './pages/Reports';
-import { DeliveryNotes } from './pages/DeliveryNotes';
-import { Settings } from './pages/Settings';
-import { PayrollPeriods } from './pages/PayrollPeriods';
-import { AuditLogs } from './pages/AuditLogs';
-import { UserGuide } from './pages/UserGuide';
-import { PrivacyPolicy } from './pages/PrivacyPolicy';
-import { RefundPolicy } from './pages/RefundPolicy';
-import { TermsOfUse } from './pages/TermsOfUse';
+
+const Landing = lazy(() => import('./pages/Landing').then((m) => ({ default: m.Landing })));
+const Login = lazy(() => import('./pages/Login').then((m) => ({ default: m.Login })));
+const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m.Register })));
+const Workspace = lazy(() => import('./pages/Workspace').then((m) => ({ default: m.Workspace })));
+const PendingJoin = lazy(() => import('./pages/PendingJoin').then((m) => ({ default: m.PendingJoin })));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
+const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
+const JobEntry = lazy(() => import('./pages/JobEntry').then((m) => ({ default: m.JobEntry })));
+const MyJobs = lazy(() => import('./pages/MyJobs').then((m) => ({ default: m.MyJobs })));
+const Management = lazy(() => import('./pages/Management').then((m) => ({ default: m.Management })));
+const TeamDetail = lazy(() => import('./pages/TeamDetail').then((m) => ({ default: m.TeamDetail })));
+const Approvals = lazy(() => import('./pages/Approvals').then((m) => ({ default: m.Approvals })));
+const Reports = lazy(() => import('./pages/Reports').then((m) => ({ default: m.Reports })));
+const DeliveryNotes = lazy(() => import('./pages/DeliveryNotes').then((m) => ({ default: m.DeliveryNotes })));
+const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
+const PayrollPeriods = lazy(() => import('./pages/PayrollPeriods').then((m) => ({ default: m.PayrollPeriods })));
+const AuditLogs = lazy(() => import('./pages/AuditLogs').then((m) => ({ default: m.AuditLogs })));
+const UserGuide = lazy(() => import('./pages/UserGuide').then((m) => ({ default: m.UserGuide })));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })));
+const RefundPolicy = lazy(() => import('./pages/RefundPolicy').then((m) => ({ default: m.RefundPolicy })));
+const TermsOfUse = lazy(() => import('./pages/TermsOfUse').then((m) => ({ default: m.TermsOfUse })));
+
+function PageFallback() {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '40vh', color: '#94a3b8' }}>
+      Loading…
+    </div>
+  );
+}
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useApp();
@@ -89,7 +98,9 @@ export default function App() {
     <I18nProvider>
       <AppProvider>
         <BrowserRouter>
-          <AppRoutes />
+          <Suspense fallback={<PageFallback />}>
+            <AppRoutes />
+          </Suspense>
         </BrowserRouter>
       </AppProvider>
     </I18nProvider>
