@@ -3,51 +3,25 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
 import { Card } from '../components/ui/Card';
-import type { DeliveryNote, DeliveryNoteItem, MaterialMainType } from '../types';
+import type { DeliveryNote, DeliveryNoteItem } from '../types';
 import styles from './DeliveryNotes.module.css';
 
-const TYPE_DISPLAY_KEYS: Record<MaterialMainType, string> = {
-  direk: 'materials.typeDisplayDirek',
-  kablo_ic: 'materials.typeDisplayKabloIc',
-  kablo_yeraltı: 'materials.typeDisplayKabloYeralti',
-  kablo_havai: 'materials.typeDisplayKabloHavai',
-  boru: 'materials.typeDisplayBoru',
-  fiber_bina_kutusu: 'materials.typeDisplayFiberKutusu',
-  ofsd: 'materials.typeDisplayOFSD',
-  sonlandirma_paneli: 'materials.typeDisplaySonlandirmaPaneli',
-  daire_sonlandirma_kutusu: 'materials.typeDisplayDaireKutusu',
-  menhol: 'materials.typeDisplayMenhol',
-  ek_odasi: 'materials.typeDisplayEkOdasi',
-  koruyucu_fider_borusu: 'materials.typeDisplayKoruyucuFider',
-  custom: 'materials.typeDisplayCustom',
-};
-
-function isMeterType(mainType: MaterialMainType): boolean {
-  return mainType === 'boru' || mainType === 'kablo_ic' || mainType === 'kablo_yeraltı' || mainType === 'kablo_havai';
-}
-
-function isCableType(mainType: MaterialMainType): boolean {
-  return mainType === 'kablo_ic' || mainType === 'kablo_yeraltı' || mainType === 'kablo_havai';
-}
-
 export type LineItem = {
-  mainType: MaterialMainType;
-  name: string;
-  sizeOrCapacity: string;
-  capacityLabel: string;
+  materialName: string;
+  materialType: string;
+  materialSize: string;
+  materialId: string;
+  unit: '' | 'adet' | 'metre' | 'kilo' | 'metreküp';
   quantity: number;
-  spoolId: string;
-  customGroupName: string;
 };
 
 const emptyLine: LineItem = {
-  mainType: 'direk',
-  name: '',
-  sizeOrCapacity: '',
-  capacityLabel: '',
+  materialName: '',
+  materialType: '',
+  materialSize: '',
+  materialId: '',
+  unit: '',
   quantity: 0,
-  spoolId: '',
-  customGroupName: '',
 };
 
 export function DeliveryNotes() {
@@ -76,12 +50,15 @@ export function DeliveryNotes() {
     ? users.find((u) => u.id === selectedNote.receivedBy)?.fullName ?? selectedNote.receivedBy
     : null;
 
-  const getMaterialLabel = (materialStockItemId: string): string => {
+  const getMaterialLabel = (materialStockItemId: string, detailId?: string | null): string => {
     const m = stockItems.find((x) => x.id === materialStockItemId);
     if (!m) return '–';
-    const typeLabel = t(TYPE_DISPLAY_KEYS[m.mainType]);
-    const namePart = m.spoolId ? `${m.name ?? m.capacityLabel} (${m.spoolId})` : (m.name ?? m.sizeOrCapacity ?? m.capacityLabel ?? m.id);
-    return `${typeLabel} — ${namePart}`;
+    const parts: string[] = [];
+    if (m.name) parts.push(m.name);
+    if (m.capacityLabel) parts.push(m.capacityLabel);
+    if (m.sizeOrCapacity) parts.push(m.sizeOrCapacity);
+    if (detailId) parts.push(detailId);
+    return parts.join(' / ') || m.id;
   };
 
   if (!canAccess) {
@@ -132,13 +109,24 @@ export function DeliveryNotes() {
               {noteItems.length === 0 && (
                 <tr><td colSpan={3} className={styles.muted}>{t('common.noData')}</td></tr>
               )}
-              {noteItems.map((item: DeliveryNoteItem) => (
-                <tr key={item.id}>
-                  <td>{getMaterialLabel(item.materialStockItemId)}</td>
-                  <td>{item.quantity}</td>
-                  <td>{item.quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}</td>
-                </tr>
-              ))}
+              {noteItems.map((item: DeliveryNoteItem) => {
+                const label = getMaterialLabel(item.materialStockItemId, item.materialDetailId);
+                const unitLabel =
+                  item.unitDisplay === 'metre'
+                    ? t('deliveryNotes.unitMeter')
+                    : item.unitDisplay === 'kilo'
+                      ? t('deliveryNotes.unitKilo')
+                      : item.unitDisplay === 'metreküp'
+                        ? t('deliveryNotes.unitCubicMeter')
+                        : t('deliveryNotes.unitPiece');
+                return (
+                  <tr key={item.id}>
+                    <td>{label}</td>
+                    <td>{item.quantity}</td>
+                    <td>{unitLabel}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </Card>
@@ -158,31 +146,14 @@ export function DeliveryNotes() {
     setLines((prev) => {
       const next = [...prev];
       next[index] = { ...next[index], ...patch };
-      if (patch.mainType !== undefined) {
-        next[index].quantity = next[index].quantity || (isMeterType(patch.mainType) ? 1 : 1);
-      }
       return next;
     });
   };
 
   const validateLine = (line: LineItem): string | null => {
-    const name = line.name.trim();
-    const size = line.sizeOrCapacity.trim();
-    const cap = line.capacityLabel.trim();
-    const spool = line.spoolId.trim();
-    const custom = line.customGroupName.trim();
-    if (line.mainType === 'direk' || line.mainType === 'boru') {
-      if (!name || !size) return 'validation.required';
-    }
-    if (isCableType(line.mainType)) {
-      if (!cap || !spool) return 'validation.required';
-    }
-    if (['fiber_bina_kutusu', 'ofsd', 'sonlandirma_paneli', 'daire_sonlandirma_kutusu', 'menhol', 'ek_odasi', 'koruyucu_fider_borusu'].includes(line.mainType)) {
-      if (!name) return 'validation.required';
-    }
-    if (line.mainType === 'custom') {
-      if (!custom || !name) return 'validation.required';
-    }
+    const name = line.materialName.trim();
+    if (!name) return 'validation.required';
+    if (!line.unit) return 'validation.required';
     if (line.quantity <= 0) return 'validation.positiveNumber';
     return null;
   };
@@ -212,14 +183,12 @@ export function DeliveryNotes() {
       irsaliyeNo: form.irsaliyeNo.trim(),
       receivedBy: user?.id,
       items: validLines.map((l) => ({
-        mainType: l.mainType,
-        name: l.name.trim() || undefined,
-        sizeOrCapacity: l.sizeOrCapacity.trim() || undefined,
-        capacityLabel: l.capacityLabel.trim() || undefined,
+        name: l.materialName.trim(),
+        typeLabel: l.materialType.trim() || undefined,
+        sizeLabel: l.materialSize.trim() || undefined,
+        materialDetailId: l.materialId.trim() || undefined,
         quantity: Math.floor(Number(l.quantity) || 0),
-        quantityUnit: isMeterType(l.mainType) ? 'm' : 'pcs',
-        spoolId: l.spoolId.trim() || undefined,
-        customGroupName: l.customGroupName.trim() || undefined,
+        unit: l.unit,
       })),
     });
     setForm({ supplier: '', receivedDate: new Date().toISOString().slice(0, 10), irsaliyeNo: '' });
@@ -279,69 +248,58 @@ export function DeliveryNotes() {
             </p>
             {lines.map((line, index) => (
               <div key={index} className={styles.lineRow}>
-                <label className={styles.label} style={{ marginBottom: 0, minWidth: 100 }}>
-                  {t('materials.mainTypeLabel')}
-                  <select
-                    value={line.mainType}
-                    onChange={(e) => handleLineChange(index, { mainType: e.target.value as MaterialMainType })}
-                    className={styles.input}
-                  >
-                    {Object.entries(TYPE_DISPLAY_KEYS).map(([val, key]) => (
-                      <option key={val} value={val}>{t(key)}</option>
-                    ))}
-                  </select>
-                </label>
-                <label className={styles.label} style={{ marginBottom: 0, minWidth: 100 }}>
-                  {line.mainType === 'custom' ? t('materials.customTypeName') : t('materials.tableNameDesc')}
+                <label className={styles.label} style={{ marginBottom: 0, minWidth: 120 }}>
+                  {t('deliveryNotes.materialNameLabel')}
                   <input
                     className={styles.input}
-                    value={line.name}
-                    onChange={(e) => handleLineChange(index, { name: e.target.value })}
-                    placeholder={line.mainType === 'custom' ? t('materials.customPlaceholder') : ''}
+                    value={line.materialName}
+                    onChange={(e) => handleLineChange(index, { materialName: e.target.value })}
+                    placeholder={t('deliveryNotes.materialNamePlaceholder')}
                   />
                 </label>
-                {(line.mainType === 'direk' || line.mainType === 'boru' || ['fiber_bina_kutusu', 'ofsd', 'sonlandirma_paneli', 'daire_sonlandirma_kutusu'].includes(line.mainType)) && (
-                  <label className={styles.label} style={{ marginBottom: 0, minWidth: 80 }}>
-                    {line.mainType === 'direk' ? t('materials.sizeOrLengthDirek') : line.mainType === 'boru' ? t('materials.sizeOrLengthBoru') : t('materials.capacityExample')}
-                    <input
-                      className={styles.input}
-                      value={line.sizeOrCapacity}
-                      onChange={(e) => handleLineChange(index, { sizeOrCapacity: e.target.value })}
-                    />
-                  </label>
-                )}
-                {isCableType(line.mainType) && (
-                  <>
-                    <label className={styles.label} style={{ marginBottom: 0, minWidth: 70 }}>
-                      {line.mainType === 'kablo_ic' ? t('materials.cableCapacityIc') : line.mainType === 'kablo_yeraltı' ? t('materials.cableCapacityYeralti') : t('materials.cableCapacityHavai')}
-                      <input
-                        className={styles.input}
-                        value={line.capacityLabel}
-                        onChange={(e) => handleLineChange(index, { capacityLabel: e.target.value })}
-                      />
-                    </label>
-                    <label className={styles.label} style={{ marginBottom: 0, minWidth: 70 }}>
-                      {t('materials.spoolId')}
-                      <input
-                        className={styles.input}
-                        value={line.spoolId}
-                        onChange={(e) => handleLineChange(index, { spoolId: e.target.value })}
-                      />
-                    </label>
-                  </>
-                )}
-                {line.mainType === 'custom' && (
-                  <label className={styles.label} style={{ marginBottom: 0, minWidth: 80 }}>
-                    {t('materials.sizeCapacity')}
-                    <input
-                      className={styles.input}
-                      value={line.sizeOrCapacity}
-                      onChange={(e) => handleLineChange(index, { sizeOrCapacity: e.target.value })}
-                    />
-                  </label>
-                )}
-                <label className={styles.label} style={{ marginBottom: 0, minWidth: 70 }}>
-                  {isMeterType(line.mainType) ? t('materials.quantityMeters') : t('materials.stockQtyPcs')}
+                <label className={styles.label} style={{ marginBottom: 0, minWidth: 110 }}>
+                  {t('deliveryNotes.materialTypeLabel')}
+                  <input
+                    className={styles.input}
+                    value={line.materialType}
+                    onChange={(e) => handleLineChange(index, { materialType: e.target.value })}
+                    placeholder={t('deliveryNotes.materialTypePlaceholder')}
+                  />
+                </label>
+                <label className={styles.label} style={{ marginBottom: 0, minWidth: 110 }}>
+                  {t('deliveryNotes.materialSizeLabel')}
+                  <input
+                    className={styles.input}
+                    value={line.materialSize}
+                    onChange={(e) => handleLineChange(index, { materialSize: e.target.value })}
+                    placeholder={t('deliveryNotes.materialSizePlaceholder')}
+                  />
+                </label>
+                <label className={styles.label} style={{ marginBottom: 0, minWidth: 110 }}>
+                  {t('deliveryNotes.materialIdLabel')}
+                  <input
+                    className={styles.input}
+                    value={line.materialId}
+                    onChange={(e) => handleLineChange(index, { materialId: e.target.value })}
+                    placeholder={t('deliveryNotes.materialIdPlaceholder')}
+                  />
+                </label>
+                <label className={styles.label} style={{ marginBottom: 0, minWidth: 90 }}>
+                  {t('deliveryNotes.unit')}
+                  <select
+                    className={styles.input}
+                    value={line.unit}
+                    onChange={(e) => handleLineChange(index, { unit: e.target.value as LineItem['unit'] })}
+                  >
+                    <option value="">{t('deliveryNotes.selectUnitPlaceholder')}</option>
+                    <option value="adet">{t('deliveryNotes.unitPiece')}</option>
+                    <option value="metre">{t('deliveryNotes.unitMeter')}</option>
+                    <option value="kilo">{t('deliveryNotes.unitKilo')}</option>
+                    <option value="metreküp">{t('deliveryNotes.unitCubicMeter')}</option>
+                  </select>
+                </label>
+                <label className={styles.label} style={{ marginBottom: 0, minWidth: 80 }}>
+                  {t('deliveryNotes.quantity')}
                   <input
                     type="number"
                     min={1}
@@ -352,9 +310,6 @@ export function DeliveryNotes() {
                     placeholder="0"
                   />
                 </label>
-                <span className={styles.muted} style={{ alignSelf: 'center' }}>
-                  {isMeterType(line.mainType) ? ' m' : ` ${t('jobs.material.pcs')}`}
-                </span>
                 {lines.length > 1 && (
                   <button type="button" className={styles.removeLineBtn} onClick={() => handleRemoveLine(index)}>
                     {t('common.delete')}

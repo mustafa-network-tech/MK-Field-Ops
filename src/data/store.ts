@@ -364,14 +364,17 @@ export const store = {
       irsaliyeNo: string;
       receivedBy?: string;
       items: Array<{
-        mainType: MaterialMainType;
-        name?: string;
-        sizeOrCapacity?: string;
-        capacityLabel?: string;
+        /** Malzeme Adı (zorunlu) */
+        name: string;
+        /** Malzeme Cinsi (opsiyonel) */
+        typeLabel?: string;
+        /** Malzeme Ebatı (opsiyonel) */
+        sizeLabel?: string;
+        /** Malzeme ID (opsiyonel; stok kalemini bölmez) */
+        materialDetailId?: string;
         quantity: number;
-        quantityUnit: 'm' | 'pcs';
-        spoolId?: string;
-        customGroupName?: string;
+        /** Kullanıcının seçtiği birim (adet, metre, kilo, metreküp). */
+        unit: 'adet' | 'metre' | 'kilo' | 'metreküp';
       }>;
     }
   ): { note: DeliveryNote; error?: string } {
@@ -385,51 +388,76 @@ export const store = {
       receivedAt: now,
     });
     const stock = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId === companyId);
-    const isCableType = (mt: MaterialMainType) =>
-      mt === 'kablo_ic' || mt === 'kablo_yeraltı' || mt === 'kablo_havai';
-    const findExistingBoru = (def: (typeof payload.items)[0]) => {
-      const nameKey = (def.name ?? '').trim().toLowerCase();
-      const capKey = (def.sizeOrCapacity ?? '').trim().toLowerCase();
-      return stock.find(
-        (m) =>
-          m.companyId === companyId &&
-          m.mainType === 'boru' &&
-          (m.name ?? '').trim().toLowerCase() === nameKey &&
-          (m.sizeOrCapacity ?? '').trim().toLowerCase() === capKey
-      );
-    };
-    const findExistingNonCable = (def: (typeof payload.items)[0]) => {
-      const nameKey = (def.name ?? '').trim().toLowerCase();
-      const capKey = (def.sizeOrCapacity ?? def.capacityLabel ?? '').trim().toLowerCase();
-      return stock.find((m) => {
-        if (m.companyId !== companyId || m.mainType !== def.mainType) return false;
-        if ((m.name ?? '').trim().toLowerCase() !== nameKey) return false;
-        if ((m.sizeOrCapacity ?? m.capacityLabel ?? '').trim().toLowerCase() !== capKey) return false;
-        if (def.mainType === 'custom' && (def.customGroupName ?? '') !== (m.customGroupName ?? '')) return false;
-        return !isCableType(m.mainType) && m.mainType !== 'boru';
-      });
-    };
+    const normalize = (val: string | undefined | null): string =>
+      (val ?? '').trim().toLowerCase();
     for (const line of payload.items) {
       if (line.quantity <= 0) continue;
       const name = (line.name ?? '').trim();
-      const sizeOrCapacity = (line.sizeOrCapacity ?? '').trim();
-      const capacityLabel = (line.capacityLabel ?? '').trim();
-      const spoolId = (line.spoolId ?? '').trim();
-      const customGroupName = (line.customGroupName ?? '').trim();
+      if (!name) continue;
+      const typeLabel = (line.typeLabel ?? '').trim();
+      const sizeLabel = (line.sizeLabel ?? '').trim();
+      const detailId = (line.materialDetailId ?? '').trim();
+      const unitDisplay = line.unit;
+      const isMeterUnit = unitDisplay === 'metre';
+      const quantityUnit: 'm' | 'pcs' = isMeterUnit ? 'm' : 'pcs';
+      const keyName = normalize(name);
+      const keyType = normalize(typeLabel);
+      const keySize = normalize(sizeLabel);
       let materialStockItemId: string;
-      if (isCableType(line.mainType)) {
+      // ANA KURAL: Aynı stok kalemi Malzeme Adı + Cinsi + Ebat kombinasyonuna göre belirlenir.
+      const existing = stock.find((m) => {
+        if (m.companyId !== companyId) return false;
+        const mName = normalize(m.name);
+        const mType = normalize(m.materialTypeLabel ?? m.capacityLabel);
+        const mSize = normalize(m.sizeOrCapacity);
+        return mName === keyName && mType === keyType && mSize === keySize;
+      });
+
+      if (existing) {
+        // Eğer bu stok kalemi için daha önce birim bilgisi set edilmemişse, ilk gördüğümüz birimi kaydedelim.
+        if (!existing.unitDisplay) {
+          this.updateMaterialStock(existing.id, { unitDisplay });
+          const inMem = stock.find((m) => m.id === existing.id);
+          if (inMem) inMem.unitDisplay = unitDisplay;
+        }
+        if (isMeterUnit) {
+          const addM = line.quantity;
+          const newTotal = (existing.lengthTotal ?? 0) + addM;
+          const newRem = (existing.lengthRemaining ?? 0) + addM;
+          this.updateMaterialStock(existing.id, {
+            lengthTotal: newTotal,
+            lengthRemaining: newRem,
+          });
+          const updated = stock.find((m) => m.id === existing.id);
+          if (updated) {
+            updated.lengthTotal = newTotal;
+            updated.lengthRemaining = newRem;
+          }
+        } else {
+          const addQty = line.quantity;
+          const newQty = (existing.stockQty ?? 0) + addQty;
+          this.updateMaterialStock(existing.id, {
+            stockQty: newQty,
+          });
+          const updated = stock.find((m) => m.id === existing.id);
+          if (updated) updated.stockQty = newQty;
+        }
+        materialStockItemId = existing.id;
+      } else {
         const newItem: MaterialStockItem = {
           id: id(),
           companyId,
-          mainType: line.mainType,
-          name: name || 'Kablo',
-          capacityLabel: capacityLabel || undefined,
-          sizeOrCapacity: sizeOrCapacity || undefined,
-          spoolId: spoolId || undefined,
-          isCable: true,
-          cableCategory: line.mainType === 'kablo_ic' ? 'ic' : line.mainType === 'kablo_yeraltı' ? 'yeraltı' : 'havai',
-          lengthTotal: line.quantityUnit === 'm' ? line.quantity : 0,
-          lengthRemaining: line.quantityUnit === 'm' ? line.quantity : 0,
+          // Yeni dinamik sistem: kategori kullanıcıya gösterilmiyor; metre bazlı ise içerde 'boru', diğerleri 'custom' olarak tutulur.
+          mainType: isMeterUnit ? ('boru' as MaterialMainType) : ('custom' as MaterialMainType),
+          name,
+          sizeOrCapacity: sizeLabel || undefined,
+          capacityLabel: typeLabel || undefined,
+          materialTypeLabel: typeLabel || undefined,
+          materialDetailIds: detailId ? [detailId] : [],
+          unitDisplay,
+          stockQty: !isMeterUnit ? line.quantity : undefined,
+          lengthTotal: isMeterUnit ? line.quantity : undefined,
+          lengthRemaining: isMeterUnit ? line.quantity : undefined,
           createdAt: now,
         };
         const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
@@ -437,71 +465,27 @@ export const store = {
         save(STORAGE_KEYS.materialStock, list);
         stock.push(newItem);
         materialStockItemId = newItem.id;
-      } else if (line.mainType === 'boru') {
-        const existing = findExistingBoru(line);
-        if (existing) {
-          const addM = line.quantityUnit === 'm' ? line.quantity : 0;
-          this.updateMaterialStock(existing.id, {
-            lengthTotal: (existing.lengthTotal ?? 0) + addM,
-            lengthRemaining: (existing.lengthRemaining ?? 0) + addM,
-          });
-          const updated = stock.find((m) => m.id === existing.id);
-          if (updated) {
-            updated.lengthTotal = (updated.lengthTotal ?? 0) + addM;
-            updated.lengthRemaining = (updated.lengthRemaining ?? 0) + addM;
+      }
+
+      // Malzeme ID bilgisi stok kalemini bölmez; aynı stok kalemi altında detay listesi olarak tutulur.
+      if (detailId) {
+        const sItem = stock.find((m) => m.id === materialStockItemId);
+        if (sItem) {
+          const existingIds = sItem.materialDetailIds ?? [];
+          if (!existingIds.includes(detailId)) {
+            const nextIds = [...existingIds, detailId];
+            sItem.materialDetailIds = nextIds;
+            this.updateMaterialStock(materialStockItemId, { materialDetailIds: nextIds });
           }
-          materialStockItemId = existing.id;
-        } else {
-          const newItem: MaterialStockItem = {
-            id: id(),
-            companyId,
-            mainType: 'boru',
-            name: name || 'Boru',
-            sizeOrCapacity: sizeOrCapacity || undefined,
-            lengthTotal: line.quantityUnit === 'm' ? line.quantity : 0,
-            lengthRemaining: line.quantityUnit === 'm' ? line.quantity : 0,
-            createdAt: now,
-          };
-          const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
-          list.push(newItem);
-          save(STORAGE_KEYS.materialStock, list);
-          stock.push(newItem);
-          materialStockItemId = newItem.id;
-        }
-      } else {
-        const existing = findExistingNonCable(line);
-        if (existing) {
-          const addQty = line.quantityUnit === 'pcs' ? line.quantity : 0;
-          this.updateMaterialStock(existing.id, {
-            stockQty: (existing.stockQty ?? 0) + addQty,
-          });
-          const updated = stock.find((m) => m.id === existing.id);
-          if (updated) updated.stockQty = (updated.stockQty ?? 0) + addQty;
-          materialStockItemId = existing.id;
-        } else {
-          const newItem: MaterialStockItem = {
-            id: id(),
-            companyId,
-            mainType: line.mainType,
-            name: name || 'Malzeme',
-            sizeOrCapacity: sizeOrCapacity || undefined,
-            capacityLabel: capacityLabel || undefined,
-            customGroupName: line.mainType === 'custom' ? customGroupName || undefined : undefined,
-            stockQty: line.quantityUnit === 'pcs' ? line.quantity : 0,
-            createdAt: now,
-          };
-          const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []);
-          list.push(newItem);
-          save(STORAGE_KEYS.materialStock, list);
-          stock.push(newItem);
-          materialStockItemId = newItem.id;
         }
       }
       this.addDeliveryNoteItem({
         deliveryNoteId: note.id,
         materialStockItemId,
         quantity: line.quantity,
-        quantityUnit: line.quantityUnit,
+        quantityUnit,
+        unitDisplay,
+        materialDetailId: detailId || undefined,
       });
     }
     return { note };

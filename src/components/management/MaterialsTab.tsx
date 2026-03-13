@@ -37,6 +37,7 @@ export function MaterialsTab() {
   const allItems = store.getMaterialStock(companyId);
   const teams = store.getTeams(companyId);
   const [stockSearchQuery, setStockSearchQuery] = useState('');
+  const [selectedNameFilter, setSelectedNameFilter] = useState<string | null>(null);
   const [distTeamId, setDistTeamId] = useState('');
   const [distMaterialId, setDistMaterialId] = useState('');
   const [distQuantity, setDistQuantity] = useState<number>(0);
@@ -46,6 +47,11 @@ export function MaterialsTab() {
   /** Stok listesi: forma bağlı değil; sadece arama metnine göre filtrelenir */
   const stockListFiltered = useMemo(() => {
     const q = stockSearchQuery.trim().toLowerCase();
+    // Seçilmiş bir malzeme adı varsa, sadece o ada tam eşleşen satırları göster.
+    if (selectedNameFilter) {
+      const key = selectedNameFilter.trim().toLowerCase();
+      return allItems.filter((m) => (m.name ?? '').trim().toLowerCase() === key);
+    }
     if (!q) return allItems;
     return allItems.filter((m) => {
       const name = (m.name ?? '').toLowerCase();
@@ -53,9 +59,28 @@ export function MaterialsTab() {
       const typeStr = typeKey ? t(typeKey).toLowerCase() : '';
       const spool = (m.spoolId ?? '').toLowerCase();
       const cap = (m.capacityLabel ?? m.sizeOrCapacity ?? '').toLowerCase();
-      return name.includes(q) || typeStr.includes(q) || spool.includes(q) || cap.includes(q);
+      // Malzeme adı için sadece başlangıca göre filtrele; diğer alanlarda mevcut genel arama devam etsin.
+      return name.startsWith(q) || typeStr.includes(q) || spool.includes(q) || cap.includes(q);
     });
-  }, [allItems, stockSearchQuery, t]);
+  }, [allItems, stockSearchQuery, selectedNameFilter, t]);
+
+  const nameSuggestions = useMemo(() => {
+    const q = stockSearchQuery.trim().toLowerCase();
+    if (!q) return [] as string[];
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const item of allItems) {
+      const rawName = (item.name ?? '').trim();
+      if (!rawName) continue;
+      const lower = rawName.toLowerCase();
+      // Öneriler sadece Malzeme Adının başlangıcına göre: prefix eşleşme.
+      if (!lower.startsWith(q)) continue;
+      if (seen.has(lower)) continue;
+      seen.add(lower);
+      out.push(rawName);
+    }
+    return out;
+  }, [allItems, stockSearchQuery]);
 
   /** Dağıtım için: stokta kalanı olan malzemeler (metre türleri: lengthRemaining > 0, diğer: stockQty > 0) */
   const itemsWithStock = useMemo(
@@ -113,22 +138,44 @@ export function MaterialsTab() {
         <h3 className={styles.sectionTitle}>{t('materials.stockListTitle')}</h3>
       </div>
       <p className={styles.muted} style={{ marginBottom: '0.75rem', fontSize: '0.875rem' }}>{t('materials.stockFromDeliveryNotes')}</p>
-      <label className={styles.label}>
-        {t('materials.stockSearchLabel')}
-        <input
-          type="text"
-          className={styles.input}
-          value={stockSearchQuery}
-          onChange={(e) => setStockSearchQuery(e.target.value)}
-          placeholder={t('materials.stockSearchPlaceholder')}
-        />
-      </label>
+      <div className={styles.suggestions}>
+        <label className={styles.label}>
+          {t('materials.stockSearchLabel')}
+          <input
+            type="text"
+            className={styles.input}
+            value={stockSearchQuery}
+            onChange={(e) => {
+              setStockSearchQuery(e.target.value);
+              // Kullanıcı manuel yazmaya başladığında seçili ada bağlı filtreyi temizle.
+              if (selectedNameFilter) setSelectedNameFilter(null);
+            }}
+            placeholder={t('materials.stockSearchPlaceholder')}
+          />
+        </label>
+        {nameSuggestions.length > 0 && !selectedNameFilter && (
+          <div className={styles.suggestionList}>
+            {nameSuggestions.map((name) => (
+              <div
+                key={name}
+                className={styles.suggestionItem}
+                onClick={() => {
+                  setStockSearchQuery(name);
+                  setSelectedNameFilter(name);
+                }}
+              >
+                {name}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>{t('materials.tableType')}</th>
             <th>{t('materials.tableNameDesc')}</th>
-            <th>{t('materials.tableSizeCapacity')}</th>
+            <th>{t('materials.tableKind')}</th>
+            <th>{t('materials.tableSize')}</th>
             <th>{t('materials.tableStockM')}</th>
             <th>{t('materials.tableSpoolId')}</th>
           </tr>
@@ -136,15 +183,26 @@ export function MaterialsTab() {
         <tbody>
           {stockListFiltered.map((item) => (
             <tr key={item.id}>
-              <td>{t(TYPE_DISPLAY_KEYS[item.mainType])}</td>
               <td>{item.name}</td>
-              <td>{item.sizeOrCapacity ?? item.capacityLabel ?? '-'}</td>
+              <td>{item.materialTypeLabel ?? item.capacityLabel ?? '-'}</td>
+              <td>{item.sizeOrCapacity ?? '-'}</td>
               <td>
-                {isMeterType(item.mainType)
-                  ? `${item.lengthRemaining ?? item.lengthTotal ?? 0} m`
-                  : item.stockQty ?? 0}
+                {(() => {
+                  const isMeter = isMeterType(item.mainType);
+                  const qty = isMeter ? (item.lengthRemaining ?? item.lengthTotal ?? 0) : (item.stockQty ?? 0);
+                  // Birim, irsaliyede seçilen ham metinle (adet / metre / kilo / metreküp) gösterilir.
+                  // Eski kayıtlar için fallback: metre türleri "metre", diğerleri "adet".
+                  const unit =
+                    item.unitDisplay ??
+                    (isMeter ? 'metre' : 'adet');
+                  return `${qty} ${unit}`;
+                })()}
               </td>
-              <td>{item.spoolId ?? '-'}</td>
+              <td>
+                {item.materialDetailIds && item.materialDetailIds.length > 0
+                  ? item.materialDetailIds.join(', ')
+                  : (item.spoolId ?? '-')}
+              </td>
             </tr>
           ))}
         </tbody>
@@ -189,13 +247,12 @@ export function MaterialsTab() {
               const rem = isMeterType(item.mainType)
                 ? (item.lengthRemaining ?? 0)
                 : (item.stockQty ?? 0);
-              const typeLabel = t(TYPE_DISPLAY_KEYS[item.mainType]);
               const namePart = item.spoolId
                 ? `${item.name ?? item.capacityLabel} (${item.spoolId})`
                 : (item.name ?? item.sizeOrCapacity ?? item.capacityLabel ?? item.id);
               const label = isMeterType(item.mainType)
-                ? `${typeLabel} — ${namePart} — ${rem} m`
-                : `${typeLabel} — ${namePart} — ${rem}`;
+                ? `${namePart} — ${rem} m`
+                : `${namePart} — ${rem}`;
               return (
                 <option key={item.id} value={item.id}>{label}</option>
               );

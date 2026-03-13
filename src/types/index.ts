@@ -126,8 +126,18 @@ export interface MaterialStockItem {
 
   /** Genel görünen ad / açıklama (direk adı, boru adı, kutu açıklaması vb.) */
   name: string;
-  /** Ebat / kapasite / çap gibi serbest alan (örn. 6m, 110mm, 1x8) */
+  /** Eski: Ebat / kapasite / çap gibi serbest alan (örn. 6m, 110mm, 1x8).
+   *  Yeni dinamik sistemde çoğunlukla "Malzeme Ebatı" için kullanılır. */
   sizeOrCapacity?: string;
+
+  /** Yeni dinamik sistem: serbest "Malzeme Cinsi" bilgisi (örn. nervürlü, 12FO, cam). */
+  materialTypeLabel?: string;
+
+  /** Yeni dinamik sistem: aynı stok kalemi altında biriken isteğe bağlı Malzeme ID listesi (örn. makara, seri no). */
+  materialDetailIds?: string[];
+
+  /** Yeni dinamik sistem: bu stok kalemi için kullanılan birim (adet / metre / kilo / metreküp). */
+  unitDisplay?: 'adet' | 'metre' | 'kilo' | 'metreküp';
 
   /** Adet bazlı stok (direk, boru, kutu vb. için). Sıfırdan küçük olamaz. */
   stockQty?: number;
@@ -188,6 +198,10 @@ export interface DeliveryNoteItem {
   materialStockItemId: string;
   quantity: number;
   quantityUnit: 'm' | 'pcs';
+  /** Kullanıcının seçtiği birim (adet, metre, kilo, metreküp) – sadece gösterim amaçlı. */
+  unitDisplay?: 'adet' | 'metre' | 'kilo' | 'metreküp';
+  /** İrsaliye satırında girilen isteğe bağlı Malzeme ID (makara, seri numarası vb.). */
+  materialDetailId?: string | null;
   createdAt: string;
 }
 
