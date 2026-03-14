@@ -138,7 +138,7 @@ export function Landing() {
                           setLangOpen(false);
                         }}
                       >
-                        {t(langKeys[loc])}
+                        {loc.toUpperCase()}
                       </button>
                     </li>
                   ))}

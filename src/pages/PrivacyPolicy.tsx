@@ -1,174 +1,107 @@
 import { useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
+import { PublicPageHeader } from '../components/PublicPageHeader';
 import styles from './PrivacyPolicy.module.css';
 
-const PAGE_TITLE = 'Gizlilik Politikası | MK-OPS';
+function listItems(t: (key: string) => string, key: string) {
+  return t(key)
+    .split('\n')
+    .filter(Boolean)
+    .map((item, i) => <li key={i}>{item}</li>);
+}
 
 export function PrivacyPolicy() {
   const { t } = useI18n();
+  const pageTitle = t('landing.footerPrivacy');
 
   useEffect(() => {
-    document.title = PAGE_TITLE;
+    document.title = `${pageTitle} | MK-OPS`;
     return () => { document.title = 'MK-OPS'; };
-  }, []);
+  }, [pageTitle]);
 
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <Link to="/" className={styles.backLink}>← {t('userGuide.backToHome')}</Link>
-      </header>
+      <PublicPageHeader />
       <main className={styles.doc}>
-        <h1 className={styles.mainTitle}>Gizlilik Politikası</h1>
+        <h1 className={styles.mainTitle}>{pageTitle}</h1>
 
-        <p className={styles.lead}>
-          MK-OPS platformunda gizliliğinize büyük önem veriyoruz. Bu Gizlilik Politikası, MK-OPS web uygulamasını kullanırken kişisel verilerinizin nasıl toplandığını, kullanıldığını ve korunduğunu açıklamaktadır.
-        </p>
-        <p>
-          MK-OPS platformunu kullanarak bu Gizlilik Politikasında belirtilen uygulamaları kabul etmiş olursunuz.
-        </p>
+        <p className={styles.lead}>{t('legal.privacy.lead')}</p>
+        <p>{t('legal.privacy.intro')}</p>
 
-        <h2 className={styles.h2}>1. Hizmet Sağlayıcı</h2>
-        <p>MK-OPS platformu aşağıdaki kuruluş tarafından işletilmektedir:</p>
+        <h2 className={styles.h2}>{t('legal.privacy.s1Title')}</h2>
+        <p>{t('legal.privacy.s1P')}</p>
         <ul className={styles.contactBlock}>
-          <li><strong>MK Digital Systems</strong></li>
-          <li>E-posta: <a href="mailto:mustafa82oner@gmail.com" className={styles.link}>mustafa82oner@gmail.com</a></li>
-          <li>Web sitesi: <a href="https://mk-ops.tr" className={styles.link} rel="noopener noreferrer" target="_blank">https://mk-ops.tr</a></li>
+          <li><strong>{t('legal.privacy.s1Contact')}</strong></li>
+          <li>{t('legal.privacy.emailLabel')} <a href="mailto:mustafa82oner@gmail.com" className={styles.link}>mustafa82oner@gmail.com</a></li>
+          <li>{t('legal.privacy.websiteLabel')} <a href="https://mk-ops.tr" className={styles.link} rel="noopener noreferrer" target="_blank">https://mk-ops.tr</a></li>
         </ul>
 
-        <h2 className={styles.h2}>2. Toplanan Veri Türleri</h2>
-        <p>MK-OPS platformu aşağıdaki veri türlerini toplayabilir:</p>
+        <h2 className={styles.h2}>{t('legal.privacy.s2Title')}</h2>
+        <p>{t('legal.privacy.s2P')}</p>
 
-        <p className={styles.subHeading}>Hesap bilgileri</p>
-        <ul>
-          <li>ad ve soyad</li>
-          <li>e-posta adresi</li>
-          <li>şirket adı</li>
-        </ul>
+        <p className={styles.subHeading}>{t('legal.privacy.s2Account')}</p>
+        <ul>{listItems(t, 'legal.privacy.s2AccountList')}</ul>
 
-        <p className={styles.subHeading}>Kullanım verileri</p>
-        <ul>
-          <li>oluşturulan projeler</li>
-          <li>ekip ve rol yönetimi verileri</li>
-          <li>görev ve operasyon kayıtları</li>
-          <li>sistem aktiviteleri</li>
-        </ul>
+        <p className={styles.subHeading}>{t('legal.privacy.s2Usage')}</p>
+        <ul>{listItems(t, 'legal.privacy.s2UsageList')}</ul>
 
-        <p className={styles.subHeading}>Teknik bilgiler</p>
-        <ul>
-          <li>IP adresi</li>
-          <li>tarayıcı türü</li>
-          <li>cihaz bilgileri</li>
-          <li>oturum zamanları</li>
-        </ul>
+        <p className={styles.subHeading}>{t('legal.privacy.s2Tech')}</p>
+        <ul>{listItems(t, 'legal.privacy.s2TechList')}</ul>
 
-        <p className={styles.subHeading}>Operasyon verileri</p>
-        <ul>
-          <li>stok ve malzeme hareketleri</li>
-          <li>irsaliye kayıtları</li>
-          <li>ekip zimmet bilgileri</li>
-          <li>proje faaliyetleri</li>
-        </ul>
+        <p className={styles.subHeading}>{t('legal.privacy.s2Ops')}</p>
+        <ul>{listItems(t, 'legal.privacy.s2OpsList')}</ul>
 
-        <p className={styles.subHeading}>Ödeme verileri</p>
+        <p className={styles.subHeading}>{t('legal.privacy.s2Payment')}</p>
+        <p>{t('legal.privacy.s2PaymentP')}</p>
+
+        <h2 className={styles.h2}>{t('legal.privacy.s3Title')}</h2>
+        <p>{t('legal.privacy.s3P')}</p>
+        <ul>{listItems(t, 'legal.privacy.s3List')}</ul>
+        <p>{t('legal.privacy.s3NoSell')}</p>
+
+        <h2 className={styles.h2}>{t('legal.privacy.s4Title')}</h2>
+        <p>{t('legal.privacy.s4P')}</p>
+        <ul>{listItems(t, 'legal.privacy.s4List')}</ul>
+
+        <h2 className={styles.h2}>{t('legal.privacy.s5Title')}</h2>
+        <p>{t('legal.privacy.s5P1')}</p>
+        <p>{t('legal.privacy.s5P2')}</p>
+        <ul>{listItems(t, 'legal.privacy.s5List')}</ul>
+        <p>{t('legal.privacy.s5P3')}</p>
+
+        <h2 className={styles.h2}>{t('legal.privacy.s6Title')}</h2>
+        <p>{t('legal.privacy.s6P1')}</p>
+        <p>{t('legal.privacy.s6P2')}</p>
+        <ul>{listItems(t, 'legal.privacy.s6List')}</ul>
+        <p>{t('legal.privacy.s6P3')}</p>
+
+        <h2 className={styles.h2}>{t('legal.privacy.s7Title')}</h2>
+        <p>{t('legal.privacy.s7P1')}</p>
+        <ul>{listItems(t, 'legal.privacy.s7List')}</ul>
         <p>
-          Ödeme işlemleri üçüncü taraf ödeme sağlayıcıları tarafından güvenli şekilde işlenebilir. MK-OPS ödeme kartı bilgilerini doğrudan saklamaz.
-        </p>
-
-        <h2 className={styles.h2}>3. Verilerin Kullanım Amaçları</h2>
-        <p>Toplanan veriler aşağıdaki amaçlarla kullanılabilir:</p>
-        <ul>
-          <li>hizmetin sağlanması ve geliştirilmesi</li>
-          <li>kullanıcı hesaplarının yönetilmesi</li>
-          <li>platform özelliklerinin çalıştırılması</li>
-          <li>sistem güvenliğinin sağlanması</li>
-          <li>operasyon raporlarının oluşturulması</li>
-          <li>kullanıcılarla iletişim kurulması</li>
-          <li>yasal yükümlülüklerin yerine getirilmesi</li>
-        </ul>
-        <p>MK-OPS kullanıcı verilerini hiçbir şekilde satmaz veya kiralamaz.</p>
-
-        <h2 className={styles.h2}>4. Veri İşleme Hukuki Dayanağı</h2>
-        <p>Kullanıcı verileri aşağıdaki hukuki temellere dayanarak işlenebilir:</p>
-        <ul>
-          <li>kullanıcının açık rızası</li>
-          <li>hizmet sözleşmesinin yerine getirilmesi</li>
-          <li>yasal yükümlülüklerin yerine getirilmesi</li>
-          <li>platform güvenliğinin sağlanması</li>
-        </ul>
-
-        <h2 className={styles.h2}>5. Veri Paylaşımı</h2>
-        <p>
-          Veriler yalnızca hizmetin çalışması için gerekli durumlarda güvenilir hizmet sağlayıcılarla paylaşılabilir.
-        </p>
-        <p>Örnek olarak:</p>
-        <ul>
-          <li>Supabase (veritabanı ve altyapı hizmetleri)</li>
-          <li>e-posta servis sağlayıcıları (sistem bildirimleri için)</li>
-          <li>ödeme sağlayıcıları (abonelik işlemleri için)</li>
-        </ul>
-        <p>Tüm üçüncü taraf hizmet sağlayıcıları veri koruma standartlarına uymak zorundadır.</p>
-
-        <h2 className={styles.h2}>6. Veri Güvenliği</h2>
-        <p>
-          MK-OPS kullanıcı verilerini korumak için çeşitli güvenlik önlemleri uygular.
-        </p>
-        <p>Bu önlemler şunları içerebilir:</p>
-        <ul>
-          <li>HTTPS / SSL güvenli bağlantı</li>
-          <li>şifrelenmiş veri depolama</li>
-          <li>erişim kontrol mekanizmaları</li>
-          <li>sistem logları ve denetim kayıtları</li>
-        </ul>
-        <p>Verilere yalnızca yetkili kişiler erişebilir.</p>
-
-        <h2 className={styles.h2}>7. Kullanıcı Hakları</h2>
-        <p>Kullanıcılar aşağıdaki haklara sahiptir:</p>
-        <ul>
-          <li>kişisel verilerine erişim talep etme</li>
-          <li>yanlış verilerin düzeltilmesini isteme</li>
-          <li>verilerin silinmesini talep etme</li>
-          <li>veri işleme onayını geri çekme</li>
-          <li>verilerini dışa aktarma talep etme</li>
-        </ul>
-        <p>
-          Bu haklarınızı kullanmak için aşağıdaki e-posta adresi üzerinden bizimle iletişime geçebilirsiniz:{' '}
+          {t('legal.privacy.s7P2')}{' '}
           <a href="mailto:mustafa82oner@gmail.com" className={styles.link}>mustafa82oner@gmail.com</a>
         </p>
 
-        <h2 className={styles.h2}>8. Çerezler</h2>
-        <p>
-          MK-OPS platformu aşağıdaki amaçlarla çerezler veya benzer teknolojiler kullanabilir:
-        </p>
-        <ul>
-          <li>kullanıcı oturumlarını sürdürmek</li>
-          <li>kullanıcı tercihlerini saklamak</li>
-          <li>platform performansını ölçmek</li>
-        </ul>
-        <p>Kullanıcılar çerezleri tarayıcı ayarlarından devre dışı bırakabilir.</p>
+        <h2 className={styles.h2}>{t('legal.privacy.s8Title')}</h2>
+        <p>{t('legal.privacy.s8P1')}</p>
+        <ul>{listItems(t, 'legal.privacy.s8List')}</ul>
+        <p>{t('legal.privacy.s8P2')}</p>
 
-        <h2 className={styles.h2}>9. Veri Saklama Süresi</h2>
-        <p>
-          Kullanıcı verileri, hesap aktif olduğu sürece veya hizmetin sağlanması için gerekli olduğu süre boyunca saklanır.
-        </p>
-        <p>
-          Hesap kapatıldığında veriler belirli bir süre sonra silinebilir veya anonim hale getirilebilir.
-        </p>
+        <h2 className={styles.h2}>{t('legal.privacy.s9Title')}</h2>
+        <p>{t('legal.privacy.s9P1')}</p>
+        <p>{t('legal.privacy.s9P2')}</p>
 
-        <h2 className={styles.h2}>10. Politika Güncellemeleri</h2>
-        <p>
-          Bu Gizlilik Politikası zaman zaman güncellenebilir.
-        </p>
-        <p>
-          Önemli değişiklikler platform üzerinden veya e-posta yoluyla kullanıcılara bildirilebilir.
-        </p>
+        <h2 className={styles.h2}>{t('legal.privacy.s10Title')}</h2>
+        <p>{t('legal.privacy.s10P1')}</p>
+        <p>{t('legal.privacy.s10P2')}</p>
 
-        <h2 className={styles.h2}>11. İletişim</h2>
-        <p>Gizlilik politikası ile ilgili sorularınız için bizimle iletişime geçebilirsiniz:</p>
+        <h2 className={styles.h2}>{t('legal.privacy.s11Title')}</h2>
+        <p>{t('legal.privacy.s11P')}</p>
         <ul className={styles.contactBlock}>
-          <li><strong>MK Digital Systems</strong></li>
-          <li>E-posta: <a href="mailto:mustafa82oner@gmail.com" className={styles.link}>mustafa82oner@gmail.com</a></li>
-          <li>Web sitesi: <a href="https://mk-ops.tr" className={styles.link} rel="noopener noreferrer" target="_blank">https://mk-ops.tr</a></li>
+          <li><strong>{t('legal.privacy.s1Contact')}</strong></li>
+          <li>{t('legal.privacy.emailLabel')} <a href="mailto:mustafa82oner@gmail.com" className={styles.link}>mustafa82oner@gmail.com</a></li>
+          <li>{t('legal.privacy.websiteLabel')} <a href="https://mk-ops.tr" className={styles.link} rel="noopener noreferrer" target="_blank">https://mk-ops.tr</a></li>
         </ul>
       </main>
     </div>

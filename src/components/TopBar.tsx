@@ -281,7 +281,7 @@ export function TopBar({ pendingApprovalsCount = 0 }: TopBarProps) {
                         }
                       }}
                     >
-                      {t(langKeys[loc])}
+                      {loc.toUpperCase()}
                     </button>
                   </li>
                 ))}
