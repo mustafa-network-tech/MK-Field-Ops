@@ -4,7 +4,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
 import { getEffectivePlan, isPlanUpgrade } from '../services/subscriptionService';
-import { changeCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase } from '../services/companyService';
+import { changeCompanyPlanInSupabase, renewCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase } from '../services/companyService';
 import type { CompanyPlan } from '../types';
 import styles from './PlanChange.module.css';
 
@@ -56,6 +56,7 @@ export function PlanChange() {
   const navigate = useNavigate();
   const planFromUrl = searchParams.get('plan') as CompanyPlan | null;
   const validPlanFromUrl = planFromUrl && PLANS.includes(planFromUrl) ? planFromUrl : null;
+  const fromRegistration = searchParams.get('from') === 'registration';
 
   const [selectedPlan, setSelectedPlan] = useState<CompanyPlan | null>(validPlanFromUrl);
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
@@ -81,6 +82,21 @@ export function PlanChange() {
     setError(null);
     setSubmitting(true);
     const result = await changeCompanyPlanInSupabase(companyId, selectedPlan, billingCycle, currentPlan);
+    setSubmitting(false);
+    if (result.ok) {
+      await fetchCompanyLanguageFromSupabase(companyId);
+      if (refreshCompany) refreshCompany();
+      navigate('/', { state: { planChangeSuccess: true }, replace: true });
+    } else {
+      setError(result.error ?? t('planChangePage.errorGeneric'));
+    }
+  };
+
+  const handleRenew = async () => {
+    if (!companyId || !isCM) return;
+    setError(null);
+    setSubmitting(true);
+    const result = await renewCompanyPlanInSupabase(companyId, billingCycle);
     setSubmitting(false);
     if (result.ok) {
       await fetchCompanyLanguageFromSupabase(companyId);
@@ -139,7 +155,7 @@ export function PlanChange() {
   }
 
   const planAlreadySet = selectedPlan && currentPlan === selectedPlan;
-  if (planAlreadySet) {
+  if (planAlreadySet && fromRegistration) {
     return (
       <div className={styles.page}>
         <h1 className={styles.title}>{t('planChangePage.paymentTitle')}</h1>
@@ -162,6 +178,10 @@ export function PlanChange() {
         const date = upgrade ? new Date() : (c?.plan_end_date ? new Date(c.plan_end_date) : new Date());
         return date.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
       })()
+    : null;
+  const isSamePlan = selectedPlan && currentPlan === selectedPlan;
+  const planEndDateLabel = c?.plan_end_date
+    ? new Date(c.plan_end_date).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
     : null;
 
   return (
@@ -243,24 +263,48 @@ export function PlanChange() {
               <span>{planLabel(selectedPlan, t)}</span>
               <strong>{selectedPrice}</strong>
             </p>
-            {planStartDateLabel && (
-              <p className={styles.summaryRow}>
-                <span>{t('planChangePage.planStartDate')}</span>
-                <strong>{planStartDateLabel}</strong>
-              </p>
+            {isSamePlan ? (
+              <>
+                <p className={styles.samePlanMessage}>
+                  {t('planChangePage.alreadyHavePlan')}
+                  {planEndDateLabel && ` ${t('planChangePage.planEndsOn', { date: planEndDateLabel })}`}
+                  {' '}{t('planChangePage.renewPrompt')}
+                </p>
+                <p className={styles.totalRow}>
+                  <span>{t('planChangePage.total')}</span>
+                  <strong>{selectedPrice}</strong>
+                </p>
+                <button
+                  type="button"
+                  className={styles.confirmBtn}
+                  disabled={submitting}
+                  onClick={handleRenew}
+                >
+                  {submitting ? t('planChangePage.confirming') : t('planChangePage.renew')}
+                </button>
+              </>
+            ) : (
+              <>
+                {planStartDateLabel && (
+                  <p className={styles.summaryRow}>
+                    <span>{t('planChangePage.planStartDate')}</span>
+                    <strong>{planStartDateLabel}</strong>
+                  </p>
+                )}
+                <p className={styles.totalRow}>
+                  <span>{t('planChangePage.total')}</span>
+                  <strong>{selectedPrice}</strong>
+                </p>
+                <button
+                  type="button"
+                  className={styles.confirmBtn}
+                  disabled={submitting}
+                  onClick={handlePayment}
+                >
+                  {submitting ? t('planChangePage.confirming') : t('planChangePage.pay')}
+                </button>
+              </>
             )}
-            <p className={styles.totalRow}>
-              <span>{t('planChangePage.total')}</span>
-              <strong>{selectedPrice}</strong>
-            </p>
-            <button
-              type="button"
-              className={styles.confirmBtn}
-              disabled={submitting}
-              onClick={handlePayment}
-            >
-              {submitting ? t('planChangePage.confirming') : t('planChangePage.pay')}
-            </button>
           </>
         ) : (
           <p className={styles.muted}>{t('planChangePage.selectPlan')}</p>

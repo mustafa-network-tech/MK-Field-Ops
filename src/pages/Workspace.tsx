@@ -69,7 +69,7 @@ export function Workspace() {
         return;
       }
       setUser(store.getCurrentUser());
-      navigate(`/plan-change?plan=${plan}`, { replace: true });
+      navigate(`/plan-and-payment?plan=${plan}&from=registration`, { replace: true });
     } finally {
       setLoading(false);
     }

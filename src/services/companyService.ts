@@ -161,6 +161,40 @@ export async function changeCompanyPlanInSupabase(
 }
 
 /**
+ * Renew current plan (extend period). Same plan, new plan_start_date and plan_end_date. Clears pending_plan.
+ */
+export async function renewCompanyPlanInSupabase(
+  companyId: string,
+  billingCycle: 'monthly' | 'yearly'
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: false, error: 'Not connected' };
+  const now = new Date();
+  const planStart = now.toISOString();
+  const planEnd = new Date(now);
+  if (billingCycle === 'yearly') planEnd.setFullYear(planEnd.getFullYear() + 1);
+  else planEnd.setDate(planEnd.getDate() + 30);
+  const planEndIso = planEnd.toISOString();
+  const { error } = await supabase
+    .from('companies')
+    .update({
+      plan_start_date: planStart,
+      plan_end_date: planEndIso,
+      billing_cycle: billingCycle,
+      pending_plan: null,
+      pending_plan_billing_cycle: null,
+    })
+    .eq('id', companyId);
+  if (error) return { ok: false, error: error.message };
+  store.updateCompany(companyId, {
+    plan_start_date: planStart,
+    plan_end_date: planEndIso,
+    pending_plan: null,
+    pending_plan_billing_cycle: null,
+  }, companyId);
+  return { ok: true };
+}
+
+/**
  * Update company join code in Supabase. Only Company Manager; 4 digits only.
  */
 export async function updateCompanyJoinCodeInSupabase(
