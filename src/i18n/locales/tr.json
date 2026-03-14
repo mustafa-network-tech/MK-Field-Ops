@@ -227,6 +227,15 @@
     "langFr": "FR",
     "langDe": "DE"
   },
+  "notifications": {
+    "title": "Bildirimler",
+    "newCount": "{count} yeni bildiriminiz var",
+    "pmJobApproved": "{actorName}, {teamCode} takımı için günlük işi onayladı, proje {projectKey}.",
+    "pmTeamCreated": "{actorName}, {teamCode} takımını oluşturdu.",
+    "pmTeamApproved": "{actorName}, {teamCode} takımını onayladı.",
+    "noNotifications": "Bildirim yok",
+    "markAllRead": "Tümünü okundu işaretle"
+  },
   "nav": {
     "dashboard": "Panel",
     "jobEntry": "Günlük İş Girişi",
@@ -603,7 +612,8 @@
     "userApprovals": "Kullanıcı Onayları",
     "approve": "Onayla",
     "reject": "Reddet",
-    "noPending": "Bekleyen onay yok"
+    "noPending": "Bekleyen onay yok",
+    "pendingNotification": "{count} onay bekliyor"
   },
   "reports": {
     "title": "Raporlar",
@@ -701,6 +711,12 @@
     "weeklySummary": "Haftalık Özet",
     "monthlySummary": "Aylık Özet",
     "performance": "Performans"
+  },
+  "planExpiry": {
+    "daysHoursLeft": "Planınızın bitmesine {days} gün {hours} saat kaldı. Plan ve ödeme için tıklayın.",
+    "hoursLeft": "Planınızın bitmesine {hours} saat kaldı. Plan ve ödeme için tıklayın.",
+    "suspendedGrace": "Planınız yok. Hesabınız askıya alındı. Veri kaybı yok. Yenilemek için {days} gün kaldı. Plan ve ödeme için tıklayın.",
+    "closed": "Hesabınız askıya alındı. Plan ve ödeme için tıklayın."
   },
   "planPage": {
     "title": "Plan",

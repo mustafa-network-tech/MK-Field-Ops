@@ -331,3 +331,19 @@ export interface PayrollPeriodSettings {
   updatedBy: string;
   updatedAt: string;
 }
+
+/** Activity notification for Company Manager (e.g. PM approved job, PM created team). */
+export type NotificationType = 'pm_job_approved' | 'pm_team_created' | 'pm_team_approved';
+
+export interface ActivityNotification {
+  id: string;
+  companyId: string;
+  type: NotificationType;
+  /** i18n key for title (params in meta). */
+  titleKey: string;
+  meta: Record<string, string>;
+  read: boolean;
+  /** Set when marked read; notification is deleted 24h after this. */
+  readAt?: string | null;
+  createdAt: string;
+}

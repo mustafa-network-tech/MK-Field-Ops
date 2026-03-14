@@ -8,6 +8,7 @@ import { getTeamsForUser } from '../../services/teamScopeService';
 import { canPlanAddTeam } from '../../services/planGating';
 import { getEffectivePlan } from '../../services/subscriptionService';
 import { logEvent, actorFromUser } from '../../services/auditLogService';
+import { addActivityNotification } from '../../services/activityNotificationService';
 import { Card } from '../ui/Card';
 import type { Team, TeamManualMember } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -114,6 +115,14 @@ export function TeamsTab() {
         team_code: team.code,
         company_id: user?.companyId ?? undefined,
         meta: {},
+      });
+    }
+    if (user?.role === 'projectManager' && team && user.companyId) {
+      addActivityNotification({
+        companyId: user.companyId,
+        type: 'pm_team_approved',
+        titleKey: 'notifications.pmTeamApproved',
+        meta: { actorName: user.fullName ?? '–', teamCode: team.code },
       });
     }
   };

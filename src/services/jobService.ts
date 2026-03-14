@@ -2,6 +2,8 @@ import { store } from '../data/store';
 import { canUserUseTeamForJob } from './teamScopeService';
 import { roundMoney } from '../utils/formatLocale';
 import { logEvent, actorFromUser } from './auditLogService';
+import { addActivityNotification } from './activityNotificationService';
+import { getProjectDisplayKey } from '../utils/projectKey';
 import type { User, JobRecord, JobMaterialUsage } from '../types';
 
 export type AddJobResult = { ok: true } | { ok: false; error: string };
@@ -215,6 +217,20 @@ export function updateJob(
       project_id: job.projectId ?? null,
       company_id: companyId,
       meta: patch.status ? { previousStatus: job.status, newStatus: patch.status } : {},
+    });
+  }
+  if (patch.status === 'approved' && user.role === 'projectManager') {
+    const project = job.projectId ? store.getProject(job.projectId, companyId) : undefined;
+    const projectKey = project ? getProjectDisplayKey(project) : '–';
+    addActivityNotification({
+      companyId,
+      type: 'pm_job_approved',
+      titleKey: 'notifications.pmJobApproved',
+      meta: {
+        actorName: user.fullName ?? '–',
+        teamCode: team?.code ?? '–',
+        projectKey,
+      },
     });
   }
   return { ok: true };

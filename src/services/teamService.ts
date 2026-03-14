@@ -1,5 +1,6 @@
 import { store } from '../data/store';
 import { logEvent, actorFromUser } from './auditLogService';
+import { addActivityNotification } from './activityNotificationService';
 import { canPlanAddTeam } from './planGating';
 import { getEffectivePlan } from './subscriptionService';
 import type { User } from '../types';
@@ -102,6 +103,14 @@ export function addTeam(
       team_code: team.code,
       company_id: params.companyId,
       meta: { code: team.code, percentage: team.percentage },
+    });
+  }
+  if (currentUser.role === 'projectManager') {
+    addActivityNotification({
+      companyId: params.companyId,
+      type: 'pm_team_created',
+      titleKey: 'notifications.pmTeamCreated',
+      meta: { actorName: currentUser.fullName ?? '–', teamCode: team.code },
     });
   }
   return { ok: true, team };

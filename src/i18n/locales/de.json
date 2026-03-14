@@ -219,6 +219,15 @@
     "langFr": "FR",
     "langDe": "DE"
   },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "newCount": "Sie haben {count} neue Benachrichtigung(en)",
+    "pmJobApproved": "{actorName} hat Tagesarbeit für Team {teamCode}, Projekt {projectKey} freigegeben.",
+    "pmTeamCreated": "{actorName} hat Team {teamCode} erstellt.",
+    "pmTeamApproved": "{actorName} hat Team {teamCode} freigegeben.",
+    "noNotifications": "Keine Benachrichtigungen",
+    "markAllRead": "Alle als gelesen markieren"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "jobEntry": "Tägliche Arbeitseingabe",
@@ -593,7 +602,8 @@
     "userApprovals": "Benutzerfreigaben",
     "approve": "Freigeben",
     "reject": "Ablehnen",
-    "noPending": "Keine ausstehenden Freigaben"
+    "noPending": "Keine ausstehenden Freigaben",
+    "pendingNotification": "{count} Freigabe(n) ausstehend"
   },
   "reports": {
     "title": "Berichte",
@@ -691,6 +701,12 @@
     "weeklySummary": "Wochenübersicht",
     "monthlySummary": "Monatsübersicht",
     "performance": "Leistung"
+  },
+  "planExpiry": {
+    "daysHoursLeft": "Noch {days} Tage {hours} Stunden bis zum Ende Ihres Plans. Klicken für Plan und Zahlung.",
+    "hoursLeft": "Noch {hours} Stunden bis zum Ende Ihres Plans. Klicken für Plan und Zahlung.",
+    "suspendedGrace": "Sie haben keinen Plan. Ihr Konto wurde gesperrt. Keine Datenverluste. Noch {days} Tage zur Verlängerung. Klicken für Plan und Zahlung.",
+    "closed": "Ihr Konto wurde gesperrt. Klicken für Plan und Zahlung."
   },
   "planPage": {
     "title": "Plan",

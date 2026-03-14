@@ -45,6 +45,17 @@
   color: white;
 }
 
+/* Approval (Onay) link when there are pending approvals for this user */
+.linkPending {
+  background: #2563eb;
+  color: white;
+}
+
+.linkPending:hover {
+  background: #1d4ed8;
+  color: white;
+}
+
 .main {
   flex: 1;
   overflow: auto;

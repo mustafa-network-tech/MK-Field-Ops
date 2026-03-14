@@ -174,3 +174,62 @@ export function formatPlanEndDisplay(iso: string | null, locale: string): string
   const d = new Date(iso);
   return d.toLocaleString(locale, { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
+
+/** 72 hours in ms; red plan warning is shown when this much or less remains. */
+export const PLAN_EXPIRY_WARNING_HOURS = 72;
+const PLAN_EXPIRY_WARNING_MS = PLAN_EXPIRY_WARNING_HOURS * 60 * 60 * 1000;
+
+export type PlanExpiryWarning = { remainingMs: number };
+
+export type PlanWarningState =
+  | { kind: 'expiring_soon'; remainingMs: number }
+  | { kind: 'suspended'; graceRemainingDays: number }
+  | { kind: 'closed' };
+
+/**
+ * Returns plan warning state for the red top-bar button.
+ * - expiring_soon: plan ends in 72 hours or less (show countdown).
+ * - suspended: plan expired, in 15-day grace (no data lost; can't process new data; show grace countdown).
+ * - closed: after grace period (still show "renew" CTA).
+ * Warning stays until plan is renewed; clicking the red button always goes to plan-and-payment.
+ */
+export function getPlanWarningState(company: {
+  plan_end_date?: string | null;
+  subscription_status?: string | null;
+  plan?: string | null;
+  createdAt?: string | null;
+} | undefined): PlanWarningState | null {
+  const state = getSubscriptionState(company);
+  if (state.status === 'closed') return { kind: 'closed' };
+  if (state.isGracePeriod && state.graceRemainingDays != null) {
+    return { kind: 'suspended', graceRemainingDays: state.graceRemainingDays };
+  }
+  if (state.planEndDate && state.remainingDays != null && !state.isExpired) {
+    const planEnd = parseDate(state.planEndDate);
+    if (planEnd) {
+      const remainingMs = planEnd.getTime() - Date.now();
+      if (remainingMs > 0 && remainingMs <= PLAN_EXPIRY_WARNING_MS) {
+        return { kind: 'expiring_soon', remainingMs };
+      }
+    }
+  }
+  return null;
+}
+
+/**
+ * Returns plan expiry warning when plan ends in 72 hours or less (and not yet expired).
+ * @deprecated Prefer getPlanWarningState for full warning (expiring + suspended + closed).
+ */
+export function getPlanExpiryWarning(company: { plan_end_date?: string | null } | undefined): PlanExpiryWarning | null {
+  const s = getPlanWarningState(company);
+  if (s?.kind === 'expiring_soon') return { remainingMs: s.remainingMs };
+  return null;
+}
+
+/** Format remaining time for plan expiry warning: "2 days 22 hours left" or "5 hours left". */
+export function formatPlanExpiryRemaining(remainingMs: number): { days: number; hours: number } {
+  const totalHours = Math.floor(remainingMs / (60 * 60 * 1000));
+  const days = Math.floor(totalHours / 24);
+  const hours = totalHours % 24;
+  return { days, hours };
+}

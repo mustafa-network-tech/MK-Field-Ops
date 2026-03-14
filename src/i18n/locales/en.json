@@ -227,6 +227,15 @@
     "langFr": "FR",
     "langDe": "DE"
   },
+  "notifications": {
+    "title": "Notifications",
+    "newCount": "You have {count} new notification(s)",
+    "pmJobApproved": "{actorName} approved daily work for team {teamCode}, project {projectKey}.",
+    "pmTeamCreated": "{actorName} created team {teamCode}.",
+    "pmTeamApproved": "{actorName} approved team {teamCode}.",
+    "noNotifications": "No notifications",
+    "markAllRead": "Mark all as read"
+  },
   "nav": {
     "dashboard": "Dashboard",
     "jobEntry": "Daily Job Entry",
@@ -601,7 +610,8 @@
     "userApprovals": "User Approvals",
     "approve": "Approve",
     "reject": "Reject",
-    "noPending": "No pending approvals"
+    "noPending": "No pending approvals",
+    "pendingNotification": "{count} pending approval(s)"
   },
   "reports": {
     "title": "Reports",
@@ -699,6 +709,12 @@
     "weeklySummary": "Weekly Summary",
     "monthlySummary": "Monthly Summary",
     "performance": "Performance"
+  },
+  "planExpiry": {
+    "daysHoursLeft": "{days} days {hours} hours left to finish your plan. Click for plan and payment.",
+    "hoursLeft": "{hours} hours left to finish your plan. Click for plan and payment.",
+    "suspendedGrace": "You don't have a plan. Your account is suspended. No data is lost. {days} days left to renew. Click for plan and payment.",
+    "closed": "Your account has been suspended. Click for plan and payment."
   },
   "planPage": {
     "title": "Plan",

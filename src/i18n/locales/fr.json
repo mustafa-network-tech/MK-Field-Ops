@@ -219,6 +219,15 @@
     "langFr": "FR",
     "langDe": "DE"
   },
+  "notifications": {
+    "title": "Notifications",
+    "newCount": "Vous avez {count} nouvelle(s) notification(s)",
+    "pmJobApproved": "{actorName} a approuvé le travail quotidien de l'équipe {teamCode}, projet {projectKey}.",
+    "pmTeamCreated": "{actorName} a créé l'équipe {teamCode}.",
+    "pmTeamApproved": "{actorName} a approuvé l'équipe {teamCode}.",
+    "noNotifications": "Aucune notification",
+    "markAllRead": "Tout marquer comme lu"
+  },
   "nav": {
     "dashboard": "Tableau de bord",
     "jobEntry": "Saisie quotidienne",
@@ -593,7 +602,8 @@
     "userApprovals": "Approbations d'utilisateurs",
     "approve": "Approuver",
     "reject": "Rejeter",
-    "noPending": "Aucune approbation en attente"
+    "noPending": "Aucune approbation en attente",
+    "pendingNotification": "{count} approbation(s) en attente"
   },
   "reports": {
     "title": "Rapports",
@@ -691,6 +701,12 @@
     "weeklySummary": "Résumé hebdo",
     "monthlySummary": "Résumé mensuel",
     "performance": "Performance"
+  },
+  "planExpiry": {
+    "daysHoursLeft": "Il reste {days} jours et {hours} heures avant la fin de votre abonnement. Cliquez pour plan et paiement.",
+    "hoursLeft": "Il reste {hours} heures avant la fin de votre abonnement. Cliquez pour plan et paiement.",
+    "suspendedGrace": "Vous n'avez pas de plan. Votre compte est suspendu. Aucune perte de données. Plus que {days} jours pour renouveler. Cliquez pour plan et paiement.",
+    "closed": "Votre compte a été suspendu. Cliquez pour plan et paiement."
   },
   "planPage": {
     "title": "Plan",

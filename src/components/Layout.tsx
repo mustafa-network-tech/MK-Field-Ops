@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
 import { getSubscriptionState, getEffectivePlan } from '../services/subscriptionService';
+import { getPendingApprovalsCountForUser } from '../services/approvalNotificationService';
 import type { CompanyLanguageCode } from '../types';
 import styles from './Layout.module.css';
 
@@ -38,9 +39,16 @@ export function Layout() {
   const canAccessSettingsAndPayroll = user?.role === 'companyManager' || user?.role === 'projectManager';
   const canAccessAuditLogs = user?.role === 'companyManager';
 
+  const companyId = user?.companyId ?? '';
+  const pendingApprovalsCount = useMemo(
+    () => getPendingApprovalsCountForUser(companyId, user ?? undefined),
+    [companyId, user]
+  );
+  const showApprovalsPending = pendingApprovalsCount > 0;
+
   return (
     <div className={styles.layout}>
-      <TopBar />
+      <TopBar pendingApprovalsCount={pendingApprovalsCount} />
       <div className={styles.body}>
         <aside className={styles.sidebar}>
           <nav className={styles.nav}>
@@ -61,7 +69,12 @@ export function Layout() {
                 {t('nav.deliveryNotes')}
               </NavLink>
             )}
-            <NavLink to="/approvals" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
+            <NavLink
+              to="/approvals"
+              className={({ isActive }) =>
+                isActive ? styles.linkActive : showApprovalsPending ? `${styles.link} ${styles.linkPending}` : styles.link
+              }
+            >
               {t('nav.approvals')}
             </NavLink>
             <NavLink to="/reports" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>

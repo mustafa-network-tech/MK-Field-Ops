@@ -219,6 +219,15 @@
     "langFr": "FR",
     "langDe": "DE"
   },
+  "notifications": {
+    "title": "Notificaciones",
+    "newCount": "Tiene {count} notificación(es) nueva(s)",
+    "pmJobApproved": "{actorName} aprobó el trabajo diario del equipo {teamCode}, proyecto {projectKey}.",
+    "pmTeamCreated": "{actorName} creó el equipo {teamCode}.",
+    "pmTeamApproved": "{actorName} aprobó el equipo {teamCode}.",
+    "noNotifications": "Sin notificaciones",
+    "markAllRead": "Marcar todo como leído"
+  },
   "nav": {
     "dashboard": "Panel",
     "jobEntry": "Entrada diaria de trabajos",
@@ -593,7 +602,8 @@
     "userApprovals": "Aprobaciones de usuarios",
     "approve": "Aprobar",
     "reject": "Rechazar",
-    "noPending": "Sin aprobaciones pendientes"
+    "noPending": "Sin aprobaciones pendientes",
+    "pendingNotification": "{count} aprobación(es) pendiente(s)"
   },
   "reports": {
     "title": "Informes",
@@ -691,6 +701,12 @@
     "weeklySummary": "Resumen semanal",
     "monthlySummary": "Resumen mensual",
     "performance": "Rendimiento"
+  },
+  "planExpiry": {
+    "daysHoursLeft": "Quedan {days} días y {hours} horas para que termine su plan. Pulse para plan y pago.",
+    "hoursLeft": "Quedan {hours} horas para que termine su plan. Pulse para plan y pago.",
+    "suspendedGrace": "No tiene plan. Su cuenta está suspendida. No se pierden datos. Quedan {days} días para renovar. Pulse para plan y pago.",
+    "closed": "Su cuenta ha sido suspendida. Pulse para plan y pago."
   },
   "planPage": {
     "title": "Plan",
