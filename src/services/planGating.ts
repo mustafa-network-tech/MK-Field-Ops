@@ -1,6 +1,6 @@
 /**
  * Plan-based feature gating for MK-OPS SaaS.
- * Starter: 4 users, 3 teams. Professional: 7 users, 6 teams. Enterprise: unlimited.
+ * Starter: 4 users, 3 teams. Professional: 7 users, 6 teams. Enterprise: 15 users, 14 teams.
  * Company Manager cannot be team leader; Project Managers can be assigned as team leaders.
  */
 
@@ -9,14 +9,14 @@ import type { CompanyPlan } from '../types';
 export const PLAN_USER_LIMITS: Record<CompanyPlan, number> = {
   starter: 4,
   professional: 7,
-  enterprise: Infinity,
+  enterprise: 15,
 };
 
-/** Starter: 3 teams; Professional: 6 teams; Enterprise: unlimited. */
+/** Starter: 3 teams; Professional: 6 teams; Enterprise: 14 teams. */
 export const PLAN_TEAM_LIMITS: Record<CompanyPlan, number> = {
   starter: 3,
   professional: 6,
-  enterprise: Infinity,
+  enterprise: 14,
 };
 
 export type PlanFeature = 'projects' | 'materials' | 'deliveryNotes';
@@ -56,7 +56,7 @@ export function canPlanAddUser(
   return limit === Infinity || currentUserCount < limit;
 }
 
-/** Maximum teams allowed for the plan (Starter = 3, Professional = 6). */
+/** Maximum teams allowed for the plan (Starter = 3, Professional = 6, Enterprise = 14). */
 export function getPlanTeamLimit(plan: CompanyPlan | null | undefined): number {
   const p = normalizePlan(plan);
   return p ? PLAN_TEAM_LIMITS[p] : 0;
