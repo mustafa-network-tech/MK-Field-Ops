@@ -1,11 +1,17 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import styles from './Auth.module.css';
+
+const VALID_PLANS = ['starter', 'professional', 'enterprise'];
 
 export function Register() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const planFromUrl = searchParams.get('plan');
+  const initialPlan = planFromUrl && VALID_PLANS.includes(planFromUrl) ? planFromUrl : null;
+
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,7 +32,7 @@ export function Register() {
     const fullName = `${first} ${last}`.trim();
     navigate('/workspace', {
       replace: false,
-      state: { email, password, fullName },
+      state: { email, password, fullName, plan: initialPlan },
     });
     setLoading(false);
   };

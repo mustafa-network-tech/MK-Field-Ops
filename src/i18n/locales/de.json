@@ -719,11 +719,14 @@
   },
   "planChangePage": {
     "title": "Planauswahl",
+    "paymentTitle": "Plan & Zahlung",
     "selectPlan": "Plan wählen",
     "billingCycle": "Abrechnungszeitraum",
     "monthly": "Monatlich",
     "yearly": "Jährlich",
     "confirmPlan": "Plan bestätigen",
+    "proceedToPayment": "Zur Kasse",
+    "total": "Gesamt",
     "confirming": "Wird bestätigt…",
     "backToPlan": "Zurück zum Plan",
     "backToHome": "Zurück zur Startseite",
@@ -734,7 +737,11 @@
     "choosePlanOnLanding": "Wählen Sie auf der Startseite einen Plan oder melden Sie sich an, um den Unternehmensplan zu ändern.",
     "pendingJoin": "Bitte schließen Sie zuerst Ihre Beitrittsanfrage ab.",
     "onlyCM": "Nur der Unternehmensleiter kann den Plan ändern.",
-    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "planSetWelcome": "Ihr Plan wurde festgelegt. Willkommen!",
+    "goToDashboard": "Zum Dashboard",
+    "backToDashboard": "Zurück zum Dashboard",
+    "planUpdateComplete": "Ihre Planaktualisierung ist abgeschlossen."
   },
   "errors": {
     "forbidden": "Sie haben keinen Zugriff auf diese Ressource (403)."

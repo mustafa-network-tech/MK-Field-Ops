@@ -729,11 +729,14 @@
   },
   "planChangePage": {
     "title": "Plan seçimi",
+    "paymentTitle": "Plan ve ödeme",
     "selectPlan": "Plan seçin",
     "billingCycle": "Faturalama dönemi",
     "monthly": "Aylık",
     "yearly": "Yıllık",
     "confirmPlan": "Planı onayla",
+    "proceedToPayment": "Ödemeye geç",
+    "total": "Toplam",
     "confirming": "Onaylanıyor…",
     "backToPlan": "Plana dön",
     "backToHome": "Ana sayfaya dön",
@@ -744,7 +747,11 @@
     "choosePlanOnLanding": "Ana sayfadan plan seçin veya şirket planınızı değiştirmek için giriş yapın.",
     "pendingJoin": "Lütfen önce katılım talebinizi tamamlayın.",
     "onlyCM": "Planı yalnızca şirket yöneticisi değiştirebilir.",
-    "errorGeneric": "Bir hata oluştu. Lütfen tekrar deneyin."
+    "errorGeneric": "Bir hata oluştu. Lütfen tekrar deneyin.",
+    "planSetWelcome": "Planınız ayarlandı. Hoş geldiniz!",
+    "goToDashboard": "Panele git",
+    "backToDashboard": "Panele dön",
+    "planUpdateComplete": "Plan güncellemeniz tamamlandı."
   },
   "errors": {
     "forbidden": "Bu kaynağa erişim yetkiniz yok (403)."

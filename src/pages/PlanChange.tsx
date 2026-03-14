@@ -10,11 +10,43 @@ import styles from './PlanChange.module.css';
 
 const PLANS: CompanyPlan[] = ['starter', 'professional', 'enterprise'];
 
+const PLAN_CONFIG: Record<
+  CompanyPlan,
+  { titleKey: string; priceMonthlyKey: string; priceYearlyKey: string; featureKeys: string[]; limitKeys?: string[] }
+> = {
+  starter: {
+    titleKey: 'landing.planStarter',
+    priceMonthlyKey: 'landing.pricingPriceStarterMonthly',
+    priceYearlyKey: 'landing.pricingPriceStarterYearly',
+    featureKeys: ['landing.pricingStarterFeature1', 'landing.pricingStarterFeature2', 'landing.pricingStarterFeature3', 'landing.pricingStarterFeature4'],
+    limitKeys: ['landing.pricingStarterLimit1', 'landing.pricingStarterLimit2', 'landing.pricingStarterLimit3', 'landing.pricingStarterLimit4'],
+  },
+  professional: {
+    titleKey: 'landing.planPro',
+    priceMonthlyKey: 'landing.pricingPriceProMonthly',
+    priceYearlyKey: 'landing.pricingPriceProYearly',
+    featureKeys: ['landing.pricingProFeature1', 'landing.pricingProFeature2', 'landing.pricingProFeature3', 'landing.pricingProFeature4'],
+    limitKeys: ['landing.pricingProOp1', 'landing.pricingProOp2', 'landing.pricingProOp3', 'landing.pricingProOp4'],
+  },
+  enterprise: {
+    titleKey: 'landing.planEnterprise',
+    priceMonthlyKey: 'landing.pricingPriceEnterpriseMonthly',
+    priceYearlyKey: 'landing.pricingPriceEnterpriseYearly',
+    featureKeys: [
+      'landing.pricingEnterpriseFeature1',
+      'landing.pricingEnterpriseFeature2',
+      'landing.pricingEnterpriseFeature3',
+      'landing.pricingEnterpriseFeature4',
+      'landing.pricingEnterpriseFeature5',
+      'landing.pricingEnterpriseFeature6',
+      'landing.pricingEnterpriseFeature7',
+    ],
+    limitKeys: ['landing.pricingEnterpriseOp1', 'landing.pricingEnterpriseOp2', 'landing.pricingEnterpriseOp3', 'landing.pricingEnterpriseOp4', 'landing.pricingEnterpriseOp5'],
+  },
+};
+
 function planLabel(plan: CompanyPlan, t: (k: string) => string): string {
-  if (plan === 'starter') return t('landing.planStarter');
-  if (plan === 'professional') return t('landing.planPro');
-  if (plan === 'enterprise') return t('landing.planEnterprise');
-  return plan;
+  return t(PLAN_CONFIG[plan].titleKey);
 }
 
 export function PlanChange() {
@@ -39,7 +71,7 @@ export function PlanChange() {
   const currentPlan = getEffectivePlan(c);
   const isCM = user?.role === 'companyManager';
 
-  const handleConfirm = async () => {
+  const handlePayment = async () => {
     if (!selectedPlan || !companyId || !isCM) return;
     setError(null);
     setSubmitting(true);
@@ -48,7 +80,7 @@ export function PlanChange() {
     if (result.ok) {
       await fetchCompanyLanguageFromSupabase(companyId);
       if (refreshCompany) refreshCompany();
-      navigate('/plan', { replace: true });
+      navigate('/', { state: { planChangeSuccess: true }, replace: true });
     } else {
       setError(result.error ?? t('planChangePage.errorGeneric'));
     }
@@ -95,70 +127,129 @@ export function PlanChange() {
         <h1 className={styles.title}>{t('planChangePage.title')}</h1>
         <div className={styles.card}>
           <p className={styles.muted}>{t('planChangePage.onlyCM')}</p>
-          <Link to="/plan" className={styles.backLink}>← {t('planChangePage.backToPlan')}</Link>
+          <Link to="/" className={styles.backLink}>← {t('planChangePage.backToDashboard')}</Link>
         </div>
       </div>
     );
   }
 
+  const planAlreadySet = selectedPlan && currentPlan === selectedPlan;
+  if (planAlreadySet) {
+    return (
+      <div className={styles.page}>
+        <h1 className={styles.title}>{t('planChangePage.title')}</h1>
+        <div className={styles.card}>
+          <p className={styles.planName}>{planLabel(selectedPlan, t)}</p>
+          <p className={styles.muted}>{t('planChangePage.planSetWelcome')}</p>
+          <Link to="/" className={styles.confirmBtn}>{t('planChangePage.goToDashboard')}</Link>
+        </div>
+      </div>
+    );
+  }
+
+  const selectedPrice =
+    selectedPlan &&
+    (billingCycle === 'monthly' ? t(PLAN_CONFIG[selectedPlan].priceMonthlyKey) : t(PLAN_CONFIG[selectedPlan].priceYearlyKey));
+
   return (
     <div className={styles.page}>
-      <h1 className={styles.title}>{t('planChangePage.title')}</h1>
-      <div className={styles.card}>
-        {validPlanFromUrl ? (
-          <p className={styles.planName}>{planLabel(selectedPlan!, t)}</p>
-        ) : (
-          <>
-            <p className={styles.muted} style={{ marginBottom: '0.75rem' }}>{t('planChangePage.selectPlan')}</p>
-            <div className={styles.planSelect}>
-              {PLANS.map((plan) => (
-                <button
-                  key={plan}
-                  type="button"
-                  className={styles.planOption}
-                  data-selected={selectedPlan === plan}
-                  onClick={() => setSelectedPlan(plan)}
-                >
-                  <span className={styles.planOptionLabel}>{planLabel(plan, t)}</span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
+      <h1 className={styles.title}>{t('planChangePage.paymentTitle')}</h1>
 
-        <div className={styles.billingRow}>
-          <span className={styles.billingLabel}>{t('planChangePage.billingCycle')}</span>
-          <div className={styles.billingOptions}>
-            <button
-              type="button"
-              className={styles.billingOption}
-              data-active={billingCycle === 'monthly'}
-              onClick={() => setBillingCycle('monthly')}
-            >
-              {t('planChangePage.monthly')}
-            </button>
-            <button
-              type="button"
-              className={styles.billingOption}
-              data-active={billingCycle === 'yearly'}
-              onClick={() => setBillingCycle('yearly')}
-            >
-              {t('planChangePage.yearly')}
-            </button>
-          </div>
+      <div className={styles.billingRow}>
+        <span className={styles.billingLabel}>{t('planChangePage.billingCycle')}</span>
+        <div className={styles.billingToggle}>
+          <button
+            type="button"
+            className={styles.billingOption}
+            data-active={billingCycle === 'monthly'}
+            onClick={() => setBillingCycle('monthly')}
+          >
+            {t('planChangePage.monthly')}
+          </button>
+          <button
+            type="button"
+            className={styles.billingOption}
+            data-active={billingCycle === 'yearly'}
+            onClick={() => setBillingCycle('yearly')}
+          >
+            {t('planChangePage.yearly')}
+          </button>
         </div>
-
-        <button
-          type="button"
-          className={styles.confirmBtn}
-          disabled={!selectedPlan || submitting}
-          onClick={handleConfirm}
-        >
-          {submitting ? t('planChangePage.confirming') : t('planChangePage.confirmPlan')}
-        </button>
-        {error && <p className={styles.error} role="alert">{error}</p>}
-        <Link to="/plan" className={styles.backLink}>← {t('planChangePage.backToPlan')}</Link>
       </div>
+
+      <div className={styles.planGrid}>
+        {PLANS.map((plan) => {
+          const config = PLAN_CONFIG[plan];
+          const isSelected = selectedPlan === plan;
+          return (
+            <button
+              key={plan}
+              type="button"
+              className={styles.planCard}
+              data-selected={isSelected}
+              onClick={() => setSelectedPlan(plan)}
+            >
+              <h3 className={styles.planCardTitle}>{t(config.titleKey)}</h3>
+              <p className={styles.planCardPrice}>
+                {billingCycle === 'monthly' ? t(config.priceMonthlyKey) : t(config.priceYearlyKey)}
+              </p>
+              <div className={styles.planCardDivider} />
+              <p className={styles.planCardFeaturesTitle}>{t('landing.pricingFeaturesTitle')}</p>
+              <ul className={styles.planCardList}>
+                {config.featureKeys.map((key) => (
+                  <li key={key}>
+                    <span className={styles.planCardCheck} aria-hidden>✔</span>
+                    <span>{t(key)}</span>
+                  </li>
+                ))}
+              </ul>
+              {config.limitKeys && config.limitKeys.length > 0 && (
+                <>
+                  <p className={styles.planCardFeaturesTitle}>
+                    {plan === 'starter' ? t('landing.pricingLimitationsTitle') : t('landing.pricingOperationsTitle')}
+                  </p>
+                  <ul className={styles.planCardList}>
+                    {config.limitKeys.map((key) => (
+                      <li key={key}>
+                        <span className={styles.planCardCheck} aria-hidden>✔</span>
+                        <span>{t(key)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className={styles.summaryCard}>
+        {selectedPlan ? (
+          <>
+            <p className={styles.summaryRow}>
+              <span>{planLabel(selectedPlan, t)}</span>
+              <strong>{selectedPrice}</strong>
+            </p>
+            <p className={styles.totalRow}>
+              <span>{t('planChangePage.total')}</span>
+              <strong>{selectedPrice}</strong>
+            </p>
+            <button
+              type="button"
+              className={styles.confirmBtn}
+              disabled={submitting}
+              onClick={handlePayment}
+            >
+              {submitting ? t('planChangePage.confirming') : t('planChangePage.proceedToPayment')}
+            </button>
+          </>
+        ) : (
+          <p className={styles.muted}>{t('planChangePage.selectPlan')}</p>
+        )}
+        {error && <p className={styles.error} role="alert">{error}</p>}
+      </div>
+
+      <Link to="/" className={styles.backLink}>← {t('planChangePage.backToDashboard')}</Link>
     </div>
   );
 }

@@ -719,11 +719,14 @@
   },
   "planChangePage": {
     "title": "Sélection du plan",
+    "paymentTitle": "Plan et paiement",
     "selectPlan": "Choisir un plan",
     "billingCycle": "Cycle de facturation",
     "monthly": "Mensuel",
     "yearly": "Annuel",
     "confirmPlan": "Confirmer le plan",
+    "proceedToPayment": "Procéder au paiement",
+    "total": "Total",
     "confirming": "Confirmation…",
     "backToPlan": "Retour au plan",
     "backToHome": "Retour à l'accueil",
@@ -734,7 +737,11 @@
     "choosePlanOnLanding": "Choisissez un plan sur la page d'accueil ou connectez-vous pour modifier le plan de l'entreprise.",
     "pendingJoin": "Veuillez d'abord finaliser votre demande d'adhésion.",
     "onlyCM": "Seul le responsable d'entreprise peut modifier le plan.",
-    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer.",
+    "planSetWelcome": "Votre plan a été défini. Bienvenue !",
+    "goToDashboard": "Aller au tableau de bord",
+    "backToDashboard": "Retour au tableau de bord",
+    "planUpdateComplete": "La mise à jour de votre plan est terminée."
   },
   "errors": {
     "forbidden": "Vous n'avez pas accès à cette ressource (403)."

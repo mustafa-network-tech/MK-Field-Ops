@@ -727,11 +727,14 @@
   },
   "planChangePage": {
     "title": "Plan selection",
+    "paymentTitle": "Plan & payment",
     "selectPlan": "Select a plan",
     "billingCycle": "Billing cycle",
     "monthly": "Monthly",
     "yearly": "Yearly",
     "confirmPlan": "Confirm plan",
+    "proceedToPayment": "Proceed to payment",
+    "total": "Total",
     "confirming": "Confirming…",
     "backToPlan": "Back to Plan",
     "backToHome": "Back to home",
@@ -742,7 +745,11 @@
     "choosePlanOnLanding": "Choose a plan on the home page, or sign in to change your company plan.",
     "pendingJoin": "Please complete your join request first.",
     "onlyCM": "Only the company manager can change the plan.",
-    "errorGeneric": "Something went wrong. Please try again."
+    "errorGeneric": "Something went wrong. Please try again.",
+    "planSetWelcome": "Your plan has been set. Welcome!",
+    "goToDashboard": "Go to dashboard",
+    "backToDashboard": "Back to dashboard",
+    "planUpdateComplete": "Your plan update is complete."
   },
   "errors": {
     "forbidden": "You do not have access to this resource (403)."

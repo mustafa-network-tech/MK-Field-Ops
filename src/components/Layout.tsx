@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
@@ -14,8 +14,20 @@ export function Layout() {
   const { t, setLocale } = useI18n();
   const { user, company } = useApp();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [showPlanUpdateSuccess, setShowPlanUpdateSuccess] = useState(() => !!(location.state as { planChangeSuccess?: boolean } | null)?.planChangeSuccess);
   const sub = getSubscriptionState(company);
   const isPlanPage = location.pathname === '/plan';
+
+  useEffect(() => {
+    const state = location.state as { planChangeSuccess?: boolean } | null;
+    if (state?.planChangeSuccess) setShowPlanUpdateSuccess(true);
+  }, [location.state]);
+
+  const dismissPlanSuccess = () => {
+    setShowPlanUpdateSuccess(false);
+    navigate(location.pathname, { replace: true, state: {} });
+  };
 
   useEffect(() => {
     const code = company?.language_code;
@@ -78,6 +90,14 @@ export function Layout() {
           </nav>
         </aside>
         <main className={styles.main}>
+          {showPlanUpdateSuccess && (
+            <div className={styles.planUpdateBanner} role="status">
+              <p>{t('planChangePage.planUpdateComplete')}</p>
+              <button type="button" className={styles.planUpdateBannerClose} onClick={dismissPlanSuccess} aria-label={t('common.close')}>
+                ×
+              </button>
+            </div>
+          )}
           {sub.isClosed && !isPlanPage && (
             <div className={styles.subscriptionBannerClosed} role="alert">
               <p>{t('planPage.bannerClosedMessage')}</p>

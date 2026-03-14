@@ -18,14 +18,15 @@ export function Workspace() {
   const { setUser } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const state = location.state as { email?: string; password?: string; fullName?: string } | null;
+  const state = location.state as { email?: string; password?: string; fullName?: string; plan?: string } | null;
+  const initialPlan: PlanKey | null = state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
 
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [existingCompanyName, setExistingCompanyName] = useState('');
   const [existingJoinCode, setExistingJoinCode] = useState('');
-  const [plan, setPlan] = useState<PlanKey>('professional');
+  const [plan, setPlan] = useState<PlanKey>(initialPlan ?? 'professional');
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -68,7 +69,7 @@ export function Workspace() {
         return;
       }
       setUser(store.getCurrentUser());
-      navigate('/', { replace: true });
+      navigate(`/plan-change?plan=${plan}`, { replace: true });
     } finally {
       setLoading(false);
     }

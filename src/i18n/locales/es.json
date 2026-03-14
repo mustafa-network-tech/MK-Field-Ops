@@ -719,11 +719,14 @@
   },
   "planChangePage": {
     "title": "Selección de plan",
+    "paymentTitle": "Plan y pago",
     "selectPlan": "Seleccione un plan",
     "billingCycle": "Ciclo de facturación",
     "monthly": "Mensual",
     "yearly": "Anual",
     "confirmPlan": "Confirmar plan",
+    "proceedToPayment": "Ir a pagar",
+    "total": "Total",
     "confirming": "Confirmando…",
     "backToPlan": "Volver al plan",
     "backToHome": "Volver al inicio",
@@ -734,7 +737,11 @@
     "choosePlanOnLanding": "Elija un plan en la página de inicio o inicie sesión para cambiar el plan de su empresa.",
     "pendingJoin": "Complete primero su solicitud de incorporación.",
     "onlyCM": "Solo el administrador de la empresa puede cambiar el plan.",
-    "errorGeneric": "Algo salió mal. Por favor, inténtelo de nuevo."
+    "errorGeneric": "Algo salió mal. Por favor, inténtelo de nuevo.",
+    "planSetWelcome": "Su plan ha sido configurado. ¡Bienvenido!",
+    "goToDashboard": "Ir al panel",
+    "backToDashboard": "Volver al panel",
+    "planUpdateComplete": "La actualización de su plan se ha completado."
   },
   "errors": {
     "forbidden": "No tiene acceso a este recurso (403)."

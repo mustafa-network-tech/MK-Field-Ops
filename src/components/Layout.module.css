@@ -51,6 +51,42 @@
   padding: 1.5rem;
 }
 
+.planUpdateBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
+}
+
+.planUpdateBanner p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.planUpdateBannerClose {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #047857;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.planUpdateBannerClose:hover {
+  background: #a7f3d0;
+}
+
 .subscriptionBannerClosed,
 .subscriptionBannerGrace {
   padding: 1rem 1.25rem;
