@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
-import { getEffectivePlan } from '../services/subscriptionService';
+import { getEffectivePlan, isPlanUpgrade } from '../services/subscriptionService';
 import { changeCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase } from '../services/companyService';
 import type { CompanyPlan } from '../types';
 import styles from './PlanChange.module.css';
@@ -50,7 +50,7 @@ function planLabel(plan: CompanyPlan, t: (k: string) => string): string {
 }
 
 export function PlanChange() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const { user, company, refreshCompany } = useApp();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -61,6 +61,11 @@ export function PlanChange() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.title = t('planChangePage.paymentTitle');
+    return () => { document.title = 'MK-OPS'; };
+  }, [t]);
 
   useEffect(() => {
     if (validPlanFromUrl) setSelectedPlan(validPlanFromUrl);
@@ -137,11 +142,11 @@ export function PlanChange() {
   if (planAlreadySet) {
     return (
       <div className={styles.page}>
-        <h1 className={styles.title}>{t('planChangePage.title')}</h1>
+        <h1 className={styles.title}>{t('planChangePage.paymentTitle')}</h1>
         <div className={styles.card}>
           <p className={styles.planName}>{planLabel(selectedPlan, t)}</p>
           <p className={styles.muted}>{t('planChangePage.planSetWelcome')}</p>
-          <Link to="/" className={styles.confirmBtn}>{t('planChangePage.goToDashboard')}</Link>
+          <Link to="/login" className={styles.confirmBtn}>{t('planChangePage.goToLogin')}</Link>
         </div>
       </div>
     );
@@ -150,6 +155,14 @@ export function PlanChange() {
   const selectedPrice =
     selectedPlan &&
     (billingCycle === 'monthly' ? t(PLAN_CONFIG[selectedPlan].priceMonthlyKey) : t(PLAN_CONFIG[selectedPlan].priceYearlyKey));
+
+  const planStartDateLabel = selectedPlan
+    ? (() => {
+        const upgrade = isPlanUpgrade(currentPlan, selectedPlan);
+        const date = upgrade ? new Date() : (c?.plan_end_date ? new Date(c.plan_end_date) : new Date());
+        return date.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
+      })()
+    : null;
 
   return (
     <div className={styles.page}>
@@ -230,6 +243,12 @@ export function PlanChange() {
               <span>{planLabel(selectedPlan, t)}</span>
               <strong>{selectedPrice}</strong>
             </p>
+            {planStartDateLabel && (
+              <p className={styles.summaryRow}>
+                <span>{t('planChangePage.planStartDate')}</span>
+                <strong>{planStartDateLabel}</strong>
+              </p>
+            )}
             <p className={styles.totalRow}>
               <span>{t('planChangePage.total')}</span>
               <strong>{selectedPrice}</strong>
@@ -240,7 +259,7 @@ export function PlanChange() {
               disabled={submitting}
               onClick={handlePayment}
             >
-              {submitting ? t('planChangePage.confirming') : t('planChangePage.proceedToPayment')}
+              {submitting ? t('planChangePage.confirming') : t('planChangePage.pay')}
             </button>
           </>
         ) : (
