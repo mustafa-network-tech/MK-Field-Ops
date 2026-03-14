@@ -222,6 +222,7 @@
   "notifications": {
     "title": "Notificaciones",
     "newCount": "Tiene {count} notificación(es) nueva(s)",
+    "newUserPending": "{userName} solicitó unirse a la empresa. Aprobar en Usuarios.",
     "pmJobApproved": "{actorName} aprobó el trabajo diario del equipo {teamCode}, proyecto {projectKey}.",
     "pmTeamCreated": "{actorName} creó el equipo {teamCode}.",
     "pmTeamApproved": "{actorName} aprobó el equipo {teamCode}.",

@@ -230,6 +230,7 @@
   "notifications": {
     "title": "Notifications",
     "newCount": "You have {count} new notification(s)",
+    "newUserPending": "{userName} requested to join the company. Approve in Users.",
     "pmJobApproved": "{actorName} approved daily work for team {teamCode}, project {projectKey}.",
     "pmTeamCreated": "{actorName} created team {teamCode}.",
     "pmTeamApproved": "{actorName} approved team {teamCode}.",

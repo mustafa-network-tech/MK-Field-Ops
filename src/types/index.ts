@@ -332,8 +332,8 @@ export interface PayrollPeriodSettings {
   updatedAt: string;
 }
 
-/** Activity notification for Company Manager (e.g. PM approved job, PM created team). */
-export type NotificationType = 'pm_job_approved' | 'pm_team_created' | 'pm_team_approved';
+/** Activity notification for Company Manager (e.g. PM approved job, PM created team, new user pending). */
+export type NotificationType = 'pm_job_approved' | 'pm_team_created' | 'pm_team_approved' | 'new_user_pending';
 
 export interface ActivityNotification {
   id: string;

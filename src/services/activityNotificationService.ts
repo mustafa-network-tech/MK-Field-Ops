@@ -1,6 +1,7 @@
 import type { ActivityNotification, NotificationType } from '../types';
 
 const STORAGE_KEY = 'tf_activity_notifications';
+const NOTIFIED_PENDING_KEY = 'tf_notified_pending_users';
 
 function loadAll(): ActivityNotification[] {
   try {
@@ -117,4 +118,49 @@ export function addActivityNotification(params: AddActivityNotificationParams): 
   saveAll(list);
   notifyListeners();
   return notification;
+}
+
+function loadNotifiedPending(companyId: string): string[] {
+  try {
+    const raw = localStorage.getItem(NOTIFIED_PENDING_KEY);
+    const obj = raw ? (JSON.parse(raw) as Record<string, string[]>) : {};
+    return obj[companyId] ?? [];
+  } catch {
+    return [];
+  }
+}
+
+function saveNotifiedPending(companyId: string, userIds: string[]): void {
+  try {
+    const raw = localStorage.getItem(NOTIFIED_PENDING_KEY);
+    const obj = raw ? (JSON.parse(raw) as Record<string, string[]>) : {};
+    obj[companyId] = userIds;
+    localStorage.setItem(NOTIFIED_PENDING_KEY, JSON.stringify(obj));
+  } catch {
+    // ignore
+  }
+}
+
+/**
+ * Call when pending users are loaded (e.g. after fetchCompanyProfilesIntoStore).
+ * Adds one activity notification per pending user we haven't notified for yet, so CM sees them in the bell.
+ */
+export function ensurePendingUserNotifications(
+  companyId: string,
+  pendingUsers: { id: string; fullName: string | null }[]
+): void {
+  if (!companyId || pendingUsers.length === 0) return;
+  const notified = loadNotifiedPending(companyId);
+  const toNotify = pendingUsers.filter((u) => !notified.includes(u.id));
+  if (toNotify.length === 0) return;
+  for (const u of toNotify) {
+    addActivityNotification({
+      companyId,
+      type: 'new_user_pending',
+      titleKey: 'notifications.newUserPending',
+      meta: { userName: u.fullName ?? '–' },
+    });
+    notified.push(u.id);
+  }
+  saveNotifiedPending(companyId, notified);
 }

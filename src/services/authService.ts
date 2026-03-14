@@ -248,6 +248,10 @@ export const authService = {
     const currentUser = store.getCurrentUser();
     if (!user || user.roleApprovalStatus !== 'pending' || !currentUser || currentUser.role !== 'companyManager') return false;
     if (user.companyId !== currentUser.companyId) return false;
+    if (assignedRole === 'companyManager') {
+      const existingCM = store.getUsers(user.companyId).find((u) => u.role === 'companyManager' && u.id !== userId);
+      if (existingCM) return false;
+    }
     store.updateUser(userId, { role: assignedRole, roleApprovalStatus: 'approved', approvedByCompanyManager: currentUser.id });
     if (supabase) supabase.from('profiles').update({ role: assignedRole, role_approval_status: 'approved' }).eq('id', userId).then((res: { error: Error | null }) => { if (res.error) console.warn(res.error); });
     return true;

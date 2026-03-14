@@ -222,6 +222,7 @@
   "notifications": {
     "title": "Benachrichtigungen",
     "newCount": "Sie haben {count} neue Benachrichtigung(en)",
+    "newUserPending": "{userName} möchte dem Unternehmen beitreten. Unter Benutzer freigeben.",
     "pmJobApproved": "{actorName} hat Tagesarbeit für Team {teamCode}, Projekt {projectKey} freigegeben.",
     "pmTeamCreated": "{actorName} hat Team {teamCode} erstellt.",
     "pmTeamApproved": "{actorName} hat Team {teamCode} freigegeben.",

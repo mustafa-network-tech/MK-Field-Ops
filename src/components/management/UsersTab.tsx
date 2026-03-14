@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { authService } from '../../services/authService';
+import { ensurePendingUserNotifications } from '../../services/activityNotificationService';
 import { canPlanAddUser } from '../../services/planGating';
 import { getEffectivePlan } from '../../services/subscriptionService';
 import { Card } from '../ui/Card';
@@ -27,6 +28,8 @@ export function UsersTab() {
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
   const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), users.length);
+  const hasCompanyManager = users.some((u) => u.role === 'companyManager');
+  const assignableRoles: Role[] = hasCompanyManager ? ['projectManager', 'teamLeader'] : ['companyManager', 'projectManager', 'teamLeader'];
 
   const loadJoinRequests = useCallback(async () => {
     if (!companyId) return;
@@ -38,7 +41,12 @@ export function UsersTab() {
     if (!companyId || !currentUser) return;
     const isCMorPM = currentUser.role === 'companyManager' || currentUser.role === 'projectManager';
     if (isCMorPM) {
-      authService.fetchCompanyProfilesIntoStore(companyId).then(() => setProfilesFetched(true));
+      authService.fetchCompanyProfilesIntoStore(companyId).then(() => {
+        setProfilesFetched(true);
+        const all = store.getUsers(companyId);
+        const pending = all.filter((u) => u.roleApprovalStatus === 'pending');
+        ensurePendingUserNotifications(companyId, pending.map((u) => ({ id: u.id, fullName: u.fullName ?? null })));
+      });
     }
     if (currentUser.role === 'companyManager') {
       loadJoinRequests();
@@ -63,7 +71,8 @@ export function UsersTab() {
   };
 
   const handleApproveWithRole = (userId: string) => {
-    const ok = authService.approveUser(userId, approveRole);
+    const roleToUse = assignableRoles.includes(approveRole) ? approveRole : assignableRoles[0];
+    const ok = authService.approveUser(userId, roleToUse);
     if (ok) {
       setApprovingUserId(null);
     }
@@ -80,7 +89,8 @@ export function UsersTab() {
       setLimitError(t('onboarding.userLimitReached'));
       return;
     }
-    const ok = await authService.approveJoinRequest(reqId, joinReqRole);
+    const roleToUse = assignableRoles.includes(joinReqRole) ? joinReqRole : assignableRoles[0];
+    const ok = await authService.approveJoinRequest(reqId, roleToUse);
     if (ok) {
       setApprovingReqId(null);
       await authService.fetchCompanyProfilesIntoStore(companyId);
@@ -119,14 +129,14 @@ export function UsersTab() {
                     {approvingReqId === req.id ? (
                       <>
                         <select
-                          value={joinReqRole}
+                          value={assignableRoles.includes(joinReqRole) ? joinReqRole : assignableRoles[0]}
                           onChange={(e) => setJoinReqRole(e.target.value as Role)}
                           className={styles.input}
                           style={{ width: 'auto', marginRight: '0.5rem', marginBottom: 0 }}
                         >
-                          <option value="companyManager">{t('roles.companyManager')}</option>
-                          <option value="projectManager">{t('roles.projectManager')}</option>
-                          <option value="teamLeader">{t('roles.teamLeader')}</option>
+                          {assignableRoles.map((r) => (
+                            <option key={r} value={r}>{t(roleKeys[r])}</option>
+                          ))}
                         </select>
                         <button type="button" className={styles.smallBtnOk} onClick={() => handleApproveJoinRequest(req.id)} disabled={!canAddMoreUsers}>
                           {t('joinRequests.approve')}
@@ -173,14 +183,14 @@ export function UsersTab() {
                     {approvingUserId === u.id ? (
                       <>
                         <select
-                          value={approveRole}
+                          value={assignableRoles.includes(approveRole) ? approveRole : assignableRoles[0]}
                           onChange={(e) => setApproveRole(e.target.value as Role)}
                           className={styles.input}
                           style={{ width: 'auto', marginRight: '0.5rem', marginBottom: 0 }}
                         >
-                          <option value="companyManager">{t('roles.companyManager')}</option>
-                          <option value="projectManager">{t('roles.projectManager')}</option>
-                          <option value="teamLeader">{t('roles.teamLeader')}</option>
+                          {assignableRoles.map((r) => (
+                            <option key={r} value={r}>{t(roleKeys[r])}</option>
+                          ))}
                         </select>
                         <button type="button" className={styles.smallBtnOk} onClick={() => handleApproveWithRole(u.id)}>
                           {t('users.approveUser')}

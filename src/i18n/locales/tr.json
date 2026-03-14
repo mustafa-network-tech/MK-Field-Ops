@@ -230,6 +230,7 @@
   "notifications": {
     "title": "Bildirimler",
     "newCount": "{count} yeni bildiriminiz var",
+    "newUserPending": "{userName} şirkete katılmak istiyor. Kullanıcılar bölümünden onaylayın.",
     "pmJobApproved": "{actorName}, {teamCode} takımı için günlük işi onayladı, proje {projectKey}.",
     "pmTeamCreated": "{actorName}, {teamCode} takımını oluşturdu.",
     "pmTeamApproved": "{actorName}, {teamCode} takımını onayladı.",
