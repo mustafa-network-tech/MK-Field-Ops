@@ -103,8 +103,13 @@ export const authService = {
         return { ok: false, error: insertCompanyError.message };
       }
       if (!insertedCompany) return { ok: false, error: 'auth.loginError' };
+      const planStart = new Date().toISOString();
+      const planEndDate = new Date();
+      if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
+      else planEndDate.setMonth(planEndDate.getMonth() + 1);
+      const planEnd = planEndDate.toISOString();
       store.ensureCompany(insertedCompany.id, insertedCompany.name);
-      store.updateCompany(insertedCompany.id, { plan }, insertedCompany.id);
+      store.updateCompany(insertedCompany.id, { plan, plan_start_date: planStart, plan_end_date: planEnd }, insertedCompany.id);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -127,6 +132,11 @@ export const authService = {
 
     const company = store.addCompany(name);
     const cId = company.id;
+    const planStart = new Date().toISOString();
+    const planEndDate = new Date();
+    if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
+    else planEndDate.setMonth(planEndDate.getMonth() + 1);
+    store.updateCompany(cId, { plan, plan_start_date: planStart, plan_end_date: planEndDate.toISOString() }, cId);
     store.addUser({
       companyId: cId,
       email,
