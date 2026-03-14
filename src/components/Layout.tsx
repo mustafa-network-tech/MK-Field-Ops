@@ -13,7 +13,7 @@ const VALID_LOCALES: CompanyLanguageCode[] = ['en', 'tr', 'es', 'fr', 'de'];
 
 export function Layout() {
   const { t, setLocale } = useI18n();
-  const { user, company } = useApp();
+  const { user, company, profilesVersion } = useApp();
   const location = useLocation();
   const navigate = useNavigate();
   const [showPlanUpdateSuccess, setShowPlanUpdateSuccess] = useState(() => !!(location.state as { planChangeSuccess?: boolean } | null)?.planChangeSuccess);
@@ -42,7 +42,7 @@ export function Layout() {
   const companyId = user?.companyId ?? '';
   const pendingApprovalsCount = useMemo(
     () => getPendingApprovalsCountForUser(companyId, user ?? undefined),
-    [companyId, user]
+    [companyId, user, profilesVersion]
   );
   const showApprovalsPending = pendingApprovalsCount > 0;
 
