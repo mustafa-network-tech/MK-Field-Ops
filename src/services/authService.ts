@@ -111,6 +111,7 @@ export const authService = {
       const planEnd = planEndDate.toISOString();
       store.ensureCompany(insertedCompany.id, insertedCompany.name);
       store.updateCompany(insertedCompany.id, { plan, plan_start_date: planStart, plan_end_date: planEnd }, insertedCompany.id);
+      if (plan === 'starter') store.ensureStarterDefaultProject(insertedCompany.id, plan);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email,
@@ -138,6 +139,7 @@ export const authService = {
     if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
     else planEndDate.setDate(planEndDate.getDate() + 30);
     store.updateCompany(cId, { plan, plan_start_date: planStart, plan_end_date: planEndDate.toISOString() }, cId);
+    if (plan === 'starter') store.ensureStarterDefaultProject(cId, plan);
     store.addUser({
       companyId: cId,
       email,

@@ -51,6 +51,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchCompanyLanguageFromSupabase(user.companyId).then(() => refreshCompany());
   }, [user?.companyId, refreshCompany]);
 
+  // Starter plan: ensure default campaign and project exist so job entry works without Projects UI
+  useEffect(() => {
+    if (!user?.companyId || !company) return;
+    const plan = company.plan ?? null;
+    if (plan === 'starter') store.ensureStarterDefaultProject(user.companyId, plan);
+  }, [user?.companyId, company?.plan]);
+
   // Load company profiles (including pending users) for CM/PM so dashboard approval count and notifications work
   useEffect(() => {
     if (!user?.companyId || (user.role !== 'companyManager' && user.role !== 'projectManager')) return;
