@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import styles from './Landing.module.css';
 
@@ -63,10 +63,18 @@ const HOW_IT_WORKS_ICONS = [
 
 export function Landing() {
   const { t, locale, setLocale } = useI18n();
+  const location = useLocation();
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const langRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (location.pathname === '/pricing' || location.hash === '#pricing') {
+      const el = document.getElementById('pricing');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     const id = setInterval(() => {

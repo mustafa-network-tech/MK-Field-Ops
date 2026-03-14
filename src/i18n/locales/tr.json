@@ -716,6 +716,7 @@
     "upgradePlan": "Plan yükselt",
     "upgradeDesc": "Planı istediğiniz zaman yükseltebilirsiniz. Daha üst bir plan seçerseniz şirket limitleri anında güncellenir.",
     "upgradeButton": "Planı yükselt",
+    "changePlanButton": "Planı değiştir",
     "bannerExpired": "Aboneliğiniz sona erdi. MK-OPS kullanmaya devam etmek için planınızı yenileyin.",
     "bannerClosedTitle": "Hesap askıya alındı",
     "bannerClosedMessage": "Şirket erişiminiz kalıcı olarak askıya alındı. Erişimi yenilemek için destek ile iletişime geçin.",
@@ -723,7 +724,8 @@
     "bannerGraceMessage": "Aboneliğiniz {expiredDate} tarihinde sona erdi. Şirketiniz {suspensionDate} tarihinde kalıcı olarak askıya alınacaktır.",
     "bannerGraceCountdown": "Kalıcı askıya alınmaya {days} gün kaldı.",
     "bannerExpiringSoon": "Planınız {days} gün içinde sona erecek. Hizmet kesintisini önlemek için yenileyin.",
-    "graceNote": "Süre sona erdikten sonra kalıcı askıya alınmadan önce yenilemek için {days} gün (ücretsiz ek süre) hakkınız vardır. Şirket verileri asla silinmez; yalnızca erişim engellenir."
+    "graceNote": "Süre sona erdikten sonra kalıcı askıya alınmadan önce yenilemek için {days} gün (ücretsiz ek süre) hakkınız vardır. Şirket verileri asla silinmez; yalnızca erişim engellenir.",
+    "pendingPlanNote": "Planınız {date} tarihinde {plan} planına geçecektir."
   },
   "errors": {
     "forbidden": "Bu kaynağa erişim yetkiniz yok (403)."

@@ -706,6 +706,7 @@
     "upgradePlan": "Plan upgraden",
     "upgradeDesc": "Sie können jederzeit upgraden. Bei einem höheren Plan werden die Unternehmenslimits sofort angepasst.",
     "upgradeButton": "Plan upgraden",
+    "changePlanButton": "Plan ändern",
     "bannerExpired": "Ihr Abonnement ist abgelaufen. Bitte erneuern Sie Ihren Plan, um MK-OPS weiter zu nutzen.",
     "bannerClosedTitle": "Konto gesperrt",
     "bannerClosedMessage": "Der Zugang Ihres Unternehmens wurde dauerhaft gesperrt. Bitte kontaktieren Sie den Support.",
@@ -713,7 +714,8 @@
     "bannerGraceMessage": "Ihr Abonnement endete am {expiredDate}. Ihr Unternehmen wird am {suspensionDate} dauerhaft gesperrt.",
     "bannerGraceCountdown": "Noch {days} Tage bis zur dauerhaften Sperrung.",
     "bannerExpiringSoon": "Ihr Plan läuft in {days} Tagen ab. Erneuern Sie, um Unterbrechungen zu vermeiden.",
-    "graceNote": "Nach Ablauf haben Sie {days} Tage (Schonfrist) zur Erneuerung. Unternehmensdaten werden nie gelöscht; nur der Zugang wird gesperrt."
+    "graceNote": "Nach Ablauf haben Sie {days} Tage (Schonfrist) zur Erneuerung. Unternehmensdaten werden nie gelöscht; nur der Zugang wird gesperrt.",
+    "pendingPlanNote": "Ihr Plan wechselt am {date} zu {plan}."
   },
   "errors": {
     "forbidden": "Sie haben keinen Zugriff auf diese Ressource (403)."

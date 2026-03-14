@@ -1,9 +1,52 @@
 /**
  * Subscription / plan state: active, suspended (grace), closed.
  * Grace period = 15 days after plan_end_date. Data is never auto-deleted; only access is blocked.
+ *
+ * Plan change rules:
+ * - Upgrade (higher plan): effective immediately. Set plan, plan_start_date = now, plan_end_date = now + period; clear pending_plan.
+ * - Downgrade (lower plan): effective at end of current period. Set pending_plan (and pending_plan_billing_cycle).
+ *   Current (higher) plan stays active until plan_end_date; then pending_plan is applied (via apply_pending_plan_if_due).
  */
 
+import type { CompanyPlan } from '../types';
+
 export const GRACE_PERIOD_DAYS = 15;
+
+const PLAN_ORDER: Record<string, number> = { starter: 0, professional: 1, enterprise: 2 };
+
+export type CompanyPlanLike = 'starter' | 'professional' | 'enterprise' | null | undefined;
+
+/** True if newPlan is higher tier than currentPlan. */
+export function isPlanUpgrade(currentPlan: CompanyPlanLike, newPlan: CompanyPlanLike): boolean {
+  const c = currentPlan && PLAN_ORDER[currentPlan] !== undefined ? PLAN_ORDER[currentPlan] : -1;
+  const n = newPlan && PLAN_ORDER[newPlan] !== undefined ? PLAN_ORDER[newPlan] : -1;
+  return n > c;
+}
+
+/** True if newPlan is lower tier than currentPlan. */
+export function isPlanDowngrade(currentPlan: CompanyPlanLike, newPlan: CompanyPlanLike): boolean {
+  const c = currentPlan && PLAN_ORDER[currentPlan] !== undefined ? PLAN_ORDER[currentPlan] : -1;
+  const n = newPlan && PLAN_ORDER[newPlan] !== undefined ? PLAN_ORDER[newPlan] : -1;
+  return n < c;
+}
+
+const VALID_PLANS: CompanyPlan[] = ['starter', 'professional', 'enterprise'];
+
+function isCompanyPlan(s: string | null | undefined): s is CompanyPlan {
+  return s != null && VALID_PLANS.includes(s as CompanyPlan);
+}
+
+/** Plan to use for limits/features: current plan until period end; after plan_end_date with pending_plan set, use pending_plan. */
+export function getEffectivePlan(company: {
+  plan?: string | null;
+  pending_plan?: string | null;
+  plan_end_date?: string | null;
+} | undefined): CompanyPlan | null {
+  if (!company) return null;
+  const planEnd = parseDate(company.plan_end_date ?? null);
+  if (isCompanyPlan(company.pending_plan) && planEnd && new Date() >= planEnd) return company.pending_plan;
+  return isCompanyPlan(company.plan) ? company.plan : null;
+}
 
 export type SubscriptionStatus = 'active' | 'suspended' | 'closed';
 
@@ -34,10 +77,18 @@ function parseDate(s: string | null | undefined): Date | null {
  * Derives subscription state from company.
  * If subscription_status is explicitly 'closed', always closed.
  * Otherwise: now > plan_end_date + 15 days => closed; now > plan_end_date => suspended (grace); else active.
+ * When plan exists but plan_end_date is missing (e.g. company created before dates existed), use createdAt + 1 month as end.
  */
-export function getSubscriptionState(company: { plan_end_date?: string | null; subscription_status?: string | null } | undefined): SubscriptionState {
+export function getSubscriptionState(company: { plan_end_date?: string | null; subscription_status?: string | null; plan?: string | null; createdAt?: string | null } | undefined): SubscriptionState {
   const closedByAdmin = company?.subscription_status === 'closed';
-  const planEnd = parseDate(company?.plan_end_date ?? null);
+  let planEnd = parseDate(company?.plan_end_date ?? null);
+  if (!planEnd && company?.plan && company?.createdAt) {
+    const start = parseDate(company.createdAt);
+    if (start) {
+      planEnd = new Date(start);
+      planEnd.setDate(planEnd.getDate() + 30);
+    }
+  }
   const now = new Date();
 
   if (closedByAdmin) {

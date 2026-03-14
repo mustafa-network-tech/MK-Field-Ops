@@ -17,14 +17,24 @@ function normalizeLanguageCode(value: string | null | undefined): CompanyLanguag
 }
 
 /**
- * Fetch company row from Supabase and merge language_code (and optionally name, logo_url) into local store.
- * Call on app init when user is set so TL/PM/CM all see company language.
+ * Apply pending plan if current period has ended (downgrade takes effect at plan_end_date).
+ * Call before fetching company so the next fetch sees the updated plan when due.
+ */
+export async function applyPendingPlanIfDue(companyId: string): Promise<void> {
+  if (!supabase) return;
+  await supabase.rpc('apply_pending_plan_if_due', { p_company_id: companyId });
+}
+
+/**
+ * Fetch company row from Supabase and merge language_code, plan, plan dates, pending_plan into local store.
+ * Applies pending plan if due (RPC) before fetch so DB is up to date. Call on app init when user is set.
  */
 export async function fetchCompanyLanguageFromSupabase(companyId: string): Promise<void> {
   if (!supabase) return;
+  await applyPendingPlanIfDue(companyId);
   const { data, error } = await supabase
     .from('companies')
-    .select('language_code, name, logo_url, plan')
+    .select('language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle')
     .eq('id', companyId)
     .maybeSingle();
   if (error) {
@@ -34,6 +44,7 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   if (!data) return;
   const language_code = normalizeLanguageCode(data.language_code);
   const plan: CompanyPlan | null = data.plan && ['starter', 'professional', 'enterprise'].includes(data.plan) ? (data.plan as CompanyPlan) : null;
+  const pending_plan: CompanyPlan | null = data.pending_plan && ['starter', 'professional', 'enterprise'].includes(data.pending_plan) ? (data.pending_plan as CompanyPlan) : null;
   const name = (data.name != null && String(data.name).trim()) ? String(data.name).trim() : 'Company';
   if (!store.getCompany(companyId, companyId)) {
     store.ensureCompany(companyId, name);
@@ -43,6 +54,10 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
     name,
     ...(data.logo_url !== undefined && { logo_url: data.logo_url ?? null }),
     ...(plan != null && { plan }),
+    ...(data.plan_start_date !== undefined && { plan_start_date: data.plan_start_date ?? null }),
+    ...(data.plan_end_date !== undefined && { plan_end_date: data.plan_end_date ?? null }),
+    ...(pending_plan !== undefined && { pending_plan: pending_plan ?? null }),
+    ...(data.pending_plan_billing_cycle !== undefined && { pending_plan_billing_cycle: data.pending_plan_billing_cycle ?? null }),
   }, companyId);
 }
 

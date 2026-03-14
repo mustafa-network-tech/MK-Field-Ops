@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
+import { getEffectivePlan } from '../services/subscriptionService';
 import { TeamsTab } from '../components/management/TeamsTab';
 import { VehiclesTab } from '../components/management/VehiclesTab';
 import { MaterialsTab } from '../components/management/MaterialsTab';
@@ -20,8 +21,8 @@ export function Management() {
   const [tab, setTab] = useState<TabId>('teams');
 
   const canEditCatalog = user?.role === 'companyManager' || user?.role === 'projectManager';
-  const planAllowsProjects = canPlanAccessFeature(company?.plan, 'projects');
-  const planAllowsMaterials = canPlanAccessFeature(company?.plan, 'materials');
+  const planAllowsProjects = canPlanAccessFeature(getEffectivePlan(company), 'projects');
+  const planAllowsMaterials = canPlanAccessFeature(getEffectivePlan(company), 'materials');
 
   const tabs = (
     [

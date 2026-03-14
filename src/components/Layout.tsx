@@ -4,7 +4,7 @@ import { TopBar } from './TopBar';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
-import { getSubscriptionState } from '../services/subscriptionService';
+import { getSubscriptionState, getEffectivePlan } from '../services/subscriptionService';
 import type { CompanyLanguageCode } from '../types';
 import styles from './Layout.module.css';
 
@@ -21,7 +21,7 @@ export function Layout() {
     const code = company?.language_code;
     if (code && VALID_LOCALES.includes(code)) setLocale(code);
   }, [company?.language_code, setLocale]);
-  const planAllowsDeliveryNotes = canPlanAccessFeature(company?.plan, 'deliveryNotes');
+  const planAllowsDeliveryNotes = canPlanAccessFeature(getEffectivePlan(company), 'deliveryNotes');
   const canAccessDeliveryNotes = (user?.role === 'companyManager' || user?.role === 'projectManager') && planAllowsDeliveryNotes;
   const canAccessSettingsAndPayroll = user?.role === 'companyManager' || user?.role === 'projectManager';
   const canAccessAuditLogs = user?.role === 'companyManager';

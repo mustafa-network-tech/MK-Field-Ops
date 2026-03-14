@@ -706,6 +706,7 @@
     "upgradePlan": "Mettre à niveau",
     "upgradeDesc": "Vous pouvez mettre à niveau à tout moment. Une limite plus élevée est appliquée immédiatement.",
     "upgradeButton": "Mettre à niveau le plan",
+    "changePlanButton": "Changer de plan",
     "bannerExpired": "Votre abonnement a expiré. Renouvelez pour continuer à utiliser MK-OPS.",
     "bannerClosedTitle": "Compte suspendu",
     "bannerClosedMessage": "L'accès de votre entreprise a été suspendu définitivement. Contactez le support.",
@@ -713,7 +714,8 @@
     "bannerGraceMessage": "Votre abonnement a expiré le {expiredDate}. Votre entreprise sera suspendue le {suspensionDate}.",
     "bannerGraceCountdown": "{days} jours avant la suspension définitive.",
     "bannerExpiringSoon": "Votre plan expire dans {days} jours. Renouvelez pour éviter toute interruption.",
-    "graceNote": "Après expiration vous disposez de {days} jours (délai de grâce). Les données ne sont jamais supprimées ; seul l'accès est bloqué."
+    "graceNote": "Après expiration vous disposez de {days} jours (délai de grâce). Les données ne sont jamais supprimées ; seul l'accès est bloqué.",
+    "pendingPlanNote": "Votre plan passera à {plan} le {date}."
   },
   "errors": {
     "forbidden": "Vous n'avez pas accès à cette ressource (403)."

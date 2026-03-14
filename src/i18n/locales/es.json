@@ -706,6 +706,7 @@
     "upgradePlan": "Mejorar plan",
     "upgradeDesc": "Puede mejorar en cualquier momento. Si elige un plan superior, los límites se actualizan de inmediato.",
     "upgradeButton": "Mejorar plan",
+    "changePlanButton": "Cambiar plan",
     "bannerExpired": "Su suscripción ha caducado. Renueve su plan para seguir usando MK-OPS.",
     "bannerClosedTitle": "Cuenta suspendida",
     "bannerClosedMessage": "El acceso de su empresa ha sido suspendido permanentemente. Contacte con soporte.",
@@ -713,7 +714,8 @@
     "bannerGraceMessage": "Su suscripción caducó el {expiredDate}. Su empresa será suspendida permanentemente el {suspensionDate}.",
     "bannerGraceCountdown": "Quedan {days} días antes de la suspensión permanente.",
     "bannerExpiringSoon": "Su plan caduca en {days} días. Renueve para evitar interrupciones.",
-    "graceNote": "Tras la caducidad tiene {days} días (período de gracia) para renovar. Los datos nunca se eliminan; solo se bloquea el acceso."
+    "graceNote": "Tras la caducidad tiene {days} días (período de gracia) para renovar. Los datos nunca se eliminan; solo se bloquea el acceso.",
+    "pendingPlanNote": "Su plan cambiará a {plan} el {date}."
   },
   "errors": {
     "forbidden": "No tiene acceso a este recurso (403)."

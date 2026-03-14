@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
+import { getEffectivePlan } from '../services/subscriptionService';
 import { store } from '../data/store';
 import { getTeamsForJobEntry } from '../services/teamScopeService';
 import { addJob } from '../services/jobService';
@@ -36,10 +37,11 @@ export function JobEntry() {
   const { t, locale } = useI18n();
   const { user, company } = useApp();
   const companyId = user?.companyId ?? '';
-  const planAllowsProjects = canPlanAccessFeature(company?.plan, 'projects');
+  const planAllowsProjects = canPlanAccessFeature(getEffectivePlan(company), 'projects');
+  const effectivePlan = getEffectivePlan(company);
   const defaultStarterProjectId = useMemo(
-    () => (company?.plan === 'starter' ? store.ensureStarterDefaultProject(companyId, company?.plan) : null),
-    [companyId, company?.plan]
+    () => (effectivePlan === 'starter' ? store.ensureStarterDefaultProject(companyId, effectivePlan) : null),
+    [companyId, effectivePlan]
   );
   const teams = getTeamsForJobEntry(companyId, user);
   const workItems = store.getWorkItems(companyId);
@@ -53,10 +55,10 @@ export function JobEntry() {
   const [campaignId, setCampaignId] = useState('');
   const [projectId, setProjectId] = useState('');
   useEffect(() => {
-    if (company?.plan === 'starter' && starterProjectId && !projectId) {
+    if (effectivePlan === 'starter' && starterProjectId && !projectId) {
       setProjectId(starterProjectId);
     }
-  }, [company?.plan, starterProjectId, projectId]);
+  }, [effectivePlan, starterProjectId, projectId]);
   const [teamId, setTeamId] = useState('');
   const [workItemId, setWorkItemId] = useState('');
   const projectsInCampaign = campaignId

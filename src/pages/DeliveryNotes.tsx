@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
+import { getEffectivePlan } from '../services/subscriptionService';
 import { store } from '../data/store';
 import { Card } from '../components/ui/Card';
 import type { DeliveryNote, DeliveryNoteItem } from '../types';
@@ -29,7 +30,7 @@ export function DeliveryNotes() {
   const { t } = useI18n();
   const { user, company } = useApp();
   const companyId = user?.companyId ?? '';
-  const planAllowsDeliveryNotes = canPlanAccessFeature(company?.plan, 'deliveryNotes');
+  const planAllowsDeliveryNotes = canPlanAccessFeature(getEffectivePlan(company), 'deliveryNotes');
   const canAccess = (user?.role === 'companyManager' || user?.role === 'projectManager') && planAllowsDeliveryNotes;
 
   if (!planAllowsDeliveryNotes) {

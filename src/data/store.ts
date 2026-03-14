@@ -128,7 +128,7 @@ export const store = {
     return company;
   },
   /** Update company. Pass onlyForCompanyId to enforce tenant isolation (update only if companyId === onlyForCompanyId). */
-  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code' | 'plan' | 'plan_start_date' | 'plan_end_date' | 'subscription_status'>>, onlyForCompanyId?: string): Company | undefined {
+  updateCompany(companyId: string, patch: Partial<Pick<Company, 'name' | 'logo_url' | 'language_code' | 'plan' | 'plan_start_date' | 'plan_end_date' | 'pending_plan' | 'pending_plan_billing_cycle' | 'subscription_status'>>, onlyForCompanyId?: string): Company | undefined {
     if (onlyForCompanyId != null && companyId !== onlyForCompanyId) return undefined;
     const companies = this.getCompanies();
     const i = companies.findIndex((c) => c.id === companyId);

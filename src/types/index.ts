@@ -29,6 +29,10 @@ export interface Company {
   plan_start_date?: string | null;
   /** Subscription period end (ISO date or datetime). When reached, company enters SUSPENDED; after grace period, CLOSED. */
   plan_end_date?: string | null;
+  /** Scheduled downgrade: applied at plan_end_date. Null if no pending change. */
+  pending_plan?: CompanyPlan | null;
+  /** Billing cycle for pending_plan when applied: monthly | yearly. */
+  pending_plan_billing_cycle?: 'monthly' | 'yearly' | null;
   /** active = normal; suspended = expired, grace period; closed = suspended + 15 days, access blocked. */
   subscription_status?: 'active' | 'suspended' | 'closed' | null;
   createdAt: string;

@@ -67,6 +67,7 @@ function AppRoutes() {
       <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/workspace" element={<PublicOnlyRoute><Workspace /></PublicOnlyRoute>} />
+      <Route path="/pricing" element={<Landing />} />
       <Route path="/pending-join" element={<PendingJoinRoute />} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />

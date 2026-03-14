@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { authService } from '../../services/authService';
 import { canPlanAddUser } from '../../services/planGating';
+import { getEffectivePlan } from '../../services/subscriptionService';
 import { Card } from '../ui/Card';
 import type { User as UserType, Role } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -25,7 +26,7 @@ export function UsersTab() {
   const [limitError, setLimitError] = useState('');
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
-  const canAddMoreUsers = canPlanAddUser(company?.plan, users.length);
+  const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), users.length);
 
   const loadJoinRequests = useCallback(async () => {
     if (!companyId) return;
@@ -75,7 +76,7 @@ export function UsersTab() {
 
   const handleApproveJoinRequest = async (reqId: string) => {
     setLimitError('');
-    if (!canPlanAddUser(company?.plan, users.length)) {
+    if (!canPlanAddUser(getEffectivePlan(company), users.length)) {
       setLimitError(t('onboarding.userLimitReached'));
       return;
     }

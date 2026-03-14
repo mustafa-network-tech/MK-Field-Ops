@@ -4,6 +4,7 @@ import { store } from '../data/store';
 import { getPlanUserLimit, getPlanTeamLimit } from '../services/planGating';
 import {
   getSubscriptionState,
+  getEffectivePlan,
   formatPlanEndDisplay,
   GRACE_PERIOD_DAYS,
 } from '../services/subscriptionService';
@@ -45,17 +46,38 @@ export function Plan() {
   const companyId = company?.id ?? user?.companyId ?? '';
   const c = store.getCompany(companyId, companyId) ?? company;
   const sub = getSubscriptionState(c);
-  const userLimit = getPlanUserLimit(c?.plan);
-  const teamLimit = getPlanTeamLimit(c?.plan);
+  const effectivePlan = getEffectivePlan(c);
+  const userLimit = getPlanUserLimit(effectivePlan);
+  const teamLimit = getPlanTeamLimit(effectivePlan);
   const userCount = store.getUsers(companyId).length;
   const teamCount = store.getTeams(companyId).length;
 
-  const planStart = c?.plan_start_date ?? null;
-  const planEnd = c?.plan_end_date ?? null;
+  const planStart = c?.plan_start_date ?? c?.createdAt ?? null;
+  const planEnd = (() => {
+    if (c?.plan_end_date) return c.plan_end_date;
+    if (c?.createdAt && c?.plan) {
+      const d = new Date(c.createdAt);
+      d.setDate(d.getDate() + 30);
+      return d.toISOString();
+    }
+    return null;
+  })();
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.pageTitle}>{t('planPage.title')}</h1>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>
+          {t('planPage.title')}
+          {effectivePlan && (
+            <span className={styles.planBadge}> ({planLabel(effectivePlan, t)})</span>
+          )}
+        </h1>
+        {!sub.isClosed && (
+          <button type="button" className={styles.upgradeBtn} onClick={() => { window.location.href = '/pricing#pricing'; }}>
+            {t('planPage.changePlanButton')}
+          </button>
+        )}
+      </div>
 
       {/* Expired / Grace / Closed warnings */}
       {sub.isClosed && (
@@ -79,7 +101,15 @@ export function Plan() {
 
       <div className={styles.grid}>
         <Card title={t('planPage.currentPlan')}>
-          <p className={styles.planName}>{planLabel(c?.plan, t)}</p>
+          <p className={styles.planName}>{planLabel(effectivePlan ?? c?.plan, t)}</p>
+          {c?.pending_plan && planEnd && new Date() < new Date(planEnd) && (
+            <p className={styles.pendingPlanNote}>
+              {t('planPage.pendingPlanNote', {
+                plan: planLabel(c.pending_plan, t),
+                date: formatDateOnly(planEnd, locale),
+              })}
+            </p>
+          )}
           <ul className={styles.metaList}>
             <li>{t('planPage.planStart')}: {formatDateOnly(planStart, locale)}</li>
             <li>{t('planPage.planEnd')}: {formatDateOnly(planEnd, locale)}</li>
@@ -107,17 +137,6 @@ export function Plan() {
           </ul>
         </Card>
       </div>
-
-      {!sub.isClosed && (
-        <div className={styles.upgradeBlock}>
-          <Card title={t('planPage.upgradePlan')}>
-            <p className={styles.upgradeDesc}>{t('planPage.upgradeDesc')}</p>
-            <button type="button" className={styles.upgradeBtn} onClick={() => window.open('/workspace', '_blank')}>
-              {t('planPage.upgradeButton')}
-            </button>
-          </Card>
-        </div>
-      )}
 
       {sub.isGracePeriod && (
         <p className={styles.graceNote}>

@@ -5,6 +5,7 @@ import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { updateCompanyLanguageInSupabase } from '../services/companyService';
 import { store } from '../data/store';
+import { getEffectivePlan } from '../services/subscriptionService';
 import styles from './TopBar.module.css';
 
 const roleKeys: Record<string, string> = {
@@ -64,7 +65,8 @@ export function TopBar() {
   const company = user.companyId ? store.getCompany(user.companyId, user.companyId) : undefined;
   const companyName = company?.name ?? '';
   const companyLogoUrl = company?.logo_url ?? null;
-  const planLabel = company?.plan ? t(planKeys[company.plan] ?? company.plan) : null;
+  const effectivePlan = getEffectivePlan(company);
+  const planLabel = effectivePlan ? t(planKeys[effectivePlan] ?? effectivePlan) : null;
   const canChangeLanguage = user.role === 'companyManager' || user.role === 'projectManager';
 
   return (

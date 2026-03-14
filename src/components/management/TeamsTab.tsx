@@ -6,6 +6,7 @@ import { store } from '../../data/store';
 import { addTeam, updateTeam, getEligibleTeamLeaders } from '../../services/teamService';
 import { getTeamsForUser } from '../../services/teamScopeService';
 import { canPlanAddTeam } from '../../services/planGating';
+import { getEffectivePlan } from '../../services/subscriptionService';
 import { logEvent, actorFromUser } from '../../services/auditLogService';
 import { Card } from '../ui/Card';
 import type { Team, TeamManualMember } from '../../types';
@@ -32,7 +33,7 @@ export function TeamsTab() {
   const users = store.getUsers(companyId);
   const eligibleLeaders = getEligibleTeamLeaders(companyId);
   const vehicles = store.getVehicles(companyId);
-  const canAddTeam = canPlanAddTeam(company?.plan ?? null, allTeamsForCompany.length);
+  const canAddTeam = canPlanAddTeam(getEffectivePlan(company) ?? null, allTeamsForCompany.length);
   const hasNoLeaders = eligibleLeaders.length === 0;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Team | null>(null);

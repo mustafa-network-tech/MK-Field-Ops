@@ -1,6 +1,7 @@
 import { store } from '../data/store';
 import type { Role } from '../types';
 import { canPlanAddUser } from './planGating';
+import { getEffectivePlan } from './subscriptionService';
 import { supabase } from './supabaseClient';
 
 function hashPassword(p: string): string {
@@ -106,7 +107,7 @@ export const authService = {
       const planStart = new Date().toISOString();
       const planEndDate = new Date();
       if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
-      else planEndDate.setMonth(planEndDate.getMonth() + 1);
+      else planEndDate.setDate(planEndDate.getDate() + 30);
       const planEnd = planEndDate.toISOString();
       store.ensureCompany(insertedCompany.id, insertedCompany.name);
       store.updateCompany(insertedCompany.id, { plan, plan_start_date: planStart, plan_end_date: planEnd }, insertedCompany.id);
@@ -135,7 +136,7 @@ export const authService = {
     const planStart = new Date().toISOString();
     const planEndDate = new Date();
     if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
-    else planEndDate.setMonth(planEndDate.getMonth() + 1);
+    else planEndDate.setDate(planEndDate.getDate() + 30);
     store.updateCompany(cId, { plan, plan_start_date: planStart, plan_end_date: planEndDate.toISOString() }, cId);
     store.addUser({
       companyId: cId,
@@ -201,7 +202,7 @@ export const authService = {
     if (store.getUserByEmail(email, cId)) return { ok: false, error: 'auth.emailExists' };
     const existingUsers = store.getUsers(cId);
     const companyWithPlan = store.getCompany(cId, cId);
-    if (!canPlanAddUser(companyWithPlan?.plan, existingUsers.length)) {
+    if (!canPlanAddUser(getEffectivePlan(companyWithPlan), existingUsers.length)) {
       return { ok: false, error: 'onboarding.userLimitReached' };
     }
     store.addUser({

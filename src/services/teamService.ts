@@ -1,6 +1,7 @@
 import { store } from '../data/store';
 import { logEvent, actorFromUser } from './auditLogService';
 import { canPlanAddTeam } from './planGating';
+import { getEffectivePlan } from './subscriptionService';
 import type { User } from '../types';
 import type { Team } from '../types';
 
@@ -84,7 +85,7 @@ export function addTeam(
 
   const company = store.getCompany(companyId, companyId);
   const existingTeams = store.getTeams(companyId);
-  if (!canPlanAddTeam(company?.plan ?? null, existingTeams.length)) {
+  if (!canPlanAddTeam(getEffectivePlan(company) ?? null, existingTeams.length)) {
     return { ok: false, error: 'teams.validation.planTeamLimitReached', statusCode: 403 };
   }
 
