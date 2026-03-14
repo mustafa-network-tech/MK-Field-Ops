@@ -4,13 +4,6 @@ import { useI18n } from '../i18n/I18nContext';
 import type { Locale } from '../i18n/I18nContext';
 import styles from './PublicPageHeader.module.css';
 
-const LANG_KEYS: Record<Locale, string> = {
-  en: 'topBar.langEn',
-  tr: 'topBar.langTr',
-  es: 'topBar.langEs',
-  fr: 'topBar.langFr',
-  de: 'topBar.langDe',
-};
 const LOCALES: Locale[] = ['en', 'tr', 'es', 'fr', 'de'];
 
 /**

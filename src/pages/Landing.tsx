@@ -3,13 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import styles from './Landing.module.css';
 
-const langKeys: Record<string, string> = {
-  en: 'topBar.langEn',
-  tr: 'topBar.langTr',
-  es: 'topBar.langEs',
-  fr: 'topBar.langFr',
-  de: 'topBar.langDe',
-};
 const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 
 /** Landing sayfası logosu – navbar ve hero’da aynı dosya kullanılır; panel ayrı. */

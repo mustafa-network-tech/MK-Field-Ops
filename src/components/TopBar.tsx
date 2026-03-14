@@ -24,14 +24,6 @@ const roleKeys: Record<string, string> = {
   teamLeader: 'roles.teamLeader',
 };
 
-const langKeys: Record<string, string> = {
-  en: 'topBar.langEn',
-  tr: 'topBar.langTr',
-  es: 'topBar.langEs',
-  fr: 'topBar.langFr',
-  de: 'topBar.langDe',
-};
-
 const planKeys: Record<string, string> = {
   starter: 'onboarding.planStarter',
   professional: 'onboarding.planProfessional',
