@@ -428,6 +428,18 @@ export function Landing() {
                       <span className={styles.pricingCheck} aria-hidden>✔</span>
                       <span>{t('landing.pricingEnterpriseFeature4')}</span>
                     </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature5')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature6')}</span>
+                    </li>
+                    <li className={styles.pricingListItem}>
+                      <span className={styles.pricingCheck} aria-hidden>✔</span>
+                      <span>{t('landing.pricingEnterpriseFeature7')}</span>
+                    </li>
                   </ul>
                 </div>
                 <div className={styles.pricingListGroup}>
