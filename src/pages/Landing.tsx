@@ -336,9 +336,9 @@ export function Landing() {
                   </ul>
                 </div>
               </div>
-              <button type="button" className={styles.pricingButton}>
+              <Link to="/plan-change?plan=starter" className={styles.pricingButton}>
                 {t('landing.navStartFree')}
-              </button>
+              </Link>
             </div>
             <div className={styles.pricingCardFeatured}>
               <h3 className={styles.pricingCardTitle}>{t('landing.planPro')}</h3>
@@ -402,9 +402,9 @@ export function Landing() {
                   </ul>
                 </div>
               </div>
-              <button type="button" className={styles.pricingButtonPrimary}>
+              <Link to="/plan-change?plan=professional" className={styles.pricingButtonPrimary}>
                 {t('landing.navStartFree')}
-              </button>
+              </Link>
             </div>
             <div className={styles.pricingCard}>
               <h3 className={styles.pricingCardTitle}>{t('landing.planEnterprise')}</h3>
@@ -478,9 +478,9 @@ export function Landing() {
                   </ul>
                 </div>
               </div>
-              <button type="button" className={styles.pricingButton}>
+              <Link to="/plan-change?plan=enterprise" className={styles.pricingButton}>
                 {t('landing.navStartFree')}
-              </button>
+              </Link>
             </div>
           </div>
         </div>

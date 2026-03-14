@@ -717,6 +717,25 @@
     "graceNote": "Nach Ablauf haben Sie {days} Tage (Schonfrist) zur Erneuerung. Unternehmensdaten werden nie gelöscht; nur der Zugang wird gesperrt.",
     "pendingPlanNote": "Ihr Plan wechselt am {date} zu {plan}."
   },
+  "planChangePage": {
+    "title": "Planauswahl",
+    "selectPlan": "Plan wählen",
+    "billingCycle": "Abrechnungszeitraum",
+    "monthly": "Monatlich",
+    "yearly": "Jährlich",
+    "confirmPlan": "Plan bestätigen",
+    "confirming": "Wird bestätigt…",
+    "backToPlan": "Zurück zum Plan",
+    "backToHome": "Zurück zur Startseite",
+    "backToPending": "Zurück zur ausstehenden Anfrage",
+    "signInToContinue": "Melden Sie sich an oder registrieren Sie sich, um Ihre Planauswahl zu bestätigen.",
+    "signIn": "Anmelden",
+    "register": "Registrieren",
+    "choosePlanOnLanding": "Wählen Sie auf der Startseite einen Plan oder melden Sie sich an, um den Unternehmensplan zu ändern.",
+    "pendingJoin": "Bitte schließen Sie zuerst Ihre Beitrittsanfrage ab.",
+    "onlyCM": "Nur der Unternehmensleiter kann den Plan ändern.",
+    "errorGeneric": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
   "errors": {
     "forbidden": "Sie haben keinen Zugriff auf diese Ressource (403)."
   },

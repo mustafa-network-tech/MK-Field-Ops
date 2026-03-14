@@ -5,6 +5,7 @@
 
 import { store } from '../data/store';
 import type { CompanyLanguageCode, CompanyPlan } from '../types';
+import { isPlanUpgrade } from './subscriptionService';
 import { supabase } from './supabaseClient';
 
 const VALID_LANGUAGE_CODES: CompanyLanguageCode[] = ['en', 'tr', 'es', 'fr', 'de'];
@@ -99,6 +100,64 @@ export async function fetchCompanyJoinCodeFromSupabase(companyId: string): Promi
     .maybeSingle();
   if (error || !data) return null;
   return data.join_code ?? null;
+}
+
+/**
+ * Change company plan (upgrade = immediate; downgrade = at period end).
+ * Only CM/PM can update; RLS enforces. Call from plan-change page after "Confirm Plan".
+ */
+export async function changeCompanyPlanInSupabase(
+  companyId: string,
+  newPlan: CompanyPlan,
+  billingCycle: 'monthly' | 'yearly',
+  currentPlan: CompanyPlan | null
+): Promise<{ ok: boolean; error?: string }> {
+  if (!['starter', 'professional', 'enterprise'].includes(newPlan)) {
+    return { ok: false, error: 'Invalid plan' };
+  }
+  if (!supabase) return { ok: false, error: 'Not connected' };
+  const now = new Date();
+  const planStart = now.toISOString();
+  const planEnd = new Date(now);
+  if (billingCycle === 'yearly') planEnd.setFullYear(planEnd.getFullYear() + 1);
+  else planEnd.setDate(planEnd.getDate() + 30);
+  const planEndIso = planEnd.toISOString();
+
+  if (isPlanUpgrade(currentPlan, newPlan)) {
+    const { error } = await supabase
+      .from('companies')
+      .update({
+        plan: newPlan,
+        plan_start_date: planStart,
+        plan_end_date: planEndIso,
+        billing_cycle: billingCycle,
+        pending_plan: null,
+        pending_plan_billing_cycle: null,
+      })
+      .eq('id', companyId);
+    if (error) return { ok: false, error: error.message };
+    store.updateCompany(companyId, {
+      plan: newPlan,
+      plan_start_date: planStart,
+      plan_end_date: planEndIso,
+      pending_plan: null,
+      pending_plan_billing_cycle: null,
+    }, companyId);
+  } else {
+    const { error } = await supabase
+      .from('companies')
+      .update({
+        pending_plan: newPlan,
+        pending_plan_billing_cycle: billingCycle,
+      })
+      .eq('id', companyId);
+    if (error) return { ok: false, error: error.message };
+    store.updateCompany(companyId, {
+      pending_plan: newPlan,
+      pending_plan_billing_cycle: billingCycle,
+    }, companyId);
+  }
+  return { ok: true };
 }
 
 /**

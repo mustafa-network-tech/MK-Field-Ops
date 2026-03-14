@@ -717,6 +717,25 @@
     "graceNote": "Après expiration vous disposez de {days} jours (délai de grâce). Les données ne sont jamais supprimées ; seul l'accès est bloqué.",
     "pendingPlanNote": "Votre plan passera à {plan} le {date}."
   },
+  "planChangePage": {
+    "title": "Sélection du plan",
+    "selectPlan": "Choisir un plan",
+    "billingCycle": "Cycle de facturation",
+    "monthly": "Mensuel",
+    "yearly": "Annuel",
+    "confirmPlan": "Confirmer le plan",
+    "confirming": "Confirmation…",
+    "backToPlan": "Retour au plan",
+    "backToHome": "Retour à l'accueil",
+    "backToPending": "Retour aux demandes en attente",
+    "signInToContinue": "Connectez-vous ou inscrivez-vous pour confirmer votre choix de plan.",
+    "signIn": "Connexion",
+    "register": "S'inscrire",
+    "choosePlanOnLanding": "Choisissez un plan sur la page d'accueil ou connectez-vous pour modifier le plan de l'entreprise.",
+    "pendingJoin": "Veuillez d'abord finaliser votre demande d'adhésion.",
+    "onlyCM": "Seul le responsable d'entreprise peut modifier le plan.",
+    "errorGeneric": "Une erreur s'est produite. Veuillez réessayer."
+  },
   "errors": {
     "forbidden": "Vous n'avez pas accès à cette ressource (403)."
   },

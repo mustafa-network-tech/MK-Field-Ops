@@ -73,7 +73,7 @@ export function Plan() {
           )}
         </h1>
         {!sub.isClosed && (
-          <button type="button" className={styles.upgradeBtn} onClick={() => { window.location.href = '/pricing#pricing'; }}>
+          <button type="button" className={styles.upgradeBtn} onClick={() => { window.location.href = '/plan-change'; }}>
             {t('planPage.changePlanButton')}
           </button>
         )}

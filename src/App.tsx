@@ -22,6 +22,7 @@ const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m
 const PayrollPeriods = lazy(() => import('./pages/PayrollPeriods').then((m) => ({ default: m.PayrollPeriods })));
 const AuditLogs = lazy(() => import('./pages/AuditLogs').then((m) => ({ default: m.AuditLogs })));
 const Plan = lazy(() => import('./pages/Plan').then((m) => ({ default: m.Plan })));
+const PlanChange = lazy(() => import('./pages/PlanChange').then((m) => ({ default: m.PlanChange })));
 const UserGuide = lazy(() => import('./pages/UserGuide').then((m) => ({ default: m.UserGuide })));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy').then((m) => ({ default: m.RefundPolicy })));
@@ -68,6 +69,7 @@ function AppRoutes() {
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/workspace" element={<PublicOnlyRoute><Workspace /></PublicOnlyRoute>} />
       <Route path="/pricing" element={<Landing />} />
+      <Route path="/plan-change" element={<PlanChange />} />
       <Route path="/pending-join" element={<PendingJoinRoute />} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />

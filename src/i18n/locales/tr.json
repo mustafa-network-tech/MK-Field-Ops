@@ -727,6 +727,25 @@
     "graceNote": "Süre sona erdikten sonra kalıcı askıya alınmadan önce yenilemek için {days} gün (ücretsiz ek süre) hakkınız vardır. Şirket verileri asla silinmez; yalnızca erişim engellenir.",
     "pendingPlanNote": "Planınız {date} tarihinde {plan} planına geçecektir."
   },
+  "planChangePage": {
+    "title": "Plan seçimi",
+    "selectPlan": "Plan seçin",
+    "billingCycle": "Faturalama dönemi",
+    "monthly": "Aylık",
+    "yearly": "Yıllık",
+    "confirmPlan": "Planı onayla",
+    "confirming": "Onaylanıyor…",
+    "backToPlan": "Plana dön",
+    "backToHome": "Ana sayfaya dön",
+    "backToPending": "Bekleyen işleme dön",
+    "signInToContinue": "Plan seçiminizi onaylamak için giriş yapın veya kayıt olun.",
+    "signIn": "Giriş yap",
+    "register": "Kayıt ol",
+    "choosePlanOnLanding": "Ana sayfadan plan seçin veya şirket planınızı değiştirmek için giriş yapın.",
+    "pendingJoin": "Lütfen önce katılım talebinizi tamamlayın.",
+    "onlyCM": "Planı yalnızca şirket yöneticisi değiştirebilir.",
+    "errorGeneric": "Bir hata oluştu. Lütfen tekrar deneyin."
+  },
   "errors": {
     "forbidden": "Bu kaynağa erişim yetkiniz yok (403)."
   },

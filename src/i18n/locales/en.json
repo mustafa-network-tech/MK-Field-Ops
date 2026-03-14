@@ -725,6 +725,25 @@
     "graceNote": "After expiration you have {days} days (grace period) to renew before permanent suspension. Company data is never deleted; only access is blocked.",
     "pendingPlanNote": "Your plan will change to {plan} on {date}."
   },
+  "planChangePage": {
+    "title": "Plan selection",
+    "selectPlan": "Select a plan",
+    "billingCycle": "Billing cycle",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "confirmPlan": "Confirm plan",
+    "confirming": "Confirming…",
+    "backToPlan": "Back to Plan",
+    "backToHome": "Back to home",
+    "backToPending": "Back to pending",
+    "signInToContinue": "Sign in or register to confirm your plan selection.",
+    "signIn": "Sign in",
+    "register": "Register",
+    "choosePlanOnLanding": "Choose a plan on the home page, or sign in to change your company plan.",
+    "pendingJoin": "Please complete your join request first.",
+    "onlyCM": "Only the company manager can change the plan.",
+    "errorGeneric": "Something went wrong. Please try again."
+  },
   "errors": {
     "forbidden": "You do not have access to this resource (403)."
   },

@@ -717,6 +717,25 @@
     "graceNote": "Tras la caducidad tiene {days} días (período de gracia) para renovar. Los datos nunca se eliminan; solo se bloquea el acceso.",
     "pendingPlanNote": "Su plan cambiará a {plan} el {date}."
   },
+  "planChangePage": {
+    "title": "Selección de plan",
+    "selectPlan": "Seleccione un plan",
+    "billingCycle": "Ciclo de facturación",
+    "monthly": "Mensual",
+    "yearly": "Anual",
+    "confirmPlan": "Confirmar plan",
+    "confirming": "Confirmando…",
+    "backToPlan": "Volver al plan",
+    "backToHome": "Volver al inicio",
+    "backToPending": "Volver a pendientes",
+    "signInToContinue": "Inicie sesión o regístrese para confirmar su selección de plan.",
+    "signIn": "Iniciar sesión",
+    "register": "Registrarse",
+    "choosePlanOnLanding": "Elija un plan en la página de inicio o inicie sesión para cambiar el plan de su empresa.",
+    "pendingJoin": "Complete primero su solicitud de incorporación.",
+    "onlyCM": "Solo el administrador de la empresa puede cambiar el plan.",
+    "errorGeneric": "Algo salió mal. Por favor, inténtelo de nuevo."
+  },
   "errors": {
     "forbidden": "No tiene acceso a este recurso (403)."
   },
