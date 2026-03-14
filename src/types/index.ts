@@ -25,6 +25,12 @@ export interface Company {
   plan_status?: string | null;
   trial_end_date?: string | null;
   owner_user_id?: string | null;
+  /** Subscription period start (ISO date or datetime). */
+  plan_start_date?: string | null;
+  /** Subscription period end (ISO date or datetime). When reached, company enters SUSPENDED; after grace period, CLOSED. */
+  plan_end_date?: string | null;
+  /** active = normal; suspended = expired, grace period; closed = suspended + 15 days, access blocked. */
+  subscription_status?: 'active' | 'suspended' | 'closed' | null;
   createdAt: string;
 }
 

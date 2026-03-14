@@ -700,6 +700,29 @@
     "monthlySummary": "Monthly Summary",
     "performance": "Performance"
   },
+  "planPage": {
+    "title": "Plan",
+    "currentPlan": "Current plan",
+    "planStart": "Plan start date",
+    "planEnd": "Plan end date",
+    "remainingDays": "Remaining days",
+    "expiresAt": "Expires at",
+    "usage": "Usage",
+    "users": "Users",
+    "teams": "Teams",
+    "billing": "Billing",
+    "upgradePlan": "Upgrade plan",
+    "upgradeDesc": "You can upgrade at any time. If you select a higher plan, company limits are updated immediately.",
+    "upgradeButton": "Upgrade plan",
+    "bannerExpired": "Your subscription has expired. Please renew your plan to continue using MK-OPS.",
+    "bannerClosedTitle": "Account suspended",
+    "bannerClosedMessage": "Your company access has been permanently suspended. Please contact support to restore access.",
+    "bannerGraceTitle": "Subscription expired",
+    "bannerGraceMessage": "Your subscription expired on {expiredDate}. Your company will be permanently suspended on {suspensionDate}.",
+    "bannerGraceCountdown": "{days} days left before permanent suspension.",
+    "bannerExpiringSoon": "Your plan expires in {days} days. Renew to avoid service interruption.",
+    "graceNote": "After expiration you have {days} days (grace period) to renew before permanent suspension. Company data is never deleted; only access is blocked."
+  },
   "errors": {
     "forbidden": "You do not have access to this resource (403)."
   },

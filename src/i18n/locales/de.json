@@ -692,6 +692,29 @@
     "monthlySummary": "Monatsübersicht",
     "performance": "Leistung"
   },
+  "planPage": {
+    "title": "Plan",
+    "currentPlan": "Aktueller Plan",
+    "planStart": "Planstart",
+    "planEnd": "Planende",
+    "remainingDays": "Verbleibende Tage",
+    "expiresAt": "Läuft aus am",
+    "usage": "Nutzung",
+    "users": "Benutzer",
+    "teams": "Teams",
+    "billing": "Abrechnung",
+    "upgradePlan": "Plan upgraden",
+    "upgradeDesc": "Sie können jederzeit upgraden. Bei einem höheren Plan werden die Unternehmenslimits sofort angepasst.",
+    "upgradeButton": "Plan upgraden",
+    "bannerExpired": "Ihr Abonnement ist abgelaufen. Bitte erneuern Sie Ihren Plan, um MK-OPS weiter zu nutzen.",
+    "bannerClosedTitle": "Konto gesperrt",
+    "bannerClosedMessage": "Der Zugang Ihres Unternehmens wurde dauerhaft gesperrt. Bitte kontaktieren Sie den Support.",
+    "bannerGraceTitle": "Abonnement abgelaufen",
+    "bannerGraceMessage": "Ihr Abonnement endete am {expiredDate}. Ihr Unternehmen wird am {suspensionDate} dauerhaft gesperrt.",
+    "bannerGraceCountdown": "Noch {days} Tage bis zur dauerhaften Sperrung.",
+    "bannerExpiringSoon": "Ihr Plan läuft in {days} Tagen ab. Erneuern Sie, um Unterbrechungen zu vermeiden.",
+    "graceNote": "Nach Ablauf haben Sie {days} Tage (Schonfrist) zur Erneuerung. Unternehmensdaten werden nie gelöscht; nur der Zugang wird gesperrt."
+  },
   "errors": {
     "forbidden": "Sie haben keinen Zugriff auf diese Ressource (403)."
   },

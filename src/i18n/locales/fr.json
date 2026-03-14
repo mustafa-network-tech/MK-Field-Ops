@@ -692,6 +692,29 @@
     "monthlySummary": "Résumé mensuel",
     "performance": "Performance"
   },
+  "planPage": {
+    "title": "Plan",
+    "currentPlan": "Plan actuel",
+    "planStart": "Début du plan",
+    "planEnd": "Fin du plan",
+    "remainingDays": "Jours restants",
+    "expiresAt": "Expire le",
+    "usage": "Utilisation",
+    "users": "Utilisateurs",
+    "teams": "Équipes",
+    "billing": "Facturation",
+    "upgradePlan": "Mettre à niveau",
+    "upgradeDesc": "Vous pouvez mettre à niveau à tout moment. Une limite plus élevée est appliquée immédiatement.",
+    "upgradeButton": "Mettre à niveau le plan",
+    "bannerExpired": "Votre abonnement a expiré. Renouvelez pour continuer à utiliser MK-OPS.",
+    "bannerClosedTitle": "Compte suspendu",
+    "bannerClosedMessage": "L'accès de votre entreprise a été suspendu définitivement. Contactez le support.",
+    "bannerGraceTitle": "Abonnement expiré",
+    "bannerGraceMessage": "Votre abonnement a expiré le {expiredDate}. Votre entreprise sera suspendue le {suspensionDate}.",
+    "bannerGraceCountdown": "{days} jours avant la suspension définitive.",
+    "bannerExpiringSoon": "Votre plan expire dans {days} jours. Renouvelez pour éviter toute interruption.",
+    "graceNote": "Après expiration vous disposez de {days} jours (délai de grâce). Les données ne sont jamais supprimées ; seul l'accès est bloqué."
+  },
   "errors": {
     "forbidden": "Vous n'avez pas accès à cette ressource (403)."
   },

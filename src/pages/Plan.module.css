@@ -1,0 +1,126 @@
+.page {
+  max-width: 900px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 1.5rem;
+}
+
+.muted {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.bannerClosed,
+.bannerGrace,
+.bannerWarning {
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.bannerClosed {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+
+.bannerGrace {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #b45309;
+}
+
+.bannerWarning {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1d4ed8;
+}
+
+.bannerTitle {
+  font-weight: 700;
+  margin: 0 0 0.35rem;
+}
+
+.bannerMeta {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+  opacity: 0.95;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.planName {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.75rem;
+}
+
+.metaList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.metaList li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.metaList li:last-child {
+  border-bottom: none;
+}
+
+.usageRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+.usageRow:last-child {
+  margin-bottom: 0;
+}
+
+.upgradeBlock {
+  margin-top: 1rem;
+}
+
+.upgradeDesc {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+}
+
+.upgradeBtn {
+  padding: 0.5rem 1.25rem;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.upgradeBtn:hover {
+  background: #1d4ed8;
+}
+
+.graceNote {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 1rem;
+}

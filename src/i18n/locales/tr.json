@@ -702,6 +702,29 @@
     "monthlySummary": "Aylık Özet",
     "performance": "Performans"
   },
+  "planPage": {
+    "title": "Plan",
+    "currentPlan": "Mevcut plan",
+    "planStart": "Plan başlangıç tarihi",
+    "planEnd": "Plan bitiş tarihi",
+    "remainingDays": "Kalan gün",
+    "expiresAt": "Bitiş saati",
+    "usage": "Kullanım",
+    "users": "Kullanıcılar",
+    "teams": "Takımlar",
+    "billing": "Faturalama",
+    "upgradePlan": "Plan yükselt",
+    "upgradeDesc": "Planı istediğiniz zaman yükseltebilirsiniz. Daha üst bir plan seçerseniz şirket limitleri anında güncellenir.",
+    "upgradeButton": "Planı yükselt",
+    "bannerExpired": "Aboneliğiniz sona erdi. MK-OPS kullanmaya devam etmek için planınızı yenileyin.",
+    "bannerClosedTitle": "Hesap askıya alındı",
+    "bannerClosedMessage": "Şirket erişiminiz kalıcı olarak askıya alındı. Erişimi yenilemek için destek ile iletişime geçin.",
+    "bannerGraceTitle": "Abonelik sona erdi",
+    "bannerGraceMessage": "Aboneliğiniz {expiredDate} tarihinde sona erdi. Şirketiniz {suspensionDate} tarihinde kalıcı olarak askıya alınacaktır.",
+    "bannerGraceCountdown": "Kalıcı askıya alınmaya {days} gün kaldı.",
+    "bannerExpiringSoon": "Planınız {days} gün içinde sona erecek. Hizmet kesintisini önlemek için yenileyin.",
+    "graceNote": "Süre sona erdikten sonra kalıcı askıya alınmadan önce yenilemek için {days} gün (ücretsiz ek süre) hakkınız vardır. Şirket verileri asla silinmez; yalnızca erişim engellenir."
+  },
   "errors": {
     "forbidden": "Bu kaynağa erişim yetkiniz yok (403)."
   },

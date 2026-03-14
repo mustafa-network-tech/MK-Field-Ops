@@ -21,6 +21,7 @@ const DeliveryNotes = lazy(() => import('./pages/DeliveryNotes').then((m) => ({ 
 const Settings = lazy(() => import('./pages/Settings').then((m) => ({ default: m.Settings })));
 const PayrollPeriods = lazy(() => import('./pages/PayrollPeriods').then((m) => ({ default: m.PayrollPeriods })));
 const AuditLogs = lazy(() => import('./pages/AuditLogs').then((m) => ({ default: m.AuditLogs })));
+const Plan = lazy(() => import('./pages/Plan').then((m) => ({ default: m.Plan })));
 const UserGuide = lazy(() => import('./pages/UserGuide').then((m) => ({ default: m.UserGuide })));
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy').then((m) => ({ default: m.RefundPolicy })));
@@ -86,6 +87,7 @@ function AppRoutes() {
         <Route path="settings" element={<Settings />} />
         <Route path="payroll" element={<PayrollPeriods />} />
         <Route path="audit-logs" element={<AuditLogs />} />
+        <Route path="plan" element={<Plan />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

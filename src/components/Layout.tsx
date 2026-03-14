@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
+import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
+import { getSubscriptionState } from '../services/subscriptionService';
 import type { CompanyLanguageCode } from '../types';
 import styles from './Layout.module.css';
 
@@ -12,6 +13,9 @@ const VALID_LOCALES: CompanyLanguageCode[] = ['en', 'tr', 'es', 'fr', 'de'];
 export function Layout() {
   const { t, setLocale } = useI18n();
   const { user, company } = useApp();
+  const location = useLocation();
+  const sub = getSubscriptionState(company);
+  const isPlanPage = location.pathname === '/plan';
 
   useEffect(() => {
     const code = company?.language_code;
@@ -66,10 +70,39 @@ export function Layout() {
                 {t('auditLogs.title')}
               </NavLink>
             )}
+            {canAccessAuditLogs && (
+              <NavLink to="/plan" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
+                {t('planPage.title')}
+              </NavLink>
+            )}
           </nav>
         </aside>
         <main className={styles.main}>
-          <Outlet />
+          {sub.isClosed && !isPlanPage && (
+            <div className={styles.subscriptionBannerClosed} role="alert">
+              <p>{t('planPage.bannerClosedMessage')}</p>
+              <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+            </div>
+          )}
+          {sub.isGracePeriod && !sub.isClosed && !isPlanPage && (
+            <div className={styles.subscriptionBannerGrace} role="alert">
+              <p>{t('planPage.bannerExpired')}</p>
+              <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+            </div>
+          )}
+          {sub.isClosed && !isPlanPage ? null : (
+            <>
+              <Outlet />
+              {sub.isGracePeriod && !isPlanPage && (
+                <div className={styles.subscriptionOverlay} aria-hidden>
+                  <div className={styles.subscriptionOverlayContent}>
+                    <p>{t('planPage.bannerExpired')}</p>
+                    <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </main>
       </div>
     </div>
