@@ -3,8 +3,6 @@
  * Grace period = 15 days after plan_end_date. Data is never auto-deleted; only access is blocked.
  */
 
-import type { Company } from '../types';
-
 export const GRACE_PERIOD_DAYS = 15;
 
 export type SubscriptionStatus = 'active' | 'suspended' | 'closed';
