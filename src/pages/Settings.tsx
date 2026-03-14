@@ -95,6 +95,7 @@ export function Settings() {
       logEvent(actor, {
         action: 'PAYROLL_SETTINGS_CHANGED',
         entity_type: 'payroll_period',
+        company_id: companyId,
         meta: { startDayOfMonth: num, previousStartDay: prev?.startDayOfMonth },
       });
     }
@@ -152,6 +153,7 @@ export function Settings() {
             action: 'COMPANY_NAME_CHANGED',
             entity_type: 'company',
             entity_id: companyId,
+            company_id: companyId,
             meta: { oldValue: prevName, newValue: companyName.trim() || company?.name },
           });
         }
@@ -160,6 +162,7 @@ export function Settings() {
             action: 'COMPANY_LOGO_CHANGED',
             entity_type: 'company',
             entity_id: companyId,
+            company_id: companyId,
             meta: { removed: newLogoUrl === null },
           });
         }

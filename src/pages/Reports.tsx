@@ -73,6 +73,7 @@ export function Reports() {
           action: 'EXPORT_PAYROLL_PDF',
           entity_type: 'export',
           period_id: null,
+          company_id: companyId,
           meta: {
             exportType: 'company',
             totals: data.totals,
@@ -97,6 +98,7 @@ export function Reports() {
           entity_type: 'export',
           period_id: null,
           team_code: data.teamCode ?? null,
+          company_id: companyId,
           meta: {
             exportType: 'team',
             teamCode: data.teamCode,

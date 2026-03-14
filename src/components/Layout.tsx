@@ -20,7 +20,7 @@ export function Layout() {
   const planAllowsDeliveryNotes = canPlanAccessFeature(company?.plan, 'deliveryNotes');
   const canAccessDeliveryNotes = (user?.role === 'companyManager' || user?.role === 'projectManager') && planAllowsDeliveryNotes;
   const canAccessSettingsAndPayroll = user?.role === 'companyManager' || user?.role === 'projectManager';
-  const canAccessAuditLogs = user?.role === 'companyManager' || user?.role === 'projectManager';
+  const canAccessAuditLogs = user?.role === 'companyManager';
 
   return (
     <div className={styles.layout}>

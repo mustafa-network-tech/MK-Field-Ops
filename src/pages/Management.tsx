@@ -32,7 +32,7 @@ export function Management() {
       { id: 'workItems' as TabId, label: t('catalog.workItems'), show: canEditCatalog },
       { id: 'projects' as TabId, label: t('nav.projects'), show: canEditCatalog && planAllowsProjects },
       { id: 'users' as TabId, label: t('nav.users'), show: user?.role === 'companyManager' || user?.role === 'projectManager' },
-      { id: 'auditLog' as TabId, label: t('audit.title'), show: canEditCatalog },
+      { id: 'auditLog' as TabId, label: t('audit.title'), show: user?.role === 'companyManager' },
     ] as { id: TabId; label: string; show: boolean }[]
   ).filter((x) => x.show);
 

@@ -20,6 +20,7 @@ export type AuditPayload = {
   period_id?: string | null;
   team_code?: string | null;
   project_id?: string | null;
+  company_id?: string | null;
   meta?: Record<string, unknown>;
 };
 
@@ -47,6 +48,7 @@ export function logEvent(actor: AuditActor, payload: AuditPayload): void {
       period_id: payload.period_id ?? null,
       team_code: payload.team_code ?? null,
       project_id: payload.project_id ?? null,
+      company_id: payload.company_id ?? null,
       user_agent: getUserAgent(),
       meta: payload.meta ?? {},
     };

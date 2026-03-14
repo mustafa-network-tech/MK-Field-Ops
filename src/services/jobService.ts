@@ -147,6 +147,7 @@ export function addJob(
       entity_id: newJob.id,
       team_code: team?.code ?? null,
       project_id: params.projectId ?? null,
+      company_id: params.companyId,
       meta: { date: newJob.date, workItemId: newJob.workItemId, quantity: newJob.quantity },
     });
   }
@@ -212,6 +213,7 @@ export function updateJob(
       entity_id: jobId,
       team_code: team?.code ?? null,
       project_id: job.projectId ?? null,
+      company_id: companyId,
       meta: patch.status ? { previousStatus: job.status, newStatus: patch.status } : {},
     });
   }

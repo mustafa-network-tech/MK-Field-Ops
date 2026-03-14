@@ -223,6 +223,7 @@ export const materialStockService = {
         entity_type: 'team',
         entity_id: params.teamId,
         team_code: team?.code ?? null,
+        company_id: companyId,
         meta: {
           material: { type: item.mainType, spoolId: item.spoolId ?? null },
           qtyMeters: isMeter ? qty : undefined,
@@ -281,6 +282,7 @@ export const materialStockService = {
         entity_type: 'team',
         entity_id: alloc.teamId,
         team_code: fromTeam?.code ?? null,
+        company_id: companyId,
         meta: {
           material: { type: item.mainType, spoolId: item.spoolId ?? null },
           qtyMeters: isMeter ? qtyM : undefined,
@@ -351,6 +353,7 @@ export const materialStockService = {
         entity_type: 'team',
         entity_id: params.allocationId,
         team_code: fromTeam?.code ?? null,
+        company_id: companyId,
         meta: {
           material: { type: item?.mainType, spoolId: item?.spoolId ?? null },
           fromTeam: fromTeam?.code ?? null,

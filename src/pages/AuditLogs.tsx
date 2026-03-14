@@ -15,13 +15,15 @@ export function AuditLogs() {
   const [error, setError] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const canAccess = user?.role === 'companyManager' || user?.role === 'projectManager';
+  const companyId = user?.companyId ?? '';
+  const canAccess = user?.role === 'companyManager';
 
   useEffect(() => {
+    if (!companyId || !canAccess) return;
     let cancelled = false;
     setLoading(true);
     setError(null);
-    fetchAuditLogs(page).then((res) => {
+    fetchAuditLogs(companyId, page).then((res) => {
       if (cancelled) return;
       setLoading(false);
       if (res.ok) setResult({ rows: res.rows, total: res.total });
@@ -30,7 +32,7 @@ export function AuditLogs() {
     return () => {
       cancelled = true;
     };
-  }, [page]);
+  }, [companyId, canAccess, page]);
 
   if (!canAccess) {
     return (

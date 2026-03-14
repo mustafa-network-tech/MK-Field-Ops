@@ -5,6 +5,7 @@ import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { addTeam, updateTeam, getEligibleTeamLeaders } from '../../services/teamService';
 import { getTeamsForUser } from '../../services/teamScopeService';
+import { canPlanAddTeam } from '../../services/planGating';
 import { logEvent, actorFromUser } from '../../services/auditLogService';
 import { Card } from '../ui/Card';
 import type { Team, TeamManualMember } from '../../types';
@@ -23,13 +24,16 @@ const defaultForm = {
 
 export function TeamsTab() {
   const { t } = useI18n();
-  const { user } = useApp();
+  const { user, company } = useApp();
   const navigate = useNavigate();
   const companyId = user?.companyId ?? '';
   const teams = getTeamsForUser(companyId, user);
+  const allTeamsForCompany = store.getTeams(companyId);
   const users = store.getUsers(companyId);
   const eligibleLeaders = getEligibleTeamLeaders(companyId);
   const vehicles = store.getVehicles(companyId);
+  const canAddTeam = canPlanAddTeam(company?.plan ?? null, allTeamsForCompany.length);
+  const hasNoLeaders = eligibleLeaders.length === 0;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Team | null>(null);
   const [form, setForm] = useState(defaultForm);
@@ -41,6 +45,12 @@ export function TeamsTab() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError('');
+    if (!editing) {
+      if (!form.leaderId || form.leaderId.trim() === '') {
+        setSaveError(t('teams.validation.leaderRequired'));
+        return;
+      }
+    }
     const membersManual = form.membersManual.filter((m) => m.fullName.trim() || m.phoneNumber.trim());
     if (editing) {
       const result = updateTeam(user ?? undefined, editing.id, {
@@ -101,6 +111,7 @@ export function TeamsTab() {
         entity_type: 'team',
         entity_id: teamId,
         team_code: team.code,
+        company_id: user?.companyId ?? undefined,
         meta: {},
       });
     }
@@ -116,6 +127,7 @@ export function TeamsTab() {
         entity_type: 'team',
         entity_id: teamId,
         team_code: team.code,
+        company_id: user?.companyId ?? undefined,
         meta: {},
       });
     }
@@ -148,9 +160,22 @@ export function TeamsTab() {
         <div className={styles.toolbar}>
           <h3 className={styles.sectionTitle}>{t('teams.title')}</h3>
           {!showForm && !editing && (
-            <button type="button" className={styles.primaryBtn} onClick={() => setShowForm(true)}>
-              {t('teams.createTeam')}
-            </button>
+            <>
+              {!canAddTeam && (
+                <p className={styles.muted}>{t('teams.planTeamLimitReached')}</p>
+              )}
+              {canAddTeam && hasNoLeaders && (
+                <p className={styles.muted}>{t('teams.noLeaderNoTeam')}</p>
+              )}
+              <button
+                type="button"
+                className={styles.primaryBtn}
+                onClick={() => setShowForm(true)}
+                disabled={!canAddTeam || hasNoLeaders}
+              >
+                {t('teams.createTeam')}
+              </button>
+            </>
           )}
         </div>
 
@@ -187,18 +212,19 @@ export function TeamsTab() {
               />
             </label>
             <label className={styles.label}>
-              {t('teams.leader')}
+              {t('teams.leader')} {!editing && <span className={styles.required}>*</span>}
               <select
                 value={form.leaderId}
                 onChange={(e) => setForm((f) => ({ ...f, leaderId: e.target.value }))}
                 className={styles.input}
+                required={!editing}
               >
                 <option value="">– {t('teams.selectLeader')} –</option>
                 {eligibleLeaders.map((u) => (
                   <option key={u.id} value={u.id}>{u.fullName}</option>
                 ))}
               </select>
-              {eligibleLeaders.length === 0 && <p className={styles.muted}>{t('teams.noEligibleLeaders')}</p>}
+              {eligibleLeaders.length === 0 && <p className={styles.muted}>{t('teams.noLeaderNoTeam')}</p>}
             </label>
             {saveError && <p className={styles.saveError}>{saveError}</p>}
             <label className={styles.label}>{t('teams.membersManual')}</label>

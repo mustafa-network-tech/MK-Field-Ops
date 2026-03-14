@@ -1,5 +1,6 @@
 import { store } from '../data/store';
 import { logEvent, actorFromUser } from './auditLogService';
+import { canPlanAddTeam } from './planGating';
 import type { User } from '../types';
 import type { Team } from '../types';
 
@@ -11,14 +12,14 @@ export type UpdateTeamResult = { ok: true; team: Team } | { ok: false; error: st
 
 /**
  * Users eligible to be selected as Team Leader in the dropdown:
- * role === teamLeader, same company, status ACTIVE (roleApprovalStatus === approved).
+ * Team Leader or Project Manager (Company Manager cannot be team leader). Same company, ACTIVE.
  */
 export function getEligibleTeamLeaders(companyId: string): User[] {
   return store.getUsers(companyId).filter(
     (u) =>
-      u.role === 'teamLeader' &&
       u.companyId === companyId &&
-      u.roleApprovalStatus === ACTIVE_ROLE_STATUS
+      u.roleApprovalStatus === ACTIVE_ROLE_STATUS &&
+      (u.role === 'teamLeader' || u.role === 'projectManager')
   );
 }
 
@@ -40,8 +41,8 @@ function validateLeader(
   if (!user) {
     return { ok: false, error: 'teams.validation.leaderNotFound', statusCode: 403 };
   }
-  if (user.role !== 'teamLeader') {
-    return { ok: false, error: 'teams.validation.leaderMustBeTeamLeader', statusCode: 403 };
+  if (user.role !== 'teamLeader' && user.role !== 'projectManager') {
+    return { ok: false, error: 'teams.validation.leaderMustBeTeamLeaderOrPM', statusCode: 403 };
   }
   if (user.companyId !== companyId) {
     return { ok: false, error: 'teams.validation.leaderWrongCompany', statusCode: 403 };
@@ -65,6 +66,8 @@ function validateLeader(
 
 /**
  * Validates leader then creates team. Use instead of store.addTeam to enforce 403 on invalid leader.
+ * Rule: team leader is required when creating a team; if there are no team leaders in the system, team cannot be created.
+ * Rule: Starter plan can have at most 2 teams.
  */
 export function addTeam(
   currentUser: User | undefined,
@@ -74,6 +77,17 @@ export function addTeam(
     return { ok: false, error: 'teams.validation.unauthorized', statusCode: 403 };
   }
   const companyId = params.companyId;
+
+  if (!params.leaderId || params.leaderId.trim() === '') {
+    return { ok: false, error: 'teams.validation.leaderRequired', statusCode: 400 };
+  }
+
+  const company = store.getCompany(companyId, companyId);
+  const existingTeams = store.getTeams(companyId);
+  if (!canPlanAddTeam(company?.plan ?? null, existingTeams.length)) {
+    return { ok: false, error: 'teams.validation.planTeamLimitReached', statusCode: 403 };
+  }
+
   const leaderCheck = validateLeader(companyId, params.leaderId, undefined, true);
   if (!leaderCheck.ok) return leaderCheck;
 
@@ -85,6 +99,7 @@ export function addTeam(
       entity_type: 'team',
       entity_id: team.id,
       team_code: team.code,
+      company_id: params.companyId,
       meta: { code: team.code, percentage: team.percentage },
     });
   }
@@ -125,6 +140,7 @@ export function updateTeam(
         entity_type: 'team',
         entity_id: teamId,
         team_code: updated.code,
+        company_id: existing.companyId,
         meta: { code: updated.code, patch: Object.keys(patch) },
       });
     }
