@@ -133,6 +133,30 @@
   margin: 0.35rem 0 0;
 }
 
+.trendHeader {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.25rem;
+}
+
+.trendUp {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #2563eb;
+}
+
+.trendFlat {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #eab308;
+}
+
+.trendDown {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #dc2626;
+}
+
 .tableWrap {
   overflow-x: auto;
 }

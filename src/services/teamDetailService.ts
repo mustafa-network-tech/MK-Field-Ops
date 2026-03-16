@@ -15,6 +15,8 @@ export type TeamDetailResponseAdmin = {
   companyTotal: number;
   weekly: { gross: number; team: number; company: number };
   monthly: { gross: number; team: number; company: number };
+  weeklyPrevGross: number;
+  monthlyPrevGross: number;
   jobs: TeamDetailJobRowAdmin[];
   totalJobs: number;
   approvedCount: number;
@@ -65,14 +67,27 @@ export function getTeamDetailSummary(companyId: string, teamId: string, user: Us
   const companyTotal = jobsWithDetails.reduce((s, j) => s + j.companyShare, 0);
   const now = new Date();
   const weekRange = getLocalWeekRange(now);
+  const prevWeekRange = getLocalWeekRange(new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000));
   const payrollSettings = store.getPayrollPeriodSettings(companyId);
-  const inPeriodOrMonth = payrollSettings
+  const inCurrentPeriodOrMonth = payrollSettings
     ? (d: string) => isDateInPeriod(d, getActivePeriod(now, payrollSettings.startDayOfMonth))
     : (d: string) => d.slice(0, 7) === getLocalMonthString(now);
-  const weeklyGross = jobsWithDetails.filter((j) => j.date >= weekRange.start && j.date <= weekRange.end).reduce((s, j) => s + j.totalWorkValue, 0);
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+  const inPrevPeriodOrMonth = payrollSettings
+    ? (d: string) => isDateInPeriod(d, getActivePeriod(prevMonthDate, payrollSettings.startDayOfMonth))
+    : (d: string) => d.slice(0, 7) === getLocalMonthString(prevMonthDate);
+
+  const weeklyGross = jobsWithDetails
+    .filter((j) => j.date >= weekRange.start && j.date <= weekRange.end)
+    .reduce((s, j) => s + j.totalWorkValue, 0);
+  const weeklyPrevGross = jobsWithDetails
+    .filter((j) => j.date >= prevWeekRange.start && j.date <= prevWeekRange.end)
+    .reduce((s, j) => s + j.totalWorkValue, 0);
   const weeklyTeam = stats.weeklyEarnings;
   const weeklyCompany = weeklyGross - weeklyTeam;
-  const monthlyGross = jobsWithDetails.filter((j) => inPeriodOrMonth(j.date)).reduce((s, j) => s + j.totalWorkValue, 0);
+
+  const monthlyGross = jobsWithDetails.filter((j) => inCurrentPeriodOrMonth(j.date)).reduce((s, j) => s + j.totalWorkValue, 0);
+  const monthlyPrevGross = jobsWithDetails.filter((j) => inPrevPeriodOrMonth(j.date)).reduce((s, j) => s + j.totalWorkValue, 0);
   const monthlyTeam = stats.monthlyEarnings;
   const monthlyCompany = monthlyGross - monthlyTeam;
 
@@ -83,6 +98,8 @@ export function getTeamDetailSummary(companyId: string, teamId: string, user: Us
     companyTotal,
     weekly: { gross: weeklyGross, team: weeklyTeam, company: weeklyCompany },
     monthly: { gross: monthlyGross, team: monthlyTeam, company: monthlyCompany },
+    weeklyPrevGross,
+    monthlyPrevGross,
     jobs: jobsWithDetails
       .sort((a, b) => b.date.localeCompare(a.date))
       .map((j) => ({

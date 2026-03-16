@@ -28,6 +28,14 @@ const TYPE_DISPLAY_KEYS: Record<MaterialMainType, string> = {
   custom: 'materials.typeDisplayCustom',
 };
 
+function computeTrend(currentValue: number, previousValue: number): { icon: 'up' | 'flat' | 'down'; percent: number } {
+  if (!previousValue || previousValue <= 0) return { icon: 'flat', percent: 0 };
+  const percent = ((currentValue - previousValue) / previousValue) * 100;
+  if (percent >= 10) return { icon: 'up', percent };
+  if (percent <= -10) return { icon: 'down', percent };
+  return { icon: 'flat', percent };
+}
+
 export function TeamDetail() {
   const { teamId } = useParams<{ teamId: string }>();
   const { t, locale } = useI18n();
@@ -81,6 +89,12 @@ export function TeamDetail() {
     isAdmin ? (detail.monthly as { team: number }).team : detail.monthly.team,
     1
   );
+  const weeklyTrend = isAdmin
+    ? computeTrend(detail.weekly.gross, detail.weeklyPrevGross)
+    : { icon: 'flat' as const, percent: 0 };
+  const monthlyTrend = isAdmin
+    ? computeTrend(detail.monthly.gross, detail.monthlyPrevGross)
+    : { icon: 'flat' as const, percent: 0 };
 
   return (
     <div className={styles.page}>
@@ -153,11 +167,41 @@ export function TeamDetail() {
         {isAdmin ? (
           <>
             <Card title={t('teamDetail.weeklySummary')}>
+              <div className={styles.trendHeader}>
+                {user?.role === 'companyManager' && (
+                  <span
+                    className={
+                      weeklyTrend.icon === 'up'
+                        ? styles.trendUp
+                        : weeklyTrend.icon === 'down'
+                          ? styles.trendDown
+                          : styles.trendFlat
+                    }
+                  >
+                    {weeklyTrend.icon === 'up' ? '▲' : weeklyTrend.icon === 'down' ? '▼' : '■'}
+                  </span>
+                )}
+              </div>
               <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(detail.weekly.gross, locale)}</p>
               <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(detail.weekly.team, locale)}</p>
               <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(detail.weekly.company, locale)}</p>
             </Card>
             <Card title={t('teamDetail.monthlySummary')}>
+              <div className={styles.trendHeader}>
+                {user?.role === 'companyManager' && (
+                  <span
+                    className={
+                      monthlyTrend.icon === 'up'
+                        ? styles.trendUp
+                        : monthlyTrend.icon === 'down'
+                          ? styles.trendDown
+                          : styles.trendFlat
+                    }
+                  >
+                    {monthlyTrend.icon === 'up' ? '▲' : monthlyTrend.icon === 'down' ? '▼' : '■'}
+                  </span>
+                )}
+              </div>
               <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(detail.monthly.gross, locale)}</p>
               <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(detail.monthly.team, locale)}</p>
               <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(detail.monthly.company, locale)}</p>
