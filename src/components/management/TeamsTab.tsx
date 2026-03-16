@@ -145,6 +145,8 @@ export function TeamsTab() {
 
   const creatorName = (userId: string) => users.find((u) => u.id === userId)?.fullName ?? userId;
   const leaderName = (userId: string) => users.find((u) => u.id === userId)?.fullName ?? '–';
+  const getUserName = (userId?: string | null) =>
+    userId ? users.find((u) => u.id === userId)?.fullName ?? userId : '–';
   const vehicleLabel = (id: string) => {
     const v = store.getVehicle(id);
     return v ? `${v.plateNumber} (${v.brand} ${v.model})` : '–';
@@ -320,7 +322,14 @@ export function TeamsTab() {
                     <span className={styles.badgePending}>{t('teams.pendingApproval')}</span>
                   )}
                   {team.approvalStatus === 'approved' && (
-                    <span className={styles.badgeOk}>{t('jobs.approved')}</span>
+                    <>
+                      <span className={styles.badgeOk}>{t('jobs.approved')}</span>
+                      {team.approvedBy && (
+                        <div className={styles.muted} style={{ fontSize: '0.8rem' }}>
+                          {t('jobs.approvedBy')}: {getUserName(team.approvedBy)}
+                        </div>
+                      )}
+                    </>
                   )}
                   {team.approvalStatus === 'rejected' && (
                     <span className={styles.badgeReject}>{t('jobs.rejected')}</span>
