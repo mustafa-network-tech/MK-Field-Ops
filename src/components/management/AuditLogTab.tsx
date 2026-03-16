@@ -32,7 +32,9 @@ export function AuditLogTab() {
   const stockItems = store.getMaterialStock(companyId);
 
   const entries = useMemo(() => {
-    return store.getMaterialAuditLog(companyId);
+    return store
+      .getMaterialAuditLog(companyId)
+      .filter((e) => e.actionType === 'DISTRIBUTE_TO_TEAM' || e.actionType === 'DELIVERY_NOTE_RECEIVE');
   }, [companyId]);
 
   const getActorName = (userId: string) => users.find((u) => u.id === userId)?.fullName ?? userId;
@@ -55,6 +57,7 @@ export function AuditLogTab() {
           <tr>
             <th>{t('audit.date')}</th>
             <th>{t('audit.operation')}</th>
+            <th>{t('audit.actor')}</th>
             <th>{t('audit.material')}</th>
             <th>{t('audit.fromTeam')}</th>
             <th>{t('audit.toTeam')}</th>
@@ -67,13 +70,20 @@ export function AuditLogTab() {
               <td>{e.createdAt ? new Date(e.createdAt).toLocaleString() : '–'}</td>
               <td>
                 {e.actionType === 'DISTRIBUTE_TO_TEAM'
-                  ? `${t('audit.operationTeamDistribute')} – ${getActorName(e.actorUserId)}`
-                  : `${t('audit.operationSender')} ${
-                      e.note && e.note.trim() ? `(${e.note.trim()}) ` : ''
-                    }– ${getActorName(e.actorUserId)}`}
+                  ? t('audit.operationTeamDistribute')
+                  : `${t('audit.operationDeliveryNote')} ${
+                      e.note && e.note.trim() ? `(${e.note.trim()})` : ''
+                    }`}
               </td>
-              <td>{getMaterialLabel(e.materialStockItemId)}</td>
-              <td>{e.actionType === 'DISTRIBUTE_TO_TEAM' && e.fromTeamId ? getTeamCode(e.fromTeamId) : '–'}</td>
+              <td>{getActorName(e.actorUserId)}</td>
+              <td>{e.actionType === 'DISTRIBUTE_TO_TEAM' ? getMaterialLabel(e.materialStockItemId) : '–'}</td>
+              <td>
+                {e.actionType === 'DISTRIBUTE_TO_TEAM'
+                  ? e.fromTeamId
+                    ? getTeamCode(e.fromTeamId)
+                    : t('audit.sourceDepot')
+                  : '–'}
+              </td>
               <td>{e.actionType === 'DISTRIBUTE_TO_TEAM' && e.toTeamId ? getTeamCode(e.toTeamId) : '–'}</td>
               <td>
                 {e.actionType === 'DISTRIBUTE_TO_TEAM'

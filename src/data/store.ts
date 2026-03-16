@@ -393,6 +393,7 @@ export const store = {
       receivedAt: now,
     });
     const stock = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId === companyId);
+    let firstMaterialStockItemId: string | null = null;
     const normalize = (val: string | undefined | null): string =>
       (val ?? '').trim().toLowerCase();
     for (const line of payload.items) {
@@ -472,6 +473,10 @@ export const store = {
         materialStockItemId = newItem.id;
       }
 
+      if (!firstMaterialStockItemId) {
+        firstMaterialStockItemId = materialStockItemId;
+      }
+
       // Malzeme ID bilgisi stok kalemini bölmez; aynı stok kalemi altında detay listesi olarak tutulur.
       if (detailId) {
         const sItem = stock.find((m) => m.id === materialStockItemId);
@@ -493,6 +498,20 @@ export const store = {
         materialDetailId: detailId || undefined,
       });
     }
+    // İrsaliye kabul hareketini denetim kaydına yaz (malzeme alanları boş gösterilecek).
+    this.addMaterialAuditLog({
+      companyId,
+      actionType: 'DELIVERY_NOTE_RECEIVE',
+      actorUserId: payload.receivedBy ?? '-',
+      actorRole: '',
+      materialStockItemId: firstMaterialStockItemId ?? 'delivery-note',
+      fromTeamId: null,
+      toTeamId: null,
+      qtyCount: null,
+      qtyMeters: null,
+      spoolId: null,
+      note: note.irsaliyeNo,
+    });
     return { note };
   },
 

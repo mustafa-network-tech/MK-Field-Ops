@@ -234,7 +234,8 @@ export type MaterialAuditActionType =
   | 'DISTRIBUTE_TO_TEAM'
   | 'RETURN_TO_STOCK'
   | 'TRANSFER_BETWEEN_TEAMS'
-  | 'STOCK_ADJUSTMENT';
+  | 'STOCK_ADJUSTMENT'
+  | 'DELIVERY_NOTE_RECEIVE';
 
 export interface MaterialAuditLogEntry {
   id: string;
