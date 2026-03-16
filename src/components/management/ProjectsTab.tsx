@@ -1,15 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { getProjectDisplayKey } from '../../utils/projectKey';
 import { Card } from '../ui/Card';
-import type { Project, ProjectStatus } from '../../types';
+import type { MaterialMainType, Project, ProjectStatus } from '../../types';
 import styles from './ManagementTabs.module.css';
 
 const PROJECT_YEAR_MIN = 2000;
 const PROJECT_YEAR_MAX = 2100;
 const LIST_FILTERS: ProjectStatus[] = ['ACTIVE', 'COMPLETED', 'ARCHIVED'];
+
+const TYPE_DISPLAY_KEYS: Record<MaterialMainType, string> = {
+  direk: 'materials.typeDisplayDirek',
+  kablo_ic: 'materials.typeDisplayKabloIc',
+  kablo_yeraltı: 'materials.typeDisplayKabloYeralti',
+  kablo_havai: 'materials.typeDisplayKabloHavai',
+  boru: 'materials.typeDisplayBoru',
+  fiber_bina_kutusu: 'materials.typeDisplayFiberKutusu',
+  ofsd: 'materials.typeDisplayOFSD',
+  sonlandirma_paneli: 'materials.typeDisplaySonlandirmaPaneli',
+  daire_sonlandirma_kutusu: 'materials.typeDisplayDaireKutusu',
+  menhol: 'materials.typeDisplayMenhol',
+  ek_odasi: 'materials.typeDisplayEkOdasi',
+  koruyucu_fider_borusu: 'materials.typeDisplayKoruyucuFider',
+  custom: 'materials.typeDisplayCustom',
+};
 
 function normalizeExternalInput(raw: string): string {
   return raw.trim().replace(/\s+/g, ' ');
@@ -176,6 +192,8 @@ export function ProjectsTab() {
     .sort((a, b) => (b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)));
   const teams = store.getTeams(companyId);
   const workItems = store.getWorkItems(companyId);
+  const stockItems = store.getMaterialStock(companyId);
+  const allocationsAll = store.getTeamMaterialAllocations(companyId);
   const getTeamCode = (id: string) => teams.find((t) => t.id === id)?.code ?? id;
   const getWorkItemCode = (id: string) => workItems.find((w) => w.id === id)?.code ?? id;
 
@@ -189,6 +207,67 @@ export function ProjectsTab() {
     if (filterEndDate && j.date > filterEndDate) return false;
     return true;
   });
+
+  const projectMaterialSummary = useMemo(() => {
+    type Row = {
+      key: string;
+      label: string;
+      unit: 'm' | 'pcs';
+      totalQty: number;
+      source: 'zimmet' | 'external';
+    };
+    const byKey = new Map<string, Row>();
+
+    const zimmetIdToStockId = new Map<string, string>();
+    for (const a of allocationsAll) zimmetIdToStockId.set(a.id, a.materialStockItemId);
+
+    const addAgg = (row: Row) => {
+      const existing = byKey.get(row.key);
+      if (existing) existing.totalQty += row.totalQty;
+      else byKey.set(row.key, row);
+    };
+
+    const jobsForMaterials = projectJobsFiltered;
+    for (const job of jobsForMaterials) {
+      const usages = job.materialUsages ?? [];
+      for (const u of usages) {
+        const unit = u.quantityUnit;
+        if (u.isExternal) {
+          const desc = (u.externalDescription ?? t('jobs.material.external')).trim();
+          addAgg({
+            key: `external:${desc}:${unit}`,
+            label: `${desc} (${t('jobs.material.external')})`,
+            unit,
+            totalQty: u.quantity,
+            source: 'external',
+          });
+          continue;
+        }
+
+        const stockId =
+          (u.materialStockItemId ?? null) ||
+          (u.teamZimmetId ? (zimmetIdToStockId.get(u.teamZimmetId) ?? null) : null);
+        if (!stockId) continue;
+
+        const item = stockItems.find((m) => m.id === stockId) ?? null;
+        const typeLabel = item ? t(TYPE_DISPLAY_KEYS[item.mainType]) : '–';
+        const namePart = item
+          ? (item.spoolId ? `${item.name ?? item.capacityLabel} (${item.spoolId})` : (item.name ?? item.capacityLabel ?? item.id))
+          : stockId;
+        const label = item ? `${typeLabel} — ${namePart}` : stockId;
+
+        addAgg({
+          key: `stock:${stockId}:${unit}`,
+          label,
+          unit,
+          totalQty: u.quantity,
+          source: 'zimmet',
+        });
+      }
+    }
+
+    return Array.from(byKey.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
+  }, [allocationsAll, projectJobsFiltered, stockItems, t]);
 
   if (selectedProject && selectedProjectId) {
     return (
@@ -329,6 +408,29 @@ export function ProjectsTab() {
                     <td>{job.quantity}</td>
                     <td>{job.createdAt ? new Date(job.createdAt).toLocaleString() : '–'}</td>
                     <td>{job.approvedAt ? new Date(job.approvedAt).toLocaleString() : '–'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h4 className={styles.sectionTitle} style={{ marginTop: '1.5rem' }}>{t('projects.projectMaterialsUsed')}</h4>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{t('deliveryNotes.material')}</th>
+                  <th>{t('deliveryNotes.unit')}</th>
+                  <th>{t('deliveryNotes.quantity')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projectMaterialSummary.length === 0 && (
+                  <tr><td colSpan={3} className={styles.muted}>{t('common.noData')}</td></tr>
+                )}
+                {projectMaterialSummary.map((r) => (
+                  <tr key={r.key}>
+                    <td>{r.label}</td>
+                    <td>{r.unit === 'm' ? 'm' : t('jobs.material.pcs')}</td>
+                    <td>{r.totalQty}</td>
                   </tr>
                 ))}
               </tbody>

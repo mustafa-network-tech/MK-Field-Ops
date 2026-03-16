@@ -445,6 +445,7 @@
     "completedProjects": "Proyectos completados",
     "archivedProjects": "Archivados",
     "projectActivityLabor": "Actividad del proyecto (mano de obra)",
+    "projectMaterialsUsed": "Materiales utilizados en el proyecto",
     "activityFilterAll": "Todos",
     "activityFilterByTeam": "Por equipo",
     "activityFilterByWorkItem": "Por concepto",

@@ -453,6 +453,7 @@
     "completedProjects": "Tamamlanan Projeler",
     "archivedProjects": "Arşivlenen Projeler",
     "projectActivityLabor": "Proje Aktivitesi (İşçilik)",
+    "projectMaterialsUsed": "Projede Kullanılan Malzemeler",
     "activityFilterAll": "Tümü",
     "activityFilterByTeam": "Ekibe Göre",
     "activityFilterByWorkItem": "İş Kalemine Göre",

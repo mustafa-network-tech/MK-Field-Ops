@@ -453,6 +453,7 @@
     "completedProjects": "Completed Projects",
     "archivedProjects": "Archived",
     "projectActivityLabor": "Project Activity (Labor)",
+    "projectMaterialsUsed": "Materials Used in Project",
     "activityFilterAll": "All",
     "activityFilterByTeam": "By Team",
     "activityFilterByWorkItem": "By Work Item",
