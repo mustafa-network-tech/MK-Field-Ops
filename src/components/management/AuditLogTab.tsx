@@ -135,7 +135,7 @@ export function AuditLogTab() {
           {entries.map((e) => (
             <tr key={e.id}>
               <td>{e.createdAt ? new Date(e.createdAt).toLocaleString() : '–'}</td>
-              <td>{t(`audit.${e.actionType}`)}</td>
+              <td>{`${t(`audit.${e.actionType}`)} (${getActorName(e.actorUserId)})`}</td>
               <td>{getActorName(e.actorUserId)}</td>
               <td>{getMaterialLabel(e.materialStockItemId)}</td>
               <td>{e.fromTeamId ? getTeamCode(e.fromTeamId) : '–'}</td>
