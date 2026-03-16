@@ -715,6 +715,7 @@
   },
   "audit": {
     "title": "Malzeme hareket kaydı",
+    "actor": "Yapan",
     "operation": "İşlem",
     "operationTeamDistribute": "Takım dağıtımı",
     "operationDeliveryNote": "İrsaliye kabul",
