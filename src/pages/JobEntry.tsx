@@ -6,7 +6,6 @@ import { getEffectivePlan } from '../services/subscriptionService';
 import { store } from '../data/store';
 import { getTeamsForJobEntry } from '../services/teamScopeService';
 import { addJob } from '../services/jobService';
-import { formatPriceForUser } from '../utils/priceRules';
 import { parseDecimalFromLocale, roundMoney } from '../utils/formatLocale';
 import { getProjectDisplayKey } from '../utils/projectKey';
 import { Card } from '../components/ui/Card';
