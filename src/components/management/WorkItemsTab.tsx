@@ -153,8 +153,13 @@ export function WorkItemsTab() {
           </label>
           {priceError && <p className={styles.saveError}>{priceError}</p>}
           <label className={styles.label}>
-            {t('catalog.description')}
-            <input value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} className={styles.input} />
+            {t('catalog.workItemName')}
+            <input
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              className={styles.input}
+              required
+            />
           </label>
           <div className={styles.formActions}>
             <button type="submit" className={styles.primaryBtn}>{t('common.save')}</button>
@@ -168,7 +173,7 @@ export function WorkItemsTab() {
             <th>{t('catalog.code')}</th>
             <th>{t('catalog.unitType')}</th>
             <th>{t('catalog.unitPrice')}</th>
-            <th>{t('catalog.description')}</th>
+            <th>{t('catalog.workItemName')}</th>
             <th>{t('common.actions')}</th>
           </tr>
         </thead>

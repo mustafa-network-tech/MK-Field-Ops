@@ -527,6 +527,7 @@
     "equipment": "Ekipman",
     "workItems": "İş Kalemleri",
     "code": "Kod",
+    "workItemName": "İş Kalemi Adı",
     "price": "Fiyat",
     "unitType": "Birim Tipi",
     "unitPrice": "Birim Fiyat",

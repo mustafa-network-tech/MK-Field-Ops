@@ -214,11 +214,24 @@ export function JobEntry() {
     const term = workItemSearch.trim().toLowerCase();
     if (!term) return workItems;
     return workItems.filter((wi) => {
+      const name = (wi.description ?? '').toLowerCase();
       const code = wi.code.toLowerCase();
-      const unitType = (wi.unitType ?? '').toLowerCase();
-      return code.includes(term) || unitType.includes(term);
+      // Öncelik: iş kalemi adı, ikincil olarak kod
+      return name.includes(term) || code.includes(term);
     });
   }, [workItems, workItemSearch]);
+
+  const selectedWorkItem = workItems.find((wi) => wi.id === workItemId) || null;
+  const selectedWorkItemUnitLabel =
+    selectedWorkItem?.unitType === 'm3'
+      ? t('deliveryNotes.unitCubicMeter')
+      : selectedWorkItem?.unitType === 'kg'
+      ? t('deliveryNotes.unitKilo')
+      : selectedWorkItem?.unitType === 'm'
+      ? t('deliveryNotes.unitMeter')
+      : selectedWorkItem?.unitType === 'pcs'
+      ? t('deliveryNotes.unitPiece')
+      : selectedWorkItem?.unitType ?? '';
 
   return (
     <div className={styles.page}>
@@ -295,7 +308,7 @@ export function JobEntry() {
               <select value={workItemId} onChange={(e) => setWorkItemId(e.target.value)} className={styles.input} required>
                 <option value="">-- {t('common.search')} --</option>
                 {filteredWorkItems.map((wi) => {
-                  const label = wi.description ? `${wi.code} – ${wi.description}` : wi.code;
+                  const label = wi.description ? `${wi.description} – ${wi.code}` : wi.code;
                   return (
                     <option key={wi.id} value={wi.id}>
                       {label}
@@ -306,11 +319,17 @@ export function JobEntry() {
             </label>
             <label className={styles.label}>
               {t('jobs.quantity')}
+              {selectedWorkItemUnitLabel ? ` (${selectedWorkItemUnitLabel})` : ''}
               <input
                 type="text"
                 inputMode="decimal"
                 min={0.01}
                 value={quantity}
+                placeholder={
+                  selectedWorkItemUnitLabel
+                    ? `10 ${selectedWorkItemUnitLabel}`
+                    : ''
+                }
                 onChange={(e) => {
                   const raw = e.target.value.trim();
                   if (raw === '') {

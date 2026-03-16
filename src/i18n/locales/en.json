@@ -527,6 +527,7 @@
     "equipment": "Equipment",
     "workItems": "Work Items",
     "code": "Code",
+    "workItemName": "Work Item Name",
     "price": "Price",
     "unitType": "Unit Type",
     "unitPrice": "Unit Price",
