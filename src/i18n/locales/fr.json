@@ -735,10 +735,21 @@
     "entity": "Entité",
     "team": "Équipe",
     "period": "Période",
-    "meta": "Meta",
+    "description": "Description",
     "noData": "Aucun enregistrement d'audit.",
     "prevPage": "Précédent",
-    "nextPage": "Suivant"
+    "nextPage": "Suivant",
+    "desc": {
+      "JOB_CREATED": "Un nouveau travail quotidien a été créé.",
+      "JOB_SUBMITTED": "Un travail quotidien a été soumis à approbation.",
+      "JOB_APPROVED": "Un travail quotidien a été approuvé.",
+      "JOB_REJECTED": "Un travail quotidien a été rejeté.",
+      "MATERIAL_DISTRIBUTE_TO_TEAM": "Du matériel a été distribué à une équipe.",
+      "TEAM_APPROVED": "Une équipe a été approuvée.",
+      "TEAM_REJECTED": "Une équipe a été rejetée.",
+      "PAYROLL_SETTINGS_CHANGED": "Les paramètres de période de paie ont été mis à jour.",
+      "DEFAULT": "Aucune description détaillée n'est disponible pour cette action."
+    }
   },
   "approvals": {
     "title": "Approbations",

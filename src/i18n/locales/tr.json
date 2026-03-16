@@ -746,10 +746,21 @@
     "entity": "Nesne",
     "team": "Ekip",
     "period": "Dönem",
-    "meta": "Meta",
+    "description": "Açıklama",
     "noData": "Denetim kaydı yok.",
     "prevPage": "Önceki",
-    "nextPage": "Sonraki"
+    "nextPage": "Sonraki",
+    "desc": {
+      "JOB_CREATED": "Yeni günlük iş kaydı oluşturuldu.",
+      "JOB_SUBMITTED": "Günlük iş onaya gönderildi.",
+      "JOB_APPROVED": "Günlük iş kaydı onaylandı.",
+      "JOB_REJECTED": "Günlük iş kaydı reddedildi.",
+      "MATERIAL_DISTRIBUTE_TO_TEAM": "Malzeme takıma dağıtıldı.",
+      "TEAM_APPROVED": "Takım onaylandı.",
+      "TEAM_REJECTED": "Takım reddedildi.",
+      "PAYROLL_SETTINGS_CHANGED": "Hakediş dönem ayarları güncellendi.",
+      "DEFAULT": "Bu işlem için ayrıntılı açıklama mevcut değil."
+    }
   },
   "approvals": {
     "title": "Onaylar",

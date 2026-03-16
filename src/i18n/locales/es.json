@@ -735,10 +735,21 @@
     "entity": "Entidad",
     "team": "Equipo",
     "period": "Período",
-    "meta": "Meta",
+    "description": "Descripción",
     "noData": "Sin registros de auditoría.",
     "prevPage": "Anterior",
-    "nextPage": "Siguiente"
+    "nextPage": "Siguiente",
+    "desc": {
+      "JOB_CREATED": "Se creó un nuevo registro de trabajo diario.",
+      "JOB_SUBMITTED": "Un trabajo diario se envió para aprobación.",
+      "JOB_APPROVED": "Se aprobó un registro de trabajo diario.",
+      "JOB_REJECTED": "Se rechazó un registro de trabajo diario.",
+      "MATERIAL_DISTRIBUTE_TO_TEAM": "Se distribuyó material a un equipo.",
+      "TEAM_APPROVED": "Se aprobó un equipo.",
+      "TEAM_REJECTED": "Se rechazó un equipo.",
+      "PAYROLL_SETTINGS_CHANGED": "Se actualizaron los ajustes del período de pago.",
+      "DEFAULT": "No hay una descripción detallada para esta acción."
+    }
   },
   "approvals": {
     "title": "Aprobaciones",

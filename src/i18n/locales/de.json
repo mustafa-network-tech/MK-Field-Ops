@@ -735,10 +735,21 @@
     "entity": "Objekt",
     "team": "Team",
     "period": "Zeitraum",
-    "meta": "Meta",
+    "description": "Beschreibung",
     "noData": "Keine Audit-Einträge.",
     "prevPage": "Zurück",
-    "nextPage": "Weiter"
+    "nextPage": "Weiter",
+    "desc": {
+      "JOB_CREATED": "Ein neuer Tagesarbeitsnachweis wurde erstellt.",
+      "JOB_SUBMITTED": "Ein Tagesarbeitsnachweis wurde zur Freigabe eingereicht.",
+      "JOB_APPROVED": "Ein Tagesarbeitsnachweis wurde freigegeben.",
+      "JOB_REJECTED": "Ein Tagesarbeitsnachweis wurde abgelehnt.",
+      "MATERIAL_DISTRIBUTE_TO_TEAM": "Material wurde an ein Team verteilt.",
+      "TEAM_APPROVED": "Ein Team wurde freigegeben.",
+      "TEAM_REJECTED": "Ein Team wurde abgelehnt.",
+      "PAYROLL_SETTINGS_CHANGED": "Einstellungen des Abrechnungszeitraums wurden aktualisiert.",
+      "DEFAULT": "Für diese Aktion ist keine Detailbeschreibung verfügbar."
+    }
   },
   "approvals": {
     "title": "Freigaben",

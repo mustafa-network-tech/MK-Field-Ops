@@ -62,7 +62,7 @@ export function AuditLogs() {
                     <th>{t('auditLogs.entity')}</th>
                     <th>{t('auditLogs.team')}</th>
                     <th>{t('auditLogs.period')}</th>
-                    <th></th>
+                    <th>{t('auditLogs.description')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -83,16 +83,16 @@ export function AuditLogs() {
                             onClick={() => setExpandedId(expandedId === row.id ? null : row.id)}
                             aria-expanded={expandedId === row.id}
                           >
-                            {expandedId === row.id ? '▼' : '▶'} {t('auditLogs.meta')}
+                            {expandedId === row.id ? '▼' : '▶'} {t('auditLogs.description')}
                           </button>
                         </td>
                       </tr>
                       {expandedId === row.id && (
                         <tr key={`${row.id}-meta`}>
                           <td colSpan={8} className={styles.metaCell}>
-                            <pre className={styles.metaPre}>
-                              {JSON.stringify(row.meta, null, 2)}
-                            </pre>
+                            <p className={styles.metaText}>
+                              {t(`auditLogs.desc.${row.action}`, { defaultValue: t('auditLogs.desc.DEFAULT') })}
+                            </p>
                           </td>
                         </tr>
                       )}

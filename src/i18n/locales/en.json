@@ -741,10 +741,21 @@
     "entity": "Entity",
     "team": "Team",
     "period": "Period",
-    "meta": "Meta",
+    "description": "Description",
     "noData": "No audit logs.",
     "prevPage": "Previous",
-    "nextPage": "Next"
+    "nextPage": "Next",
+    "desc": {
+      "JOB_CREATED": "A new daily job record was created.",
+      "JOB_SUBMITTED": "A daily job was submitted for approval.",
+      "JOB_APPROVED": "A daily job record was approved.",
+      "JOB_REJECTED": "A daily job record was rejected.",
+      "MATERIAL_DISTRIBUTE_TO_TEAM": "Material was distributed to a team.",
+      "TEAM_APPROVED": "A team was approved.",
+      "TEAM_REJECTED": "A team was rejected.",
+      "PAYROLL_SETTINGS_CHANGED": "Payroll period settings were updated.",
+      "DEFAULT": "No detailed description is available for this action."
+    }
   },
   "approvals": {
     "title": "Approvals",
