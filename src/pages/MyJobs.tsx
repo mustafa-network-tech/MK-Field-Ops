@@ -48,6 +48,8 @@ export function MyJobs() {
   const stockItems = store.getMaterialStock(companyId);
   const getTeamCode = (id: string) => teams.find((t) => t.id === id)?.code ?? id;
   const getWorkItemCode = (id: string) => workItems.find((w) => w.id === id)?.code ?? id;
+  const users = store.getUsers(companyId);
+  const getUserName = (id?: string | null) => (id ? users.find((u) => u.id === id)?.fullName ?? id : '–');
   const getProjectKey = (projectId?: string) => {
     if (!projectId) return '–';
     const p = store.getProject(projectId, companyId);
@@ -116,6 +118,16 @@ export function MyJobs() {
                   </td>
                   <td>
                     <span className={styles[`badge_${job.status}`] ?? styles.badge}>{t(statusKeys[job.status])}</span>
+                    {job.status === 'approved' && job.approvedBy && (
+                      <div className={styles.approverLine}>
+                        {t('jobs.approvedBy')}: {getUserName(job.approvedBy)}
+                      </div>
+                    )}
+                    {job.status === 'rejected' && job.rejectedBy && (
+                      <div className={styles.approverLine}>
+                        {t('jobs.rejectedBy')}: {getUserName(job.rejectedBy)}
+                      </div>
+                    )}
                   </td>
                   <td>{details ? formatPriceForUser(details.totalWorkValue, user, 'companyOrTotal', locale) : '–'}</td>
                   <td>{details ? formatPriceForUser(details.teamEarnings, user, 'teamOnly', locale) : '–'}</td>
