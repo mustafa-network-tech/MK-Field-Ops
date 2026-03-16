@@ -454,6 +454,8 @@
     "archivedProjects": "Archived",
     "projectActivityLabor": "Project Activity (Labor)",
     "projectMaterialsUsed": "Materials Used in Project",
+    "projectMaterialsUsedByJob": "Material Usage by Job",
+    "projectMaterialsUsedSummary": "Summary (Total)",
     "activityFilterAll": "All",
     "activityFilterByTeam": "By Team",
     "activityFilterByWorkItem": "By Work Item",

@@ -446,6 +446,8 @@
     "archivedProjects": "Archivados",
     "projectActivityLabor": "Actividad del proyecto (mano de obra)",
     "projectMaterialsUsed": "Materiales utilizados en el proyecto",
+    "projectMaterialsUsedByJob": "Uso de materiales por trabajo",
+    "projectMaterialsUsedSummary": "Resumen (Total)",
     "activityFilterAll": "Todos",
     "activityFilterByTeam": "Por equipo",
     "activityFilterByWorkItem": "Por concepto",

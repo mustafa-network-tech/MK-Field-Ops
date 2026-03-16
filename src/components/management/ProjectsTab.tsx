@@ -196,6 +196,18 @@ export function ProjectsTab() {
   const allocationsAll = store.getTeamMaterialAllocations(companyId);
   const getTeamCode = (id: string) => teams.find((t) => t.id === id)?.code ?? id;
   const getWorkItemCode = (id: string) => workItems.find((w) => w.id === id)?.code ?? id;
+  const getWorkItemLabel = (id: string) => {
+    const w = workItems.find((x) => x.id === id);
+    if (!w) return id;
+    const name = (w.description ?? '').trim();
+    return name ? `${name} – ${w.code}` : w.code;
+  };
+
+  const zimmetIdToStockId = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const a of allocationsAll) m.set(a.id, a.materialStockItemId);
+    return m;
+  }, [allocationsAll]);
 
   const teamIdsInProject = Array.from(new Set(projectJobsApproved.map((j) => j.teamId)));
   const workItemIdsInProject = Array.from(new Set(projectJobsApproved.map((j) => j.workItemId)));
@@ -217,9 +229,6 @@ export function ProjectsTab() {
       source: 'zimmet' | 'external';
     };
     const byKey = new Map<string, Row>();
-
-    const zimmetIdToStockId = new Map<string, string>();
-    for (const a of allocationsAll) zimmetIdToStockId.set(a.id, a.materialStockItemId);
 
     const addAgg = (row: Row) => {
       const existing = byKey.get(row.key);
@@ -267,7 +276,68 @@ export function ProjectsTab() {
     }
 
     return Array.from(byKey.values()).sort((a, b) => a.label.localeCompare(b.label, undefined, { numeric: true }));
-  }, [allocationsAll, projectJobsFiltered, stockItems, t]);
+  }, [projectJobsFiltered, stockItems, t, zimmetIdToStockId]);
+
+  const projectMaterialRowsByJob = useMemo(() => {
+    type Row = {
+      key: string;
+      jobId: string;
+      date: string;
+      approvedAt?: string | null;
+      teamId: string;
+      workItemId: string;
+      materialLabel: string;
+      unit: 'm' | 'pcs';
+      qty: number;
+    };
+    const rows: Row[] = [];
+
+    for (const job of projectJobsFiltered) {
+      const usages = job.materialUsages ?? [];
+      for (const u of usages) {
+        const unit = u.quantityUnit;
+        if (u.isExternal) {
+          const desc = (u.externalDescription ?? t('jobs.material.external')).trim();
+          rows.push({
+            key: `${job.id}:external:${desc}:${unit}:${u.quantity}`,
+            jobId: job.id,
+            date: job.date,
+            approvedAt: job.approvedAt ?? null,
+            teamId: job.teamId,
+            workItemId: job.workItemId,
+            materialLabel: `${desc} (${t('jobs.material.external')})`,
+            unit,
+            qty: u.quantity,
+          });
+          continue;
+        }
+
+        const stockId =
+          (u.materialStockItemId ?? null) ||
+          (u.teamZimmetId ? (zimmetIdToStockId.get(u.teamZimmetId) ?? null) : null);
+        const item = stockId ? (stockItems.find((m) => m.id === stockId) ?? null) : null;
+        const typeLabel = item ? t(TYPE_DISPLAY_KEYS[item.mainType]) : '–';
+        const namePart = item
+          ? (item.spoolId ? `${item.name ?? item.capacityLabel} (${item.spoolId})` : (item.name ?? item.capacityLabel ?? item.id))
+          : (stockId ?? '–');
+        const materialLabel = item ? `${typeLabel} — ${namePart}` : (stockId ?? '–');
+
+        rows.push({
+          key: `${job.id}:stock:${stockId ?? '–'}:${unit}:${u.quantity}`,
+          jobId: job.id,
+          date: job.date,
+          approvedAt: job.approvedAt ?? null,
+          teamId: job.teamId,
+          workItemId: job.workItemId,
+          materialLabel,
+          unit,
+          qty: u.quantity,
+        });
+      }
+    }
+
+    return rows.sort((a, b) => (b.date.localeCompare(a.date) || (a.materialLabel.localeCompare(b.materialLabel))));
+  }, [projectJobsFiltered, stockItems, t, zimmetIdToStockId]);
 
   if (selectedProject && selectedProjectId) {
     return (
@@ -404,7 +474,7 @@ export function ProjectsTab() {
                   <tr key={job.id}>
                     <td>{new Date(job.date).toLocaleDateString()}</td>
                     <td>{getTeamCode(job.teamId)}</td>
-                    <td>{getWorkItemCode(job.workItemId)}</td>
+                    <td>{getWorkItemLabel(job.workItemId)}</td>
                     <td>{job.quantity}</td>
                     <td>{job.createdAt ? new Date(job.createdAt).toLocaleString() : '–'}</td>
                     <td>{job.approvedAt ? new Date(job.approvedAt).toLocaleString() : '–'}</td>
@@ -414,6 +484,43 @@ export function ProjectsTab() {
             </table>
 
             <h4 className={styles.sectionTitle} style={{ marginTop: '1.5rem' }}>{t('projects.projectMaterialsUsed')}</h4>
+
+            <h4 className={styles.sectionTitle} style={{ marginTop: '0.75rem', fontSize: '1rem' }}>
+              {t('projects.projectMaterialsUsedByJob')}
+            </h4>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{t('jobs.date')}</th>
+                  <th>{t('jobs.team')}</th>
+                  <th>{t('jobs.workItem')}</th>
+                  <th>{t('deliveryNotes.material')}</th>
+                  <th>{t('deliveryNotes.unit')}</th>
+                  <th>{t('deliveryNotes.quantity')}</th>
+                  <th>{t('jobs.approvedAt')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {projectMaterialRowsByJob.length === 0 && (
+                  <tr><td colSpan={7} className={styles.muted}>{t('common.noData')}</td></tr>
+                )}
+                {projectMaterialRowsByJob.map((r) => (
+                  <tr key={r.key}>
+                    <td>{new Date(r.date).toLocaleDateString()}</td>
+                    <td>{getTeamCode(r.teamId)}</td>
+                    <td>{getWorkItemLabel(r.workItemId)}</td>
+                    <td>{r.materialLabel}</td>
+                    <td>{r.unit === 'm' ? 'm' : t('jobs.material.pcs')}</td>
+                    <td>{r.qty}</td>
+                    <td>{r.approvedAt ? new Date(r.approvedAt).toLocaleString() : '–'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            <h4 className={styles.sectionTitle} style={{ marginTop: '0.75rem', fontSize: '1rem' }}>
+              {t('projects.projectMaterialsUsedSummary')}
+            </h4>
             <table className={styles.table}>
               <thead>
                 <tr>

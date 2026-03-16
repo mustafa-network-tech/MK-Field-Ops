@@ -454,6 +454,8 @@
     "archivedProjects": "Arşivlenen Projeler",
     "projectActivityLabor": "Proje Aktivitesi (İşçilik)",
     "projectMaterialsUsed": "Projede Kullanılan Malzemeler",
+    "projectMaterialsUsedByJob": "İşe Göre Malzeme Kullanımı",
+    "projectMaterialsUsedSummary": "Özet (Toplam)",
     "activityFilterAll": "Tümü",
     "activityFilterByTeam": "Ekibe Göre",
     "activityFilterByWorkItem": "İş Kalemine Göre",

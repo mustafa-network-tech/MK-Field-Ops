@@ -446,6 +446,8 @@
     "archivedProjects": "Archiviert",
     "projectActivityLabor": "Projektaktivität (Arbeitsleistung)",
     "projectMaterialsUsed": "Im Projekt verwendete Materialien",
+    "projectMaterialsUsedByJob": "Materialverbrauch nach Arbeit",
+    "projectMaterialsUsedSummary": "Übersicht (Summe)",
     "activityFilterAll": "Alle",
     "activityFilterByTeam": "Nach Team",
     "activityFilterByWorkItem": "Nach Arbeitsposition",
