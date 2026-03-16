@@ -368,7 +368,7 @@
     "materials": "Matériaux",
     "equipment": "Équipements",
     "workItems": "Postes de travail",
-    "projects": "Projets",
+    "projects": "Campagnes",
     "users": "Utilisateurs",
     "approvals": "Approbations",
     "reports": "Rapports",
@@ -421,7 +421,7 @@
     "noCampaigns": "Aucune campagne. Créez-en une d'abord."
   },
   "projects": {
-    "title": "Projets",
+    "title": "Campagnes",
     "createProject": "Créer un projet",
     "projectKey": "Clé projet",
     "projectYear": "Année du projet",

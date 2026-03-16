@@ -376,7 +376,7 @@
     "materials": "Materials",
     "equipment": "Equipment",
     "workItems": "Work Items",
-    "projects": "Projects",
+    "projects": "Campaigns",
     "users": "Users",
     "approvals": "Approvals",
     "reports": "Reports",
@@ -429,7 +429,7 @@
     "noCampaigns": "No campaigns. Create one first."
   },
   "projects": {
-    "title": "Projects",
+    "title": "Campaigns",
     "createProject": "Create project",
     "projectKey": "Project Key",
     "projectYear": "Project Year",
@@ -456,6 +456,8 @@
     "activityFilterAll": "All",
     "activityFilterByTeam": "By Team",
     "activityFilterByWorkItem": "By Work Item",
+    "activityStartDate": "Start Date",
+    "activityEndDate": "End Date",
     "selectTeam": "Select Team",
     "selectWorkItem": "Select Work Item",
     "markProjectCompleted": "Mark Project as Completed",

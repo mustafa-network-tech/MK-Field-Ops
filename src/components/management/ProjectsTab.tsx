@@ -42,16 +42,17 @@ export function ProjectsTab() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
   const [completeError, setCompleteError] = useState('');
-  type ActivityFilterMode = 'all' | 'byTeam' | 'byWorkItem';
-  const [activityFilterMode, setActivityFilterMode] = useState<ActivityFilterMode>('all');
-  const [activityTeamId, setActivityTeamId] = useState('');
-  const [activityWorkItemId, setActivityWorkItemId] = useState('');
+  const [filterTeamId, setFilterTeamId] = useState('');
+  const [filterWorkItemId, setFilterWorkItemId] = useState('');
+  const [filterStartDate, setFilterStartDate] = useState('');
+  const [filterEndDate, setFilterEndDate] = useState('');
 
   useEffect(() => {
     if (selectedProjectId) {
-      setActivityFilterMode('all');
-      setActivityTeamId('');
-      setActivityWorkItemId('');
+      setFilterTeamId('');
+      setFilterWorkItemId('');
+      setFilterStartDate('');
+      setFilterEndDate('');
     }
   }, [selectedProjectId]);
 
@@ -177,14 +178,13 @@ export function ProjectsTab() {
   const teamIdsInProject = Array.from(new Set(projectJobsApproved.map((j) => j.teamId)));
   const workItemIdsInProject = Array.from(new Set(projectJobsApproved.map((j) => j.workItemId)));
 
-  const projectJobsFiltered =
-    activityFilterMode === 'all'
-      ? projectJobsApproved
-      : activityFilterMode === 'byTeam' && activityTeamId
-        ? projectJobsApproved.filter((j) => j.teamId === activityTeamId)
-        : activityFilterMode === 'byWorkItem' && activityWorkItemId
-          ? projectJobsApproved.filter((j) => j.workItemId === activityWorkItemId)
-          : projectJobsApproved;
+  const projectJobsFiltered = projectJobsApproved.filter((j) => {
+    if (filterTeamId && j.teamId !== filterTeamId) return false;
+    if (filterWorkItemId && j.workItemId !== filterWorkItemId) return false;
+    if (filterStartDate && j.date < filterStartDate) return false;
+    if (filterEndDate && j.date > filterEndDate) return false;
+    return true;
+  });
 
   if (selectedProject && selectedProjectId) {
     return (
@@ -247,63 +247,54 @@ export function ProjectsTab() {
         {canEditCatalog && (
           <>
             <h4 className={styles.sectionTitle} style={{ marginTop: '1.5rem' }}>{t('projects.projectActivityLabor')}</h4>
-            <div className={styles.segmentGroup}>
-              <button
-                type="button"
-                className={activityFilterMode === 'all' ? styles.segmentActive : styles.segment}
-                onClick={() => { setActivityFilterMode('all'); setActivityTeamId(''); setActivityWorkItemId(''); }}
-              >
-                {t('projects.activityFilterAll')}
-              </button>
-              <button
-                type="button"
-                className={activityFilterMode === 'byTeam' ? styles.segmentActive : styles.segment}
-                onClick={() => { setActivityFilterMode('byTeam'); setActivityWorkItemId(''); }}
-              >
-                {t('projects.activityFilterByTeam')}
-              </button>
-              <button
-                type="button"
-                className={activityFilterMode === 'byWorkItem' ? styles.segmentActive : styles.segment}
-                onClick={() => { setActivityFilterMode('byWorkItem'); setActivityTeamId(''); }}
-              >
-                {t('projects.activityFilterByWorkItem')}
-              </button>
+            <div className={styles.filterRow}>
+              <label className={styles.label}>
+                {t('projects.selectTeam')}
+                <select
+                  value={filterTeamId}
+                  onChange={(e) => setFilterTeamId(e.target.value)}
+                  className={styles.input}
+                >
+                  <option value="">-- {t('projects.activityFilterAll')} --</option>
+                  {teamIdsInProject.map((id) => (
+                    <option key={id} value={id}>{getTeamCode(id)}</option>
+                  ))}
+                </select>
+              </label>
+              <label className={styles.label}>
+                {t('projects.selectWorkItem')}
+                <select
+                  value={filterWorkItemId}
+                  onChange={(e) => setFilterWorkItemId(e.target.value)}
+                  className={styles.input}
+                >
+                  <option value="">-- {t('projects.activityFilterAll')} --</option>
+                  {workItemIdsInProject.map((id) => (
+                    <option key={id} value={id}>{getWorkItemCode(id)}</option>
+                  ))}
+                </select>
+              </label>
             </div>
-            {activityFilterMode === 'byTeam' && (
-              <div className={styles.filterRow}>
-                <label className={styles.label}>
-                  {t('projects.selectTeam')}
-                  <select
-                    value={activityTeamId}
-                    onChange={(e) => setActivityTeamId(e.target.value)}
-                    className={styles.input}
-                  >
-                    <option value="">-- {t('projects.selectTeam')} --</option>
-                    {teamIdsInProject.map((id) => (
-                      <option key={id} value={id}>{getTeamCode(id)}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            )}
-            {activityFilterMode === 'byWorkItem' && (
-              <div className={styles.filterRow}>
-                <label className={styles.label}>
-                  {t('projects.selectWorkItem')}
-                  <select
-                    value={activityWorkItemId}
-                    onChange={(e) => setActivityWorkItemId(e.target.value)}
-                    className={styles.input}
-                  >
-                    <option value="">-- {t('projects.selectWorkItem')} --</option>
-                    {workItemIdsInProject.map((id) => (
-                      <option key={id} value={id}>{getWorkItemCode(id)}</option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-            )}
+            <div className={styles.filterRow}>
+              <label className={styles.label}>
+                {t('projects.activityStartDate')}
+                <input
+                  type="date"
+                  value={filterStartDate}
+                  onChange={(e) => setFilterStartDate(e.target.value)}
+                  className={styles.input}
+                />
+              </label>
+              <label className={styles.label}>
+                {t('projects.activityEndDate')}
+                <input
+                  type="date"
+                  value={filterEndDate}
+                  onChange={(e) => setFilterEndDate(e.target.value)}
+                  className={styles.input}
+                />
+              </label>
+            </div>
             <table className={styles.table}>
               <thead>
                 <tr>

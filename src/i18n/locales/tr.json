@@ -376,7 +376,7 @@
     "materials": "Malzemeler",
     "equipment": "Ekipman",
     "workItems": "İş Kalemleri",
-    "projects": "Projeler",
+    "projects": "Kampanyalar",
     "users": "Kullanıcılar",
     "approvals": "Onaylar",
     "reports": "Raporlar",
@@ -429,7 +429,7 @@
     "noCampaigns": "Kampanya yok. Önce bir kampanya oluşturun."
   },
   "projects": {
-    "title": "Projeler",
+    "title": "Kampanyalar",
     "createProject": "Proje oluştur",
     "projectKey": "Proje Anahtarı",
     "projectYear": "Proje Yılı",
@@ -456,6 +456,8 @@
     "activityFilterAll": "Tümü",
     "activityFilterByTeam": "Ekibe Göre",
     "activityFilterByWorkItem": "İş Kalemine Göre",
+    "activityStartDate": "Başlangıç Tarihi",
+    "activityEndDate": "Bitiş Tarihi",
     "selectTeam": "Ekip Seç",
     "selectWorkItem": "İş Kalemi Seç",
     "markProjectCompleted": "Projeyi Tamamlandı Olarak İşaretle",
