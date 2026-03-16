@@ -71,9 +71,15 @@ export function AuditLogs() {
                       <tr>
                         <td>{formatDate(row.created_at, locale)}</td>
                         <td>{row.actor_email ?? row.actor_user_id}</td>
-                        <td>{row.actor_role ?? '–'}</td>
-                        <td>{row.action}</td>
-                        <td>{row.entity_type}{row.entity_id ? ` #${row.entity_id.slice(0, 8)}` : ''}</td>
+                        <td>{row.actor_role ? t(`auditLogs.role_${row.actor_role}`) : '–'}</td>
+                        <td>{t(`auditLogs.action_${row.action}`)}</td>
+                        <td>
+                          {row.entity_type
+                            ? `${t(`auditLogs.entity_${row.entity_type}`)}${
+                                row.entity_id ? ` #${row.entity_id.slice(0, 8)}` : ''
+                              }`
+                            : '–'}
+                        </td>
                         <td>{row.team_code ?? '–'}</td>
                         <td>{row.period_id ? String(row.period_id).slice(0, 8) : '–'}</td>
                         <td>
