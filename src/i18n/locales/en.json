@@ -562,6 +562,8 @@
     "submitted": "Submitted",
     "approved": "Approved",
     "rejected": "Rejected",
+    "approvedBy": "Approved by",
+    "rejectedBy": "Rejected by",
     "totalWorkValue": "Total Work Value",
     "teamEarnings": "Team Earnings",
     "companyShare": "Company Share",

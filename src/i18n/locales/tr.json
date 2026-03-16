@@ -562,6 +562,8 @@
     "submitted": "Gönderildi",
     "approved": "Onaylandı",
     "rejected": "Reddedildi",
+    "approvedBy": "Onaylayan",
+    "rejectedBy": "Reddeden",
     "totalWorkValue": "Toplam İş Değeri",
     "teamEarnings": "Takım Kazancı",
     "companyShare": "Şirket Payı",

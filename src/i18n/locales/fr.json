@@ -551,6 +551,8 @@
     "submitted": "Soumis",
     "approved": "Approuvé",
     "rejected": "Rejeté",
+    "approvedBy": "Approuvé par",
+    "rejectedBy": "Rejeté par",
     "totalWorkValue": "Valeur totale du travail",
     "teamEarnings": "Revenus équipe",
     "companyShare": "Part entreprise",

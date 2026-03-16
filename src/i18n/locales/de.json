@@ -551,6 +551,8 @@
     "submitted": "Eingereicht",
     "approved": "Genehmigt",
     "rejected": "Abgelehnt",
+    "approvedBy": "Genehmigt von",
+    "rejectedBy": "Abgelehnt von",
     "totalWorkValue": "Gesamter Arbeitswert",
     "teamEarnings": "Team-Einnahmen",
     "companyShare": "Unternehmensanteil",

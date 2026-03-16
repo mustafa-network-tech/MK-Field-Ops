@@ -191,6 +191,7 @@ export function ProjectsTab() {
     .filter((j) => j.status === 'approved')
     .sort((a, b) => (b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt)));
   const teams = store.getTeams(companyId);
+  const users = store.getUsers(companyId);
   const workItems = store.getWorkItems(companyId);
   const stockItems = store.getMaterialStock(companyId);
   const allocationsAll = store.getTeamMaterialAllocations(companyId);
@@ -202,6 +203,8 @@ export function ProjectsTab() {
     const name = (w.description ?? '').trim();
     return name ? `${name} – ${w.code}` : w.code;
   };
+  const getUserName = (id: string | undefined | null) =>
+    id ? users.find((u) => u.id === id)?.fullName ?? id : '–';
 
   const zimmetIdToStockId = useMemo(() => {
     const m = new Map<string, string>();
@@ -464,11 +467,12 @@ export function ProjectsTab() {
                   <th>{t('jobs.quantity')}</th>
                   <th>{t('jobs.createdAt')}</th>
                   <th>{t('jobs.approvedAt')}</th>
+                  <th>{t('jobs.status')}</th>
                 </tr>
               </thead>
               <tbody>
                 {projectJobsFiltered.length === 0 && (
-                  <tr><td colSpan={6} className={styles.muted}>{t('common.noData')}</td></tr>
+                  <tr><td colSpan={7} className={styles.muted}>{t('common.noData')}</td></tr>
                 )}
                 {projectJobsFiltered.map((job) => (
                   <tr key={job.id}>
@@ -478,6 +482,19 @@ export function ProjectsTab() {
                     <td>{job.quantity}</td>
                     <td>{job.createdAt ? new Date(job.createdAt).toLocaleString() : '–'}</td>
                     <td>{job.approvedAt ? new Date(job.approvedAt).toLocaleString() : '–'}</td>
+                    <td>
+                      <div>{t(`jobs.${job.status}`)}</div>
+                      {job.status === 'approved' && job.approvedBy && (
+                        <div className={styles.muted} style={{ fontSize: '0.8rem' }}>
+                          {t('jobs.approvedBy')}: {getUserName(job.approvedBy)}
+                        </div>
+                      )}
+                      {job.status === 'rejected' && job.rejectedBy && (
+                        <div className={styles.muted} style={{ fontSize: '0.8rem' }}>
+                          {t('jobs.rejectedBy')}: {getUserName(job.rejectedBy)}
+                        </div>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
