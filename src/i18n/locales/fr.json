@@ -531,7 +531,8 @@
     "editWorkItem": "Modifier le poste",
     "codeMustBeFiveDigits": "Le code du poste doit comporter exactement 5 chiffres (ex. 00001).",
     "codeMustBeUnique": "Ce code de poste est déjà utilisé pour cette entreprise.",
-    "unitTypeRequired": "Le type d'unité du poste (ex. mètre, pièce, etc.) est obligatoire."
+    "unitTypeRequired": "Le type d'unité du poste (ex. mètre, pièce, etc.) est obligatoire.",
+    "unitPriceMustBePositive": "Le prix unitaire doit être supérieur à zéro."
   },
   "jobs": {
     "title": "Saisie quotidienne",

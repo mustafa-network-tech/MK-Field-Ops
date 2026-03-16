@@ -215,8 +215,8 @@ export function JobEntry() {
     if (!term) return workItems;
     return workItems.filter((wi) => {
       const code = wi.code.toLowerCase();
-      const desc = (wi.description ?? '').toLowerCase();
-      return code.includes(term) || desc.includes(term);
+      const unitType = (wi.unitType ?? '').toLowerCase();
+      return code.includes(term) || unitType.includes(term);
     });
   }, [workItems, workItemSearch]);
 

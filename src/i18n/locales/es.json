@@ -531,7 +531,8 @@
     "editWorkItem": "Editar concepto",
     "codeMustBeFiveDigits": "El código del concepto debe tener exactamente 5 dígitos (ej. 00001).",
     "codeMustBeUnique": "Este código de concepto ya está usado en esta empresa.",
-    "unitTypeRequired": "El tipo de unidad del concepto (ej. metro, unidad, etc.) es obligatorio."
+    "unitTypeRequired": "El tipo de unidad del concepto (ej. metro, unidad, etc.) es obligatorio.",
+    "unitPriceMustBePositive": "El precio unitario debe ser mayor que cero."
   },
   "jobs": {
     "title": "Entrada diaria de trabajos",

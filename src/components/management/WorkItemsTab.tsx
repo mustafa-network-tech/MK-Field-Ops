@@ -22,6 +22,13 @@ export function WorkItemsTab() {
   const [unitTypeSearch, setUnitTypeSearch] = useState('');
   const [unitTypeError, setUnitTypeError] = useState('');
 
+  const UNIT_TYPE_OPTIONS: { value: string; label: string }[] = [
+    { value: 'm3', label: t('deliveryNotes.unitCubicMeter') },
+    { value: 'kg', label: t('deliveryNotes.unitKilo') },
+    { value: 'm', label: t('deliveryNotes.unitMeter') },
+    { value: 'pcs', label: t('deliveryNotes.unitPiece') },
+  ];
+
   const filteredWorkItems = workItems.filter((w) => {
     const term = searchTerm.trim().toLowerCase();
     const unitTerm = unitTypeSearch.trim().toLowerCase();
@@ -61,6 +68,10 @@ export function WorkItemsTab() {
     const priceResult = validatePrice(form.unitPrice);
     if (!priceResult.ok) {
       setPriceError(t(priceResult.error));
+      return;
+    }
+    if (priceResult.value <= 0) {
+      setPriceError(t('catalog.unitPriceMustBePositive'));
       return;
     }
     const payload = { ...form, code: rawCode, unitPrice: priceResult.value };
@@ -109,7 +120,19 @@ export function WorkItemsTab() {
           {codeError && <p className={styles.saveError}>{codeError}</p>}
           <label className={styles.label}>
             {t('catalog.unitType')}
-            <input value={form.unitType} onChange={(e) => setForm((f) => ({ ...f, unitType: e.target.value }))} className={styles.input} />
+            <select
+              value={form.unitType}
+              onChange={(e) => setForm((f) => ({ ...f, unitType: e.target.value }))}
+              className={styles.input}
+              required
+            >
+              <option value="">{t('deliveryNotes.selectUnitPlaceholder')}</option>
+              {UNIT_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
           </label>
           {unitTypeError && <p className={styles.saveError}>{unitTypeError}</p>}
           <label className={styles.label}>

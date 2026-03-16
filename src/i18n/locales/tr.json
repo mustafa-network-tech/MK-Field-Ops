@@ -539,7 +539,8 @@
     "editWorkItem": "İş Kalemi Düzenle",
     "codeMustBeFiveDigits": "İş kalemi kodu tam 5 haneli rakam olmalıdır (örn. 00001).",
     "codeMustBeUnique": "Bu iş kalemi kodu bu şirket için zaten kullanılıyor.",
-    "unitTypeRequired": "İş kalemi birim tipi (örneğin metre, adet vb.) zorunludur."
+    "unitTypeRequired": "İş kalemi birim tipi (örneğin metre, adet vb.) zorunludur.",
+    "unitPriceMustBePositive": "Birim fiyat sıfırdan büyük olmalıdır."
   },
   "jobs": {
     "title": "Günlük İş Girişi",

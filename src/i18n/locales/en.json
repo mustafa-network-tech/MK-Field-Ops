@@ -539,7 +539,8 @@
     "editWorkItem": "Edit Work Item",
     "codeMustBeFiveDigits": "Work item code must be exactly 5 digits (e.g. 00001).",
     "codeMustBeUnique": "This work item code is already used for this company.",
-    "unitTypeRequired": "Work item unit type (e.g. meter, piece, etc.) is required."
+    "unitTypeRequired": "Work item unit type (e.g. meter, piece, etc.) is required.",
+    "unitPriceMustBePositive": "Unit price must be greater than zero."
   },
   "jobs": {
     "title": "Daily Job Entry",
