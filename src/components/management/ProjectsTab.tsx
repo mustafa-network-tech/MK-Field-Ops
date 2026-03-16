@@ -31,7 +31,11 @@ export function ProjectsTab() {
   const campaigns = store.getCampaigns(companyId);
   const allProjects = store.getProjects(companyId);
   const [listFilter, setListFilter] = useState<ProjectStatus>('ACTIVE');
-  const projects = listFilter ? allProjects.filter((p) => p.status === listFilter) : allProjects;
+  const [selectedCampaignId, setSelectedCampaignId] = useState<string | null>(null);
+  const projectsByStatus = listFilter ? allProjects.filter((p) => p.status === listFilter) : allProjects;
+  const projectsInSelectedCampaign = selectedCampaignId
+    ? projectsByStatus.filter((p) => p.campaignId === selectedCampaignId)
+    : [];
 
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
@@ -190,7 +194,14 @@ export function ProjectsTab() {
     return (
       <Card>
         <div className={styles.toolbar}>
-          <button type="button" className={styles.secondaryBtn} onClick={() => { setSelectedProjectId(null); setCompleteError(''); }}>
+          <button
+            type="button"
+            className={styles.secondaryBtn}
+            onClick={() => {
+              setSelectedProjectId(null);
+              setCompleteError('');
+            }}
+          >
             {t('projects.backToList')}
           </button>
         </div>
@@ -328,10 +339,68 @@ export function ProjectsTab() {
     );
   }
 
+  // Kampanya seçili değilse: sadece kampanya listesi
+  if (!selectedCampaignId && !selectedProjectId) {
+    return (
+      <Card>
+        <div className={styles.toolbar}>
+          <h3 className={styles.sectionTitle}>{t('campaigns.title')}</h3>
+        </div>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th>{t('campaigns.campaignName')}</th>
+              <th>{t('common.actions')}</th>
+            </tr>
+          </thead>
+          <tbody>
+            {campaigns.length === 0 && (
+              <tr>
+                <td colSpan={2} className={styles.muted}>{t('common.noData')}</td>
+              </tr>
+            )}
+            {campaigns.map((c) => (
+              <tr key={c.id}>
+                <td>{c.name}</td>
+                <td>
+                  <button
+                    type="button"
+                    className={styles.smallBtnEdit}
+                    onClick={() => {
+                      setSelectedCampaignId(c.id);
+                      setListFilter('ACTIVE');
+                    }}
+                  >
+                    {t('projects.viewDetail')}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </Card>
+    );
+  }
+
+  // Kampanya seçili, proje listesi görünümü
   return (
     <Card>
       <div className={styles.toolbar}>
-        <h3 className={styles.sectionTitle}>{t('projects.title')}</h3>
+        <button
+          type="button"
+          className={styles.secondaryBtn}
+          onClick={() => {
+            setSelectedCampaignId(null);
+            setShowForm(false);
+            setEditing(null);
+            setError('');
+          }}
+        >
+          {t('projects.backToList')}
+        </button>
+        <h3 className={styles.sectionTitle}>
+          {selectedCampaignId ? getCampaignName(selectedCampaignId) : t('campaigns.title')}
+        </h3>
         {!editing && (
           <button
             type="button"
@@ -339,7 +408,11 @@ export function ProjectsTab() {
             onClick={() => {
               setShowForm(!showForm);
               setError('');
-              setForm({ ...defaultForm, receivedDate: new Date().toISOString().slice(0, 10) });
+              setForm({
+                ...defaultForm,
+                receivedDate: new Date().toISOString().slice(0, 10),
+                campaignId: selectedCampaignId ?? '',
+              });
             }}
           >
             {showForm ? t('common.cancel') : t('projects.createProject')}
@@ -478,7 +551,6 @@ export function ProjectsTab() {
         <thead>
           <tr>
             <th>{t('projects.projectKey')}</th>
-            <th>{t('campaigns.campaign')}</th>
             <th>{t('projects.receivedDate')}</th>
             <th>{t('projects.status')}</th>
             {listFilter === 'COMPLETED' && <th>{t('projects.completedAt')}</th>}
@@ -486,17 +558,18 @@ export function ProjectsTab() {
           </tr>
         </thead>
         <tbody>
-          {projects.map((p) => (
+          {projectsInSelectedCampaign.map((p) => (
             <tr key={p.id}>
               <td>
                 <button type="button" className={styles.linkBtn} onClick={() => setSelectedProjectId(p.id)}>
                   {getProjectDisplayKey(p)}
                 </button>
               </td>
-              <td>{getCampaignName(p.campaignId)}</td>
               <td>{p.receivedDate ? new Date(p.receivedDate).toLocaleDateString() : '–'}</td>
               <td>{t(`projects.status_${p.status}`)}</td>
-              {listFilter === 'COMPLETED' && <td>{p.completedAt ? new Date(p.completedAt).toLocaleDateString() : '–'}</td>}
+              {listFilter === 'COMPLETED' && (
+                <td>{p.completedAt ? new Date(p.completedAt).toLocaleDateString() : '–'}</td>
+              )}
               <td>
                 <button type="button" className={styles.linkBtn} onClick={() => setSelectedProjectId(p.id)}>
                   {t('projects.viewDetail')}
@@ -534,7 +607,13 @@ export function ProjectsTab() {
           ))}
         </tbody>
       </table>
-      {projects.length === 0 && !showForm && <p className={styles.noData}>{t('common.noData')}</p>}
+          {projectsInSelectedCampaign.length === 0 && !showForm && (
+            <tr>
+              <td colSpan={listFilter === 'COMPLETED' ? 4 : 3} className={styles.noData}>
+                {t('common.noData')}
+              </td>
+            </tr>
+          )}
     </Card>
   );
 }
