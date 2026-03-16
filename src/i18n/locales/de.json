@@ -528,7 +528,10 @@
     "addWorkItem": "Arbeitsposition hinzufügen",
     "editMaterial": "Materialbestand bearbeiten",
     "editEquipment": "Ausrüstung bearbeiten",
-    "editWorkItem": "Arbeitsposition bearbeiten"
+    "editWorkItem": "Arbeitsposition bearbeiten",
+    "codeMustBeFiveDigits": "Der Arbeitspositions‑Code muss genau 5 Ziffern haben (z. B. 00001).",
+    "codeMustBeUnique": "Dieser Arbeitspositions‑Code wird für dieses Unternehmen bereits verwendet.",
+    "unitTypeRequired": "Der Einheitentyp der Arbeitsposition (z. B. Meter, Stück usw.) ist erforderlich."
   },
   "jobs": {
     "title": "Tägliche Arbeitseingabe",

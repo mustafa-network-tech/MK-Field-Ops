@@ -17,16 +17,53 @@ export function WorkItemsTab() {
   const [editing, setEditing] = useState<WorkItem | null>(null);
   const [form, setForm] = useState({ code: '', unitType: '', unitPrice: 0, description: '' });
   const [priceError, setPriceError] = useState('');
+  const [codeError, setCodeError] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [unitTypeSearch, setUnitTypeSearch] = useState('');
+  const [unitTypeError, setUnitTypeError] = useState('');
+
+  const filteredWorkItems = workItems.filter((w) => {
+    const term = searchTerm.trim().toLowerCase();
+    const unitTerm = unitTypeSearch.trim().toLowerCase();
+    const matchesTerm =
+      !term ||
+      w.code.toLowerCase().includes(term) ||
+      (w.description ?? '').toLowerCase().includes(term);
+    const matchesUnit = !unitTerm || w.unitType.toLowerCase().includes(unitTerm);
+    return matchesTerm && matchesUnit;
+  });
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     setPriceError('');
+    setCodeError('');
+    setUnitTypeError('');
+
+    const rawCode = form.code.trim();
+    if (!/^\d{5}$/.test(rawCode)) {
+      setCodeError(t('catalog.codeMustBeFiveDigits'));
+      return;
+    }
+
+    const isDuplicate = workItems.some(
+      (w) => w.code === rawCode && (!editing || w.id !== editing.id)
+    );
+    if (isDuplicate) {
+      setCodeError(t('catalog.codeMustBeUnique'));
+      return;
+    }
+
+    if (!form.unitType.trim()) {
+      setUnitTypeError(t('catalog.unitTypeRequired'));
+      return;
+    }
+
     const priceResult = validatePrice(form.unitPrice);
     if (!priceResult.ok) {
       setPriceError(t(priceResult.error));
       return;
     }
-    const payload = { ...form, unitPrice: priceResult.value };
+    const payload = { ...form, code: rawCode, unitPrice: priceResult.value };
     if (editing) {
       store.updateWorkItem(editing.id, payload);
       setEditing(null);
@@ -41,6 +78,22 @@ export function WorkItemsTab() {
     <Card>
       <div className={styles.toolbar}>
         <h3 className={styles.sectionTitle}>{t('catalog.workItems')}</h3>
+        <div className={styles.toolbarFilters}>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={styles.input}
+            placeholder={t('common.search')}
+          />
+          <input
+            type="text"
+            value={unitTypeSearch}
+            onChange={(e) => setUnitTypeSearch(e.target.value)}
+            className={styles.input}
+            placeholder={t('catalog.unitType')}
+          />
+        </div>
         {!editing && (
           <button type="button" className={styles.primaryBtn} onClick={() => setShowForm(!showForm)}>
             {showForm ? t('common.cancel') : t('catalog.addWorkItem')}
@@ -53,10 +106,12 @@ export function WorkItemsTab() {
             {t('catalog.code')}
             <input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} className={styles.input} required />
           </label>
+          {codeError && <p className={styles.saveError}>{codeError}</p>}
           <label className={styles.label}>
             {t('catalog.unitType')}
             <input value={form.unitType} onChange={(e) => setForm((f) => ({ ...f, unitType: e.target.value }))} className={styles.input} />
           </label>
+          {unitTypeError && <p className={styles.saveError}>{unitTypeError}</p>}
           <label className={styles.label}>
             {t('catalog.unitPrice')}
             <input
@@ -95,7 +150,7 @@ export function WorkItemsTab() {
           </tr>
         </thead>
         <tbody>
-          {workItems.map((w) => (
+          {filteredWorkItems.map((w) => (
             <tr key={w.id}>
               <td>{w.code}</td>
               <td>{w.unitType}</td>

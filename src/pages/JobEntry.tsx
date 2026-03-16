@@ -70,6 +70,7 @@ export function JobEntry() {
   const [equipmentIds, setEquipmentIds] = useState<string[]>([]);
   const [notes, setNotes] = useState('');
   const [submitError, setSubmitError] = useState('');
+  const [workItemSearch, setWorkItemSearch] = useState('');
 
   // Add material form state
   const [addMaterialId, setAddMaterialId] = useState('');
@@ -210,6 +211,16 @@ export function JobEntry() {
     return `${typeLabel} — ${namePart}`;
   };
 
+  const filteredWorkItems = useMemo(() => {
+    const term = workItemSearch.trim().toLowerCase();
+    if (!term) return workItems;
+    return workItems.filter((wi) => {
+      const code = wi.code.toLowerCase();
+      const desc = (wi.description ?? '').toLowerCase();
+      return code.includes(term) || desc.includes(term);
+    });
+  }, [workItems, workItemSearch]);
+
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('jobs.title')}</h1>
@@ -274,11 +285,24 @@ export function JobEntry() {
           <div className={styles.row}>
             <label className={styles.label}>
               {t('jobs.workItem')}
+              <input
+                type="text"
+                value={workItemSearch}
+                onChange={(e) => setWorkItemSearch(e.target.value)}
+                className={styles.input}
+                placeholder={t('common.search')}
+                style={{ marginBottom: 4 }}
+              />
               <select value={workItemId} onChange={(e) => setWorkItemId(e.target.value)} className={styles.input} required>
                 <option value="">-- {t('common.search')} --</option>
-                {workItems.map((wi) => (
-                  <option key={wi.id} value={wi.id}>{wi.code} – {formatPriceForUser(wi.unitPrice, user, 'companyOrTotal', locale)}</option>
-                ))}
+                {filteredWorkItems.map((wi) => {
+                  const label = wi.description ? `${wi.code} – ${wi.description}` : wi.code;
+                  return (
+                    <option key={wi.id} value={wi.id}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </label>
             <label className={styles.label}>

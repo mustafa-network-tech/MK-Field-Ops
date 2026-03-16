@@ -536,7 +536,10 @@
     "addWorkItem": "İş Kalemi Ekle",
     "editMaterial": "Malzeme Stoğu Düzenle",
     "editEquipment": "Ekipman Düzenle",
-    "editWorkItem": "İş Kalemi Düzenle"
+    "editWorkItem": "İş Kalemi Düzenle",
+    "codeMustBeFiveDigits": "İş kalemi kodu tam 5 haneli rakam olmalıdır (örn. 00001).",
+    "codeMustBeUnique": "Bu iş kalemi kodu bu şirket için zaten kullanılıyor.",
+    "unitTypeRequired": "İş kalemi birim tipi (örneğin metre, adet vb.) zorunludur."
   },
   "jobs": {
     "title": "Günlük İş Girişi",

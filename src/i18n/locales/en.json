@@ -536,7 +536,10 @@
     "addWorkItem": "Add Work Item",
     "editMaterial": "Edit Material Stock",
     "editEquipment": "Edit Equipment",
-    "editWorkItem": "Edit Work Item"
+    "editWorkItem": "Edit Work Item",
+    "codeMustBeFiveDigits": "Work item code must be exactly 5 digits (e.g. 00001).",
+    "codeMustBeUnique": "This work item code is already used for this company.",
+    "unitTypeRequired": "Work item unit type (e.g. meter, piece, etc.) is required."
   },
   "jobs": {
     "title": "Daily Job Entry",

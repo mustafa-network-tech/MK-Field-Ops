@@ -528,7 +528,10 @@
     "addWorkItem": "Ajouter un poste",
     "editMaterial": "Modifier le stock",
     "editEquipment": "Modifier l'équipement",
-    "editWorkItem": "Modifier le poste"
+    "editWorkItem": "Modifier le poste",
+    "codeMustBeFiveDigits": "Le code du poste doit comporter exactement 5 chiffres (ex. 00001).",
+    "codeMustBeUnique": "Ce code de poste est déjà utilisé pour cette entreprise.",
+    "unitTypeRequired": "Le type d'unité du poste (ex. mètre, pièce, etc.) est obligatoire."
   },
   "jobs": {
     "title": "Saisie quotidienne",

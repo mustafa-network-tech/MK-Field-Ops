@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS public.work_items (
   description text NOT NULL DEFAULT ''
 );
 CREATE INDEX IF NOT EXISTS idx_work_items_company_id ON public.work_items (company_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uq_work_items_company_code ON public.work_items (company_id, code);
 COMMENT ON TABLE public.work_items IS 'Work item definitions; unit price and type for job valuation.';
 
 -- 5) Materials – basit malzeme kaydı (fiyat; bazı ekranlarda kullanılır)
