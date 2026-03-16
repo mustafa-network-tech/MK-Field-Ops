@@ -737,7 +737,7 @@
   "auditLogs": {
     "title": "Denetim Günlüğü",
     "date": "Tarih",
-    "actor": "Kullanıcı",
+    "actor": "Yapan",
     "role": "Rol",
     "action": "İşlem",
     "entity": "Nesne",
