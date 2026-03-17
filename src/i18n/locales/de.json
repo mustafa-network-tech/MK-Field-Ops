@@ -341,6 +341,10 @@
     "projectManager": "Projektleiter",
     "teamLeader": "Teamleiter"
   },
+  "offline": {
+    "title": "Kein Internet",
+    "message": "Keine Internetverbindung. Daten werden auf diesem Gerät gespeichert und bei wiederhergestellter Verbindung automatisch in die Cloud gesendet."
+  },
   "layout": {
     "footerDevelopedBy": "Diese Anwendung wurde von MK Digital Systems entwickelt.",
     "supportEmailTitle": "E-Mail für Support senden",

@@ -341,6 +341,10 @@
     "projectManager": "Responsable de Proyecto",
     "teamLeader": "Líder de Equipo"
   },
+  "offline": {
+    "title": "Sin Internet",
+    "message": "Sin conexión a Internet. Los datos se guardan en este dispositivo y se enviarán a la nube automáticamente cuando se restablezca la conexión."
+  },
   "layout": {
     "footerDevelopedBy": "Esta aplicación está desarrollada por MK Digital Systems.",
     "supportEmailTitle": "Enviar correo de soporte",

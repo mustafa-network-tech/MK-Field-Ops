@@ -349,6 +349,10 @@
     "projectManager": "Project Manager",
     "teamLeader": "Team Leader"
   },
+  "offline": {
+    "title": "No Internet",
+    "message": "No internet connection. Data is stored on this device and will be sent to the cloud automatically when connection is restored."
+  },
   "layout": {
     "footerDevelopedBy": "This application is developed by MK Digital Systems.",
     "supportEmailTitle": "Send email for support",

@@ -5,6 +5,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { updateCompanyLanguageInSupabase } from '../services/companyService';
+import { pushCompanyDataToSupabase } from '../services/supabaseSyncService';
 import { canPlanAccessFeature } from '../services/planGating';
 import { getSubscriptionState, getEffectivePlan } from '../services/subscriptionService';
 import { getPendingApprovalsCountForUser } from '../services/approvalNotificationService';
@@ -48,6 +49,23 @@ export function Layout() {
   );
   const showApprovalsPending = pendingApprovalsCount > 0;
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' && navigator.onLine);
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      if (companyId) {
+        pushCompanyDataToSupabase(companyId).catch(() => {});
+      }
+    };
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [companyId]);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -162,6 +180,12 @@ export function Layout() {
           </div>
         </aside>
         <main className={styles.main}>
+          {!isOnline && (
+            <div className={styles.offlineBanner} role="status" aria-live="polite">
+              <h2 className={styles.offlineTitle}>{t('offline.title')}</h2>
+              <p className={styles.offlineMessage}>{t('offline.message')}</p>
+            </div>
+          )}
           {showPlanUpdateSuccess && (
             <div className={styles.planUpdateBanner} role="status">
               <p>{t('planChangePage.planUpdateComplete')}</p>
@@ -176,7 +200,7 @@ export function Layout() {
               <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
             </div>
           )}
-          {sub.isGracePeriod && !sub.isClosed && !isPlanPage && (
+          {isOnline && sub.isGracePeriod && !sub.isClosed && !isPlanPage && (
             <div className={styles.subscriptionBannerGrace} role="alert">
               <p>{t('planPage.bannerExpired')}</p>
               <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>

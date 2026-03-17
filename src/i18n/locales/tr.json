@@ -349,6 +349,10 @@
     "projectManager": "Proje Yöneticisi",
     "teamLeader": "Takım Lideri"
   },
+  "offline": {
+    "title": "İnternet Olmadı",
+    "message": "İnternet bağlantısı yok. Veriler cihazda saklanıyor; bağlantı gelince otomatik olarak buluta gönderilecek."
+  },
   "layout": {
     "footerDevelopedBy": "Bu uygulama MK Digital Systems tarafından geliştirilmiştir.",
     "supportEmailTitle": "Destek için e-posta gönder",

@@ -341,6 +341,10 @@
     "projectManager": "Chef de Projet",
     "teamLeader": "Chef d'Équipe"
   },
+  "offline": {
+    "title": "Pas d'Internet",
+    "message": "Aucune connexion Internet. Les données sont enregistrées sur cet appareil et seront envoyées vers le cloud automatiquement lorsque la connexion sera rétablie."
+  },
   "layout": {
     "footerDevelopedBy": "Cette application est développée par MK Digital Systems.",
     "supportEmailTitle": "Envoyer un e-mail pour le support",
