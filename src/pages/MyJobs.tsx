@@ -57,15 +57,7 @@ export function MyJobs() {
   };
   const [actionError, setActionError] = useState('');
   const [listRefreshKey, setListRefreshKey] = useState(0);
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [modalJobId, setModalJobId] = useState<string | null>(null);
-
-  const handleCopyJobId = (jobId: string) => {
-    navigator.clipboard?.writeText(jobId).then(() => {
-      setCopiedId(jobId);
-      setTimeout(() => setCopiedId(null), 2000);
-    });
-  };
 
   const handleOpenJobDetailModal = (jobId: string) => {
     setModalJobId(jobId);
@@ -164,7 +156,6 @@ export function MyJobs() {
                     >
                       #{job.id.slice(0, 8)}
                     </button>
-                    {copiedId === job.id && <span className={styles.copiedHint}>{t('common.copied')}</span>}
                   </td>
                   <td>
                     {job.status === 'draft' && (
