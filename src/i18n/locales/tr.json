@@ -865,7 +865,13 @@
     "syncToCloud": "Verileri buluta yükle",
     "syncToCloudLoading": "Yükleniyor…",
     "syncToCloudSuccess": "Veriler buluta yüklendi.",
-    "syncToCloudError": "Yükleme başarısız. Bağlantıyı ve Supabase ayarlarını kontrol edin."
+    "syncToCloudError": "Yükleme başarısız. Bağlantıyı ve Supabase ayarlarını kontrol edin.",
+    "migrateExistingTitle": "Mevcut veriyi buluta taşı (tek seferlik)",
+    "migrateExistingHint": "Supabase entegrasyonundan önce girdiğiniz kampanya, proje, ekip ve iş verilerini bir kez buluta yüklemek için bu butonu kullanın. Sonrasında tüm yeni veriler otomatik senkron olur.",
+    "migrateExistingButton": "Mevcut veriyi buluta yükle",
+    "migrateExistingLoading": "Yükleniyor…",
+    "migrateExistingSuccess": "Mevcut veriler buluta yüklendi.",
+    "migrateExistingError": "Yükleme başarısız. Bağlantıyı ve Supabase ayarlarını kontrol edin."
   },
   "payroll": {
     "title": "Hakediş Dönemleri",

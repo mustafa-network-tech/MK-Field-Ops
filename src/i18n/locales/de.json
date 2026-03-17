@@ -854,7 +854,13 @@
     "syncToCloud": "Daten in Cloud hochladen",
     "syncToCloudLoading": "Wird hochgeladen…",
     "syncToCloudSuccess": "Daten in Cloud hochgeladen.",
-    "syncToCloudError": "Upload fehlgeschlagen. Verbindung und Supabase prüfen."
+    "syncToCloudError": "Upload fehlgeschlagen. Verbindung und Supabase prüfen.",
+    "migrateExistingTitle": "Bestehende Daten in Cloud übernehmen (einmalig)",
+    "migrateExistingHint": "Nutzen Sie diese Schaltfläche einmal, um Kampagnen, Projekte, Teams und Aufträge hochzuladen, die vor der Supabase-Integration erfasst wurden. Neue Daten werden ab sofort automatisch synchronisiert.",
+    "migrateExistingButton": "Bestehende Daten in Cloud hochladen",
+    "migrateExistingLoading": "Wird hochgeladen…",
+    "migrateExistingSuccess": "Bestehende Daten in Cloud hochgeladen.",
+    "migrateExistingError": "Upload fehlgeschlagen. Verbindung und Supabase prüfen."
   },
   "payroll": {
     "title": "Abrechnungszeiträume",

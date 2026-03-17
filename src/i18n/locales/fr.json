@@ -854,7 +854,13 @@
     "syncToCloud": "Envoyer les données vers le cloud",
     "syncToCloudLoading": "Envoi en cours…",
     "syncToCloudSuccess": "Données envoyées vers le cloud.",
-    "syncToCloudError": "Échec de l'envoi. Vérifiez la connexion et Supabase."
+    "syncToCloudError": "Échec de l'envoi. Vérifiez la connexion et Supabase.",
+    "migrateExistingTitle": "Migrer les données existantes vers le cloud (une fois)",
+    "migrateExistingHint": "Utilisez ce bouton une fois pour envoyer les campagnes, projets, équipes et chantiers saisis avant l'intégration Supabase. Les nouvelles données sont synchronisées automatiquement ensuite.",
+    "migrateExistingButton": "Envoyer les données existantes vers le cloud",
+    "migrateExistingLoading": "Envoi en cours…",
+    "migrateExistingSuccess": "Données existantes envoyées vers le cloud.",
+    "migrateExistingError": "Échec de l'envoi. Vérifiez la connexion et Supabase."
   },
   "payroll": {
     "title": "Périodes de Paiement",

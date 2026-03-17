@@ -854,7 +854,13 @@
     "syncToCloud": "Subir datos a la nube",
     "syncToCloudLoading": "Subiendo…",
     "syncToCloudSuccess": "Datos subidos a la nube.",
-    "syncToCloudError": "Error al subir. Compruebe la conexión y Supabase."
+    "syncToCloudError": "Error al subir. Compruebe la conexión y Supabase.",
+    "migrateExistingTitle": "Migrar datos existentes a la nube (una vez)",
+    "migrateExistingHint": "Use este botón una vez para subir campañas, proyectos, equipos y trabajos introducidos antes de la integración con Supabase. Los datos nuevos se sincronizan automáticamente a partir de ahora.",
+    "migrateExistingButton": "Subir datos existentes a la nube",
+    "migrateExistingLoading": "Subiendo…",
+    "migrateExistingSuccess": "Datos existentes subidos a la nube.",
+    "migrateExistingError": "Error al subir. Compruebe la conexión y Supabase."
   },
   "payroll": {
     "title": "Períodos de Liquidación",

@@ -860,7 +860,13 @@
     "syncToCloud": "Upload data to cloud",
     "syncToCloudLoading": "Uploading…",
     "syncToCloudSuccess": "Data uploaded to cloud.",
-    "syncToCloudError": "Upload failed. Check connection and Supabase setup."
+    "syncToCloudError": "Upload failed. Check connection and Supabase setup.",
+    "migrateExistingTitle": "Migrate existing data to cloud (one-time)",
+    "migrateExistingHint": "Use this button once to upload campaigns, projects, teams and jobs that were entered before Supabase integration. New data is synced automatically from now on.",
+    "migrateExistingButton": "Upload existing data to cloud",
+    "migrateExistingLoading": "Uploading…",
+    "migrateExistingSuccess": "Existing data uploaded to cloud.",
+    "migrateExistingError": "Upload failed. Check connection and Supabase setup."
   },
   "payroll": {
     "title": "Payroll Periods",

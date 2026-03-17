@@ -5,6 +5,8 @@ import { store } from '../data/store';
 import { Card } from '../components/ui/Card';
 import { uploadCompanyLogo, isAllowedLogoFile } from '../services/companyLogoService';
 import { fetchCompanyJoinCodeFromSupabase, updateCompanyJoinCodeInSupabase } from '../services/companyService';
+import { pushCompanyDataToSupabase } from '../services/supabaseSyncService';
+import { supabase } from '../services/supabaseClient';
 import { logEvent, actorFromUser } from '../services/auditLogService';
 import styles from './Settings.module.css';
 
@@ -37,6 +39,9 @@ export function Settings() {
 
   const [joinCode, setJoinCode] = useState('');
   const [joinCodeMessage, setJoinCodeMessage] = useState<'saved' | 'error' | null>(null);
+
+  const [migrateMessage, setMigrateMessage] = useState<'success' | 'error' | null>(null);
+  const [migrateLoading, setMigrateLoading] = useState(false);
 
   useEffect(() => {
     if (company) {
@@ -278,6 +283,28 @@ export function Settings() {
           {t('settings.save')}
         </button>
       </Card>
+
+      {supabase && canEditCompany && companyId && (
+        <Card title={t('settings.migrateExistingTitle')}>
+          <p className={styles.hint}>{t('settings.migrateExistingHint')}</p>
+          {migrateMessage === 'success' && <p className={styles.success}>{t('settings.migrateExistingSuccess')}</p>}
+          {migrateMessage === 'error' && <p className={styles.error}>{t('settings.migrateExistingError')}</p>}
+          <button
+            type="button"
+            className={styles.btnPrimary}
+            disabled={migrateLoading}
+            onClick={async () => {
+              setMigrateMessage(null);
+              setMigrateLoading(true);
+              const result = await pushCompanyDataToSupabase(companyId);
+              setMigrateLoading(false);
+              setMigrateMessage(result.ok ? 'success' : 'error');
+            }}
+          >
+            {migrateLoading ? t('settings.migrateExistingLoading') : t('settings.migrateExistingButton')}
+          </button>
+        </Card>
+      )}
     </div>
   );
 }
