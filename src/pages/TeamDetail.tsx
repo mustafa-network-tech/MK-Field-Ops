@@ -51,6 +51,7 @@ export function TeamDetail() {
   const [transferTargetTeamId, setTransferTargetTeamId] = useState('');
   const [transferQuantity, setTransferQuantity] = useState('');
   const [jobColumnsVisible, setJobColumnsVisible] = useState({ totalWorkValue: true, teamEarnings: true, companyShare: true });
+  const [modalJobId, setModalJobId] = useState<string | null>(null);
 
   const teamResult = teamId && user ? getTeamForUser(teamId, user) : { ok: false as const, statusCode: 404 as const };
   const team = teamResult.ok ? teamResult.team : undefined;
@@ -258,6 +259,7 @@ export function TeamDetail() {
                 <th>{t('jobs.date')}</th>
                 <th>{t('jobs.workItem')}</th>
                 <th>{t('jobs.quantity')}</th>
+                <th aria-label={t('jobs.jobCode')}></th>
                 {isAdmin && (
                   <>
                     {jobColumnsVisible.totalWorkValue && <th>{t('jobs.totalWorkValue')}</th>}
@@ -275,6 +277,11 @@ export function TeamDetail() {
                       <td>{new Date(j.date).toLocaleDateString()}</td>
                       <td>{getWorkItemCode(j.workItemId)}</td>
                       <td>{j.quantity}</td>
+                      <td>
+                        <button type="button" className={styles.jobCodeBtn} onClick={() => setModalJobId(j.id)} title={t('jobs.jobCodeModalTitle')}>
+                          #{j.id.slice(0, 8)}
+                        </button>
+                      </td>
                       {jobColumnsVisible.totalWorkValue && <td>{formatCurrency(j.gross, locale)}</td>}
                       {jobColumnsVisible.teamEarnings && <td>{formatCurrency(j.team, locale)}</td>}
                       {jobColumnsVisible.companyShare && <td>{formatCurrency(j.company, locale)}</td>}
@@ -285,13 +292,18 @@ export function TeamDetail() {
                       <td>{new Date(j.date).toLocaleDateString()}</td>
                       <td>{getWorkItemCode(j.workItemId)}</td>
                       <td>{j.quantity}</td>
+                      <td>
+                        <button type="button" className={styles.jobCodeBtn} onClick={() => setModalJobId(j.id)} title={t('jobs.jobCodeModalTitle')}>
+                          #{j.id.slice(0, 8)}
+                        </button>
+                      </td>
                       <td>{formatPriceForUser(j.team, user, 'teamOnly', locale)}</td>
                     </tr>
                   ))}
             </tbody>
             <tfoot>
               <tr className={styles.totalsRow}>
-                <td colSpan={3}>{t('teamDetail.total')}</td>
+                <td colSpan={4}>{t('teamDetail.total')}</td>
                 {isAdmin && (
                   <>
                     {jobColumnsVisible.totalWorkValue && <td>{formatCurrency(detail.grossTotal, locale)}</td>}
@@ -306,6 +318,42 @@ export function TeamDetail() {
         </div>
         {detail.jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
+
+      {modalJobId && (() => {
+        const allJobs = store.getJobs(companyId);
+        const modalJob = allJobs.find((j) => j.id === modalJobId);
+        return (
+          <div className={styles.modalOverlay} onClick={() => setModalJobId(null)} role="dialog" aria-modal="true" aria-labelledby="team-job-detail-modal-title">
+            <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h2 id="team-job-detail-modal-title" className={styles.modalTitle}>
+                  {t('jobs.jobDetailModalTitle')} #{modalJobId.slice(0, 8)}
+                </h2>
+                <button type="button" className={styles.modalClose} onClick={() => setModalJobId(null)} aria-label={t('common.close')}>
+                  ×
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                {modalJob?.notes ? (
+                  <div className={styles.modalNoteSection}>
+                    <strong>{t('jobs.notes')}</strong>
+                    <p className={styles.modalNoteText}>{modalJob.notes}</p>
+                  </div>
+                ) : null}
+                {modalJob?.notePhoto ? (
+                  <div className={styles.modalPhotoSection}>
+                    <strong>{t('jobs.photo')}</strong>
+                    <img src={modalJob.notePhoto} alt="" className={styles.modalPhotoImg} />
+                  </div>
+                ) : null}
+                {!modalJob?.notes && !modalJob?.notePhoto && (
+                  <p className={styles.modalPlaceholder}>{t('jobs.jobDetailModalPlaceholder')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <Card title={t('materials.assignedMaterials')}>
         <div className={styles.tableWrap}>

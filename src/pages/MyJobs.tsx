@@ -101,7 +101,7 @@ export function MyJobs() {
               <th>{t('jobs.totalWorkValue')}</th>
               <th>{t('jobs.teamEarnings')}</th>
               <th>{t('jobs.jobCode')}</th>
-              <th>{t('common.actions')}</th>
+              <th aria-label={t('common.actions')}></th>
             </tr>
           </thead>
           <tbody>
@@ -175,23 +175,40 @@ export function MyJobs() {
         {jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
 
-      {modalJobId && (
-        <div className={styles.modalOverlay} onClick={() => setModalJobId(null)} role="dialog" aria-modal="true" aria-labelledby="job-detail-modal-title">
-          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h2 id="job-detail-modal-title" className={styles.modalTitle}>
-                {t('jobs.jobDetailModalTitle')} #{modalJobId.slice(0, 8)}
-              </h2>
-              <button type="button" className={styles.modalClose} onClick={() => setModalJobId(null)} aria-label={t('common.close')}>
-                ×
-              </button>
-            </div>
-            <div className={styles.modalBody}>
-              <p className={styles.modalPlaceholder}>{t('jobs.jobDetailModalPlaceholder')}</p>
+      {modalJobId && (() => {
+        const modalJob = jobs.find((j) => j.id === modalJobId);
+        return (
+          <div className={styles.modalOverlay} onClick={() => setModalJobId(null)} role="dialog" aria-modal="true" aria-labelledby="job-detail-modal-title">
+            <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+              <div className={styles.modalHeader}>
+                <h2 id="job-detail-modal-title" className={styles.modalTitle}>
+                  {t('jobs.jobDetailModalTitle')} #{modalJobId.slice(0, 8)}
+                </h2>
+                <button type="button" className={styles.modalClose} onClick={() => setModalJobId(null)} aria-label={t('common.close')}>
+                  ×
+                </button>
+              </div>
+              <div className={styles.modalBody}>
+                {modalJob?.notes ? (
+                  <div className={styles.modalNoteSection}>
+                    <strong>{t('jobs.notes')}</strong>
+                    <p className={styles.modalNoteText}>{modalJob.notes}</p>
+                  </div>
+                ) : null}
+                {modalJob?.notePhoto ? (
+                  <div className={styles.modalPhotoSection}>
+                    <strong>{t('jobs.photo')}</strong>
+                    <img src={modalJob.notePhoto} alt="" className={styles.modalPhotoImg} />
+                  </div>
+                ) : null}
+                {!modalJob?.notes && !modalJob?.notePhoto && (
+                  <p className={styles.modalPlaceholder}>{t('jobs.jobDetailModalPlaceholder')}</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

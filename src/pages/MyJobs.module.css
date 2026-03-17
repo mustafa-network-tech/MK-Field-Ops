@@ -165,6 +165,42 @@
   padding: 1.25rem;
 }
 
+.modalNoteSection {
+  margin-bottom: 1rem;
+}
+
+.modalNoteSection strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.modalNoteText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e293b;
+  white-space: pre-wrap;
+}
+
+.modalPhotoSection {
+  margin-top: 1rem;
+}
+
+.modalPhotoSection strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.modalPhotoImg {
+  max-width: 100%;
+  max-height: 280px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
 .modalPlaceholder {
   margin: 0;
   font-size: 0.95rem;

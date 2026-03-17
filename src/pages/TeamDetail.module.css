@@ -225,3 +225,118 @@
   color: #94a3b8;
   margin: 0.5rem 0 0;
 }
+
+/* İş kaydı kodu ve detay modal */
+.jobCodeBtn {
+  background: none;
+  border: none;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.8rem;
+  font-family: inherit;
+  color: #2563eb;
+  cursor: pointer;
+  text-decoration: underline;
+  border-radius: 4px;
+}
+
+.jobCodeBtn:hover {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.modalBox {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  max-width: 480px;
+  width: 90%;
+  max-height: 85vh;
+  overflow: auto;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.modalTitle {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.modalClose {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: #64748b;
+  cursor: pointer;
+  padding: 0 0.35rem;
+  border-radius: 4px;
+}
+
+.modalClose:hover {
+  color: #1e293b;
+  background: #f1f5f9;
+}
+
+.modalBody {
+  padding: 1.25rem;
+}
+
+.modalNoteSection {
+  margin-bottom: 1rem;
+}
+
+.modalNoteSection strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.modalNoteText {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e293b;
+  white-space: pre-wrap;
+}
+
+.modalPhotoSection {
+  margin-top: 1rem;
+}
+
+.modalPhotoSection strong {
+  display: block;
+  font-size: 0.85rem;
+  color: #475569;
+  margin-bottom: 0.35rem;
+}
+
+.modalPhotoImg {
+  max-width: 100%;
+  max-height: 280px;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.modalPlaceholder {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #64748b;
+}

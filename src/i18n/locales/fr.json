@@ -562,6 +562,7 @@
     "noteDescription": "Description de la note",
     "noteDescriptionPlaceholder": "Écrire une note sur ce travail…",
     "notePhotoUpload": "Photo (prendre avec le téléphone ou téléverser un fichier)",
+    "photo": "Photo",
     "photoAttached": "— Photo jointe",
     "status": "Statut",
     "draft": "Brouillon",
