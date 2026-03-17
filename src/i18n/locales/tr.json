@@ -796,7 +796,9 @@
     "approve": "Onayla",
     "reject": "Reddet",
     "noPending": "Bekleyen onay yok",
-    "pendingNotification": "{count} onay bekliyor"
+    "pendingNotification": "{count} onay bekliyor",
+    "approvedMessage": "Onay işlemi yapıldı.",
+    "rejectedMessage": "Reddedildi."
   },
   "reports": {
     "title": "Raporlar",

@@ -791,7 +791,9 @@
     "approve": "Approve",
     "reject": "Reject",
     "noPending": "No pending approvals",
-    "pendingNotification": "{count} pending approval(s)"
+    "pendingNotification": "{count} pending approval(s)",
+    "approvedMessage": "Approval has been made.",
+    "rejectedMessage": "Rejected."
   },
   "reports": {
     "title": "Reports",

@@ -785,7 +785,9 @@
     "approve": "Approuver",
     "reject": "Rejeter",
     "noPending": "Aucune approbation en attente",
-    "pendingNotification": "{count} approbation(s) en attente"
+    "pendingNotification": "{count} approbation(s) en attente",
+    "approvedMessage": "L'approbation a été effectuée.",
+    "rejectedMessage": "Rejeté."
   },
   "reports": {
     "title": "Rapports",

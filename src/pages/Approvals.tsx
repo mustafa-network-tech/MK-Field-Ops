@@ -48,6 +48,7 @@ export function Approvals() {
     return p ? getProjectDisplayKey(p) : '–';
   };
   const [actionError, setActionError] = useState('');
+  const [successMessage, setSuccessMessage] = useState<'approved' | 'rejected' | null>(null);
 
   function formatMaterialUsage(u: JobMaterialUsage, t: (key: string) => string): string {
     const q = `${u.quantity} ${u.quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}`;
@@ -60,19 +61,31 @@ export function Approvals() {
 
   const handleApprove = (jobId: string) => {
     setActionError('');
+    setSuccessMessage(null);
     const result = updateJob(user ?? undefined, companyId, jobId, { status: 'approved', approvedBy: user!.id });
-    if (!result.ok) setActionError(t(result.error));
+    if (result.ok) {
+      setSuccessMessage('approved');
+    } else {
+      setActionError(t(result.error));
+    }
   };
   const handleReject = (jobId: string) => {
     setActionError('');
+    setSuccessMessage(null);
     const result = updateJob(user ?? undefined, companyId, jobId, { status: 'rejected', rejectedBy: user!.id });
-    if (!result.ok) setActionError(t(result.error));
+    if (result.ok) {
+      setSuccessMessage('rejected');
+    } else {
+      setActionError(t(result.error));
+    }
   };
 
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('approvals.title')}</h1>
       {actionError && <p className={styles.error}>{actionError}</p>}
+      {successMessage === 'approved' && <p className={styles.success}>{t('approvals.approvedMessage')}</p>}
+      {successMessage === 'rejected' && <p className={styles.successReject}>{t('approvals.rejectedMessage')}</p>}
       <Card title={t('approvals.jobApprovals')}>
         {!canApproveJobs && <p className={styles.muted}>{t('approvals.noPending')}</p>}
         {canApproveJobs && jobs.length === 0 && <p className={styles.muted}>{t('approvals.noPending')}</p>}

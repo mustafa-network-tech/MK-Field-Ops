@@ -785,7 +785,9 @@
     "approve": "Aprobar",
     "reject": "Rechazar",
     "noPending": "Sin aprobaciones pendientes",
-    "pendingNotification": "{count} aprobación(es) pendiente(s)"
+    "pendingNotification": "{count} aprobación(es) pendiente(s)",
+    "approvedMessage": "Se ha realizado la aprobación.",
+    "rejectedMessage": "Rechazado."
   },
   "reports": {
     "title": "Informes",

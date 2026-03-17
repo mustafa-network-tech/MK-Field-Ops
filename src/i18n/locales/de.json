@@ -785,7 +785,9 @@
     "approve": "Freigeben",
     "reject": "Ablehnen",
     "noPending": "Keine ausstehenden Freigaben",
-    "pendingNotification": "{count} Freigabe(n) ausstehend"
+    "pendingNotification": "{count} Freigabe(n) ausstehend",
+    "approvedMessage": "Freigabe wurde erteilt.",
+    "rejectedMessage": "Abgelehnt."
   },
   "reports": {
     "title": "Berichte",
