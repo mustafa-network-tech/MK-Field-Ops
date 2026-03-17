@@ -180,6 +180,40 @@
   color: #475569;
 }
 
+.columnFilters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0;
+}
+
+.columnFiltersLabel {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.columnFilterCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.875rem;
+  color: #475569;
+  cursor: pointer;
+}
+
+.columnFilterCheck input {
+  cursor: pointer;
+}
+
+.totalsRow td {
+  font-weight: 700;
+  background: #f8fafc;
+  border-top: 2px solid #e2e8f0;
+}
+
 .noData {
   color: #94a3b8;
   margin: 0.5rem 0 0;

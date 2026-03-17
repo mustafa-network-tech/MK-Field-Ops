@@ -50,6 +50,7 @@ export function TeamDetail() {
   const [transferAllocationId, setTransferAllocationId] = useState<string | null>(null);
   const [transferTargetTeamId, setTransferTargetTeamId] = useState('');
   const [transferQuantity, setTransferQuantity] = useState('');
+  const [jobColumnsVisible, setJobColumnsVisible] = useState({ totalWorkValue: true, teamEarnings: true, companyShare: true });
 
   const teamResult = teamId && user ? getTeamForUser(teamId, user) : { ok: false as const, statusCode: 404 as const };
   const team = teamResult.ok ? teamResult.team : undefined;
@@ -220,6 +221,35 @@ export function TeamDetail() {
       </div>
 
       <Card title={t('teamDetail.jobBreakdown')}>
+        {isAdmin && (
+          <div className={styles.columnFilters}>
+            <span className={styles.columnFiltersLabel}>{t('teamDetail.showColumns')}:</span>
+            <label className={styles.columnFilterCheck}>
+              <input
+                type="checkbox"
+                checked={jobColumnsVisible.totalWorkValue}
+                onChange={(e) => setJobColumnsVisible((v) => ({ ...v, totalWorkValue: e.target.checked }))}
+              />
+              {t('jobs.totalWorkValue')}
+            </label>
+            <label className={styles.columnFilterCheck}>
+              <input
+                type="checkbox"
+                checked={jobColumnsVisible.teamEarnings}
+                onChange={(e) => setJobColumnsVisible((v) => ({ ...v, teamEarnings: e.target.checked }))}
+              />
+              {t('jobs.teamEarnings')}
+            </label>
+            <label className={styles.columnFilterCheck}>
+              <input
+                type="checkbox"
+                checked={jobColumnsVisible.companyShare}
+                onChange={(e) => setJobColumnsVisible((v) => ({ ...v, companyShare: e.target.checked }))}
+              />
+              {t('jobs.companyShare')}
+            </label>
+          </div>
+        )}
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
@@ -229,9 +259,9 @@ export function TeamDetail() {
                 <th>{t('jobs.quantity')}</th>
                 {isAdmin && (
                   <>
-                    <th>{t('jobs.totalWorkValue')}</th>
-                    <th>{t('jobs.teamEarnings')}</th>
-                    <th>{t('jobs.companyShare')}</th>
+                    {jobColumnsVisible.totalWorkValue && <th>{t('jobs.totalWorkValue')}</th>}
+                    {jobColumnsVisible.teamEarnings && <th>{t('jobs.teamEarnings')}</th>}
+                    {jobColumnsVisible.companyShare && <th>{t('jobs.companyShare')}</th>}
                   </>
                 )}
                 {!isAdmin && <th>{t('jobs.teamEarnings')}</th>}
@@ -244,9 +274,9 @@ export function TeamDetail() {
                       <td>{new Date(j.date).toLocaleDateString()}</td>
                       <td>{getWorkItemCode(j.workItemId)}</td>
                       <td>{j.quantity}</td>
-                      <td>{formatCurrency(j.gross, locale)}</td>
-                      <td>{formatCurrency(j.team, locale)}</td>
-                      <td>{formatCurrency(j.company, locale)}</td>
+                      {jobColumnsVisible.totalWorkValue && <td>{formatCurrency(j.gross, locale)}</td>}
+                      {jobColumnsVisible.teamEarnings && <td>{formatCurrency(j.team, locale)}</td>}
+                      {jobColumnsVisible.companyShare && <td>{formatCurrency(j.company, locale)}</td>}
                     </tr>
                   ))
                 : detail.jobs.map((j) => (
@@ -258,6 +288,19 @@ export function TeamDetail() {
                     </tr>
                   ))}
             </tbody>
+            <tfoot>
+              <tr className={styles.totalsRow}>
+                <td colSpan={3}>{t('teamDetail.total')}</td>
+                {isAdmin && (
+                  <>
+                    {jobColumnsVisible.totalWorkValue && <td>{formatCurrency(detail.grossTotal, locale)}</td>}
+                    {jobColumnsVisible.teamEarnings && <td>{formatCurrency(detail.teamTotal, locale)}</td>}
+                    {jobColumnsVisible.companyShare && <td>{formatCurrency(detail.companyTotal, locale)}</td>}
+                  </>
+                )}
+                {!isAdmin && <td>{formatPriceForUser(detail.teamTotal, user, 'teamOnly', locale)}</td>}
+              </tr>
+            </tfoot>
           </table>
         </div>
         {detail.jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}

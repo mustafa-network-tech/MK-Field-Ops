@@ -888,6 +888,8 @@
     "pendingApprovals": "Approbations en attente",
     "approvedJobs": "Travaux approuvés",
     "jobBreakdown": "Détail des travaux",
+    "total": "Total",
+    "showColumns": "Afficher les colonnes",
     "weeklySummary": "Résumé hebdo",
     "monthlySummary": "Résumé mensuel",
     "performance": "Performance"

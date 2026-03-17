@@ -888,6 +888,8 @@
     "pendingApprovals": "Ausstehende Freigaben",
     "approvedJobs": "Genehmigte Arbeiten",
     "jobBreakdown": "Arbeitsaufschlüsselung",
+    "total": "Gesamt",
+    "showColumns": "Spalten anzeigen",
     "weeklySummary": "Wochenübersicht",
     "monthlySummary": "Monatsübersicht",
     "performance": "Leistung"

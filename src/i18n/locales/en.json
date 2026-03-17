@@ -894,6 +894,8 @@
     "pendingApprovals": "Pending Approvals",
     "approvedJobs": "Approved Jobs",
     "jobBreakdown": "Job Breakdown",
+    "total": "Total",
+    "showColumns": "Show columns",
     "weeklySummary": "Weekly Summary",
     "monthlySummary": "Monthly Summary",
     "performance": "Performance"

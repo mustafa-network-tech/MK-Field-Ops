@@ -899,6 +899,8 @@
     "pendingApprovals": "Bekleyen Onaylar",
     "approvedJobs": "Onaylanan İşler",
     "jobBreakdown": "İş Dağılımı",
+    "total": "Toplam",
+    "showColumns": "Sütunları göster",
     "weeklySummary": "Haftalık Özet",
     "monthlySummary": "Aylık Özet",
     "performance": "Performans"
