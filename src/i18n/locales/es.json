@@ -545,6 +545,8 @@
     "date": "Fecha",
     "team": "Equipo",
     "workItem": "Concepto",
+    "workItemSearchPlaceholder": "Escriba código o nombre",
+    "workItemNoResults": "Sin resultados",
     "quantity": "Cantidad",
     "usedMaterials": "Materiales usados",
     "usedEquipment": "Equipos usados",

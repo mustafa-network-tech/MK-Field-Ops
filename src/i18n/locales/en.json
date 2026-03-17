@@ -556,6 +556,8 @@
     "date": "Date",
     "team": "Team",
     "workItem": "Work Item",
+    "workItemSearchPlaceholder": "Type code or name",
+    "workItemNoResults": "No results",
     "quantity": "Quantity",
     "usedMaterials": "Used Materials",
     "usedEquipment": "Used Equipment",

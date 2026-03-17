@@ -556,6 +556,8 @@
     "date": "Tarih",
     "team": "Takım",
     "workItem": "İş Kalemi",
+    "workItemSearchPlaceholder": "Kod veya ad yazın",
+    "workItemNoResults": "Sonuç yok",
     "quantity": "Miktar",
     "usedMaterials": "Kullanılan Malzemeler",
     "usedEquipment": "Kullanılan Ekipman",

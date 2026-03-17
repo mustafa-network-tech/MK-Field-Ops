@@ -93,6 +93,7 @@ export function JobEntry() {
 
   const [jobRows, setJobRows] = useState<JobRowState[]>(() => [createDefaultRow()]);
   const [submitError, setSubmitError] = useState('');
+  const [workItemDropdownRow, setWorkItemDropdownRow] = useState<number | null>(null);
 
   useEffect(() => {
     if (effectivePlan !== 'starter' || !starterProjectId) return;
@@ -256,7 +257,7 @@ export function JobEntry() {
               : workItems.filter((wi) => {
                   const name = (wi.description ?? '').toLowerCase();
                   const code = wi.code.toLowerCase();
-                  return name.includes(term) || code.includes(term);
+                  return code.startsWith(term) || name.includes(term) || code.includes(term);
                 });
             const selectedWorkItem = workItems.find((wi) => wi.id === row.workItemId) || null;
             const selectedWorkItemUnitLabel =
@@ -361,26 +362,51 @@ export function JobEntry() {
                 <div className={styles.row}>
                   <label className={styles.label}>
                     {t('jobs.workItem')}
-                    <input
-                      type="text"
-                      value={row.workItemSearch}
-                      onChange={(e) => updateRow(index, { workItemSearch: e.target.value })}
-                      className={styles.input}
-                      placeholder={t('common.search')}
-                      style={{ marginBottom: 4 }}
-                    />
-                    <select
-                      value={row.workItemId}
-                      onChange={(e) => updateRow(index, { workItemId: e.target.value })}
-                      className={styles.input}
-                      required
-                    >
-                      <option value="">-- {t('common.search')} --</option>
-                      {filteredWorkItems.map((wi) => {
-                        const label = wi.description ? `${wi.description} – ${wi.code}` : wi.code;
-                        return <option key={wi.id} value={wi.id}>{label}</option>;
-                      })}
-                    </select>
+                    <div className={styles.workItemWrap}>
+                      <input
+                        type="text"
+                        value={row.workItemSearch}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          const selectedLabel = selectedWorkItem
+                            ? (selectedWorkItem.description ? `${selectedWorkItem.description} – ${selectedWorkItem.code}` : selectedWorkItem.code)
+                            : '';
+                          updateRow(index, {
+                            workItemSearch: v,
+                            workItemId: v !== selectedLabel ? '' : row.workItemId,
+                          });
+                        }}
+                        onFocus={() => setWorkItemDropdownRow(index)}
+                        onBlur={() => setTimeout(() => setWorkItemDropdownRow(null), 200)}
+                        className={styles.input}
+                        placeholder={t('jobs.workItemSearchPlaceholder')}
+                        autoComplete="off"
+                      />
+                      {workItemDropdownRow === index && (
+                        <ul className={styles.workItemDropdown}>
+                          {filteredWorkItems.length === 0 ? (
+                            <li className={styles.workItemDropdownEmpty}>{t('jobs.workItemNoResults')}</li>
+                          ) : (
+                            filteredWorkItems.map((wi) => {
+                              const label = wi.description ? `${wi.description} – ${wi.code}` : wi.code;
+                              return (
+                                <li
+                                  key={wi.id}
+                                  className={styles.workItemDropdownItem}
+                                  onMouseDown={(e) => {
+                                    e.preventDefault();
+                                    updateRow(index, { workItemId: wi.id, workItemSearch: label });
+                                    setWorkItemDropdownRow(null);
+                                  }}
+                                >
+                                  {label}
+                                </li>
+                              );
+                            })
+                          )}
+                        </ul>
+                      )}
+                    </div>
                   </label>
                   <label className={styles.label}>
                     {t('jobs.quantity')}

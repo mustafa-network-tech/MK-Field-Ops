@@ -545,6 +545,8 @@
     "date": "Date",
     "team": "Équipe",
     "workItem": "Poste",
+    "workItemSearchPlaceholder": "Saisir le code ou le nom",
+    "workItemNoResults": "Aucun résultat",
     "quantity": "Quantité",
     "usedMaterials": "Matériaux utilisés",
     "usedEquipment": "Équipements utilisés",
