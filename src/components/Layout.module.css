@@ -154,3 +154,40 @@
   margin-top: 0.75rem;
   color: #2563eb;
 }
+
+/* Panel footer: ince, solda metin sağda e-posta ikonu */
+.panelFooter {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.4rem 1rem;
+  font-size: 0.75rem;
+  color: #64748b;
+  background: #f1f5f9;
+  border-top: 1px solid #e2e8f0;
+}
+
+.panelFooterLeft {
+  color: #64748b;
+}
+
+.panelFooterMail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+  padding: 0.25rem;
+  border-radius: 6px;
+  transition: color 0.2s, background 0.2s;
+}
+
+.panelFooterMail:hover {
+  color: #2563eb;
+  background: #e0e7ff;
+}
+
+.envelopeIcon {
+  width: 1.1rem;
+  height: 1.1rem;
+}

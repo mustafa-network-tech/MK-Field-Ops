@@ -348,6 +348,10 @@
     "projectManager": "Proje Yöneticisi",
     "teamLeader": "Takım Lideri"
   },
+  "layout": {
+    "footerDevelopedBy": "Bu uygulama MK Digital Systems tarafından geliştirilmiştir.",
+    "supportEmailTitle": "Destek için e-posta gönder"
+  },
   "topBar": {
     "managementPanel": "Yönetim Paneli",
     "excelExport": "Excel Aktar",

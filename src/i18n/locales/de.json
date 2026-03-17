@@ -340,6 +340,10 @@
     "projectManager": "Projektleiter",
     "teamLeader": "Teamleiter"
   },
+  "layout": {
+    "footerDevelopedBy": "Diese Anwendung wurde von MK Digital Systems entwickelt.",
+    "supportEmailTitle": "E-Mail für Support senden"
+  },
   "topBar": {
     "managementPanel": "Verwaltungsbereich",
     "excelExport": "Excel-Export",
