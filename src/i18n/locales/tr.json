@@ -538,6 +538,7 @@
       "leaderWrongCompany": "Lider bu şirkete ait olmalıdır.",
       "leaderNotActive": "Lider aktif (onaylı) kullanıcı olmalıdır.",
       "leaderAlreadyAssigned": "Bu kullanıcı zaten başka bir takımın lideri.",
+      "leaderMustBeSelf": "Takım lideri olarak yalnızca kendinizi seçebilirsiniz.",
       "teamNotFound": "Takım bulunamadı.",
       "updateFailed": "Güncelleme başarısız."
     }

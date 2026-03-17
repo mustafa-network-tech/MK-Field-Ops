@@ -538,6 +538,7 @@
       "leaderWrongCompany": "Leader must belong to this company.",
       "leaderNotActive": "Leader must be an active (approved) user.",
       "leaderAlreadyAssigned": "This user is already leader of another team.",
+      "leaderMustBeSelf": "As a team leader, you can only select yourself.",
       "teamNotFound": "Team not found.",
       "updateFailed": "Update failed."
     }

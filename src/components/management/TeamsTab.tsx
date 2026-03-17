@@ -34,9 +34,12 @@ export function TeamsTab() {
   const allTeamsForCompany = store.getTeams(companyId);
   const users = store.getUsers(companyId);
   const eligibleLeaders = getEligibleTeamLeaders(companyId);
+  const visibleLeaders = user?.role === 'teamLeader'
+    ? eligibleLeaders.filter((u) => u.id === user.id)
+    : eligibleLeaders;
   const vehicles = store.getVehicles(companyId);
   const canAddTeam = canPlanAddTeam(getEffectivePlan(company) ?? null, allTeamsForCompany.length);
-  const hasNoLeaders = eligibleLeaders.length === 0;
+  const hasNoLeaders = visibleLeaders.length === 0;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Team | null>(null);
   const [form, setForm] = useState(defaultForm);
@@ -60,7 +63,7 @@ export function TeamsTab() {
         code: form.code,
         description: form.description,
         percentage: form.percentage,
-        leaderId: form.leaderId || undefined,
+        leaderId: user?.role === 'teamLeader' ? user.id : (form.leaderId || undefined),
         membersManual,
         vehicleId: form.vehicleId || undefined,
       });
@@ -78,7 +81,7 @@ export function TeamsTab() {
         createdBy: user!.id,
         approvalStatus: needsApproval ? 'pending' : 'approved',
         approvedBy: needsApproval ? undefined : user!.id,
-        leaderId: form.leaderId || undefined,
+        leaderId: user?.role === 'teamLeader' ? user.id : (form.leaderId || undefined),
         memberIds: [],
         membersManual,
         vehicleId: form.vehicleId || undefined,
@@ -185,7 +188,12 @@ export function TeamsTab() {
               <button
                 type="button"
                 className={styles.primaryBtn}
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  setShowForm(true);
+                  if (user?.role === 'teamLeader') {
+                    setForm((f) => ({ ...f, leaderId: user.id }));
+                  }
+                }}
                 disabled={!canAddTeam || hasNoLeaders}
               >
                 {t('teams.createTeam')}
@@ -235,13 +243,14 @@ export function TeamsTab() {
                 onChange={(e) => setForm((f) => ({ ...f, leaderId: e.target.value }))}
                 className={styles.input}
                 required={!editing}
+                disabled={user?.role === 'teamLeader'}
               >
                 <option value="">– {t('teams.selectLeader')} –</option>
-                {eligibleLeaders.map((u) => (
+                {visibleLeaders.map((u) => (
                   <option key={u.id} value={u.id}>{u.fullName}</option>
                 ))}
               </select>
-              {eligibleLeaders.length === 0 && <p className={styles.muted}>{t('teams.noLeaderNoTeam')}</p>}
+              {visibleLeaders.length === 0 && <p className={styles.muted}>{t('teams.noLeaderNoTeam')}</p>}
             </label>
             {saveError && <p className={styles.saveError}>{saveError}</p>}
             <label className={styles.label}>{t('teams.membersManual')}</label>

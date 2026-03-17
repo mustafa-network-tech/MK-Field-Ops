@@ -104,7 +104,22 @@ export function addTeam(
   const leaderCheck = validateLeader(companyId, params.leaderId, undefined, true);
   if (!leaderCheck.ok) return leaderCheck;
 
-  const team = store.addTeam(params);
+  // Team leaders can only propose their own team and it stays pending until PM/CM approval.
+  if (currentUser.role === 'teamLeader' && params.leaderId !== currentUser.id) {
+    return { ok: false, error: 'teams.validation.leaderMustBeSelf', statusCode: 403 };
+  }
+
+  const normalizedParams: Omit<Team, 'id' | 'createdAt'> =
+    currentUser.role === 'teamLeader'
+      ? {
+          ...params,
+          leaderId: currentUser.id,
+          approvalStatus: 'pending',
+          approvedBy: undefined,
+        }
+      : params;
+
+  const team = store.addTeam(normalizedParams);
   void import('./supabaseSyncService').then(({ upsertTeam }) => upsertTeam(team).catch(() => {}));
   const actor = actorFromUser(currentUser);
   if (actor) {
