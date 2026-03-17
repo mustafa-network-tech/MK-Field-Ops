@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
@@ -97,6 +97,7 @@ export function JobEntry() {
   const [submitError, setSubmitError] = useState('');
   const [workItemDropdownRow, setWorkItemDropdownRow] = useState<number | null>(null);
   const [noteModalRowIndex, setNoteModalRowIndex] = useState<number | null>(null);
+  const notePhotoInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (effectivePlan !== 'starter' || !starterProjectId) return;
@@ -649,10 +650,10 @@ export function JobEntry() {
                     <label className={styles.label}>
                       {t('jobs.notePhotoUpload')} ({t('jobs.notePhotoMax', { max: 3 })})
                       <input
+                        ref={notePhotoInputRef}
                         type="file"
                         accept="image/*"
-                        className={styles.fileInput}
-                        disabled={(row.notePhotos?.length ?? 0) >= 3}
+                        className={styles.fileInputHidden}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
@@ -667,22 +668,34 @@ export function JobEntry() {
                           e.target.value = '';
                         }}
                       />
-                      {(row.notePhotos?.length ?? 0) > 0 && (
-                        <div className={styles.notePhotoList}>
-                          {(row.notePhotos ?? []).map((src, i) => (
-                            <div key={i} className={styles.notePhotoPreview}>
-                              <img src={src} alt="" />
-                              <button
-                                type="button"
-                                className={styles.removePhotoBtn}
-                                onClick={() => updateRow(noteModalRowIndex, { notePhotos: (row.notePhotos ?? []).filter((_, idx) => idx !== i) })}
-                              >
-                                {t('common.delete')}
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                      <div className={styles.notePhotoRow}>
+                        {(row.notePhotos?.length ?? 0) < 3 && (
+                          <button
+                            type="button"
+                            className={styles.addPhotoBtn}
+                            onClick={() => notePhotoInputRef.current?.click()}
+                            title={t('jobs.notePhotoAddButton')}
+                          >
+                            + {t('jobs.notePhotoAddButton')}
+                          </button>
+                        )}
+                        {(row.notePhotos?.length ?? 0) > 0 && (
+                          <div className={styles.notePhotoList}>
+                            {(row.notePhotos ?? []).map((src, i) => (
+                              <div key={i} className={styles.notePhotoPreview}>
+                                <img src={src} alt="" />
+                                <button
+                                  type="button"
+                                  className={styles.removePhotoBtn}
+                                  onClick={() => updateRow(noteModalRowIndex, { notePhotos: (row.notePhotos ?? []).filter((_, idx) => idx !== i) })}
+                                >
+                                  {t('common.delete')}
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </label>
                   </div>
                   <div className={styles.modalFooter}>

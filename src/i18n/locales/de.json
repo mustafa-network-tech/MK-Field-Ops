@@ -563,6 +563,7 @@
     "noteDescriptionPlaceholder": "Notiz zu diesem Job schreiben…",
     "notePhotoUpload": "Foto (mit Handy aufnehmen oder Datei hochladen)",
     "notePhotoMax": "max. {max}",
+    "notePhotoAddButton": "Foto hinzufügen",
     "photo": "Foto",
     "photoAttached": "— Foto angehängt",
     "status": "Status",

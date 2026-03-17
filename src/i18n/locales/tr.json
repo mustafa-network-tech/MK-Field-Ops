@@ -574,6 +574,7 @@
     "noteDescriptionPlaceholder": "İşle ilgili not yazın…",
     "notePhotoUpload": "Fotoğraf (telefonda çekebilir veya dosya yükleyebilirsiniz)",
     "notePhotoMax": "en fazla {max} adet",
+    "notePhotoAddButton": "Fotoğraf ekle",
     "photo": "Fotoğraf",
     "photoAttached": "— Fotoğraf eklendi",
     "status": "Durum",
