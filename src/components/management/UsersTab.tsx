@@ -226,7 +226,7 @@ export function UsersTab() {
           </table>
         </Card>
       )}
-      <Card title={t('nav.users')}>
+      <Card key={usersRefreshKey} title={t('nav.users')}>
         <table className={styles.table}>
           <thead>
             <tr>
