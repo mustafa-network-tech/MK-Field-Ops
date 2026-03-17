@@ -125,6 +125,12 @@ export function addTeam(
       meta: { actorName: currentUser.fullName ?? '–', teamCode: team.code },
     });
   }
+  void import('./supabaseNotificationService').then(({ pushNotificationToSupabase }) =>
+    pushNotificationToSupabase(params.companyId, 'pm_team_created', 'notifications.pmTeamCreated', {
+      actorName: currentUser.fullName ?? '–',
+      teamCode: team.code,
+    }).catch(() => {})
+  );
   return { ok: true, team };
 }
 

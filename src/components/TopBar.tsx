@@ -13,7 +13,12 @@ import {
   markAllActivityAsRead,
   subscribeActivityNotifications,
 } from '../services/activityNotificationService';
-import type { ActivityNotification } from '../types';
+import {
+  fetchNotificationsFromSupabase,
+  markNotificationReadInSupabase,
+  markAllNotificationsReadInSupabase,
+  type SupabaseNotificationRow,
+} from '../services/supabaseNotificationService';
 import styles from './TopBar.module.css';
 
 type TopBarProps = { pendingApprovalsCount?: number };
@@ -44,9 +49,24 @@ export function TopBar({ pendingApprovalsCount = 0 }: TopBarProps) {
   const notifRef = useRef<HTMLDivElement>(null);
 
   const companyId = user?.companyId ?? '';
+  const userId = user?.id ?? '';
   const isCompanyManager = user?.role === 'companyManager';
+  const isManager = user?.role === 'companyManager' || user?.role === 'projectManager';
   const activityNotifications = isCompanyManager ? getActivityNotifications(companyId) : [];
   const activityUnreadCount = isCompanyManager ? getActivityUnreadCount(companyId) : 0;
+
+  const [supabaseNotifications, setSupabaseNotifications] = useState<SupabaseNotificationRow[]>([]);
+  const [supabaseLoaded, setSupabaseLoaded] = useState(false);
+  useEffect(() => {
+    if (!isManager || !companyId || !userId) return;
+    fetchNotificationsFromSupabase(companyId, userId).then((list) => {
+      setSupabaseNotifications(list);
+      setSupabaseLoaded(true);
+    });
+  }, [isManager, companyId, userId]);
+
+  const supabaseUnreadCount = supabaseNotifications.filter((n) => !n.read_at).length;
+  const totalUnreadCount = activityUnreadCount + supabaseUnreadCount;
 
   const [, forceUpdate] = useState(0);
   useEffect(() => {
@@ -77,8 +97,23 @@ export function TopBar({ pendingApprovalsCount = 0 }: TopBarProps) {
   }, [notificationsOpen]);
 
   useEffect(() => {
-    if (activityUnreadCount > 0) setToastVisible(true);
-  }, [activityUnreadCount]);
+    if (totalUnreadCount > 0) setToastVisible(true);
+  }, [totalUnreadCount]);
+
+  const hasSpokenRef = useRef(false);
+  useEffect(() => {
+    if (!isManager || !supabaseLoaded || totalUnreadCount === 0 || hasSpokenRef.current) return;
+    hasSpokenRef.current = true;
+    const msg = totalUnreadCount === 1
+      ? (typeof document !== 'undefined' && document.documentElement?.lang?.startsWith('tr') ? 'Bir yeni bildiriminiz var.' : 'You have one new notification.')
+      : (typeof document !== 'undefined' && document.documentElement?.lang?.startsWith('tr') ? `${totalUnreadCount} yeni bildiriminiz var.` : `You have ${totalUnreadCount} new notifications.`);
+    if (typeof window !== 'undefined' && window.speechSynthesis?.speak) {
+      const u = new SpeechSynthesisUtterance(msg);
+      u.volume = 0.9;
+      u.rate = 0.9;
+      window.speechSynthesis.speak(u);
+    }
+  }, [isManager, supabaseLoaded, totalUnreadCount]);
   useEffect(() => {
     if (!toastVisible) return;
     const t = setTimeout(() => setToastVisible(false), 6000);
@@ -134,11 +169,35 @@ export function TopBar({ pendingApprovalsCount = 0 }: TopBarProps) {
     return d.toLocaleDateString();
   }
 
+  type MergedNotification = { id: string; titleKey: string; meta: Record<string, string>; createdAt: string; read: boolean; source: 'local' | 'supabase' };
+  const mergedNotifications: MergedNotification[] = [
+    ...activityNotifications.map((n) => ({ id: n.id, titleKey: n.titleKey, meta: n.meta, createdAt: n.createdAt, read: n.read, source: 'local' as const })),
+    ...supabaseNotifications.map((n) => ({ id: n.id, titleKey: n.title_key, meta: n.meta, createdAt: n.created_at, read: !!n.read_at, source: 'supabase' as const })),
+  ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+  const handleMarkRead = (item: MergedNotification) => {
+    if (item.read) return;
+    if (item.source === 'supabase') {
+      markNotificationReadInSupabase(item.id, userId).then(() =>
+        setSupabaseNotifications((prev) => prev.map((n) => (n.id === item.id ? { ...n, read_at: new Date().toISOString() } : n)))
+      );
+    } else {
+      markActivityAsRead(item.id);
+    }
+  };
+
+  const handleMarkAllRead = () => {
+    markAllActivityAsRead(companyId);
+    markAllNotificationsReadInSupabase(companyId, userId).then(() =>
+      setSupabaseNotifications((prev) => prev.map((n) => ({ ...n, read_at: n.read_at || new Date().toISOString() })))
+    );
+  };
+
   return (
     <header className={styles.topBar}>
-      {isCompanyManager && toastVisible && activityUnreadCount > 0 && (
+      {isManager && toastVisible && totalUnreadCount > 0 && (
         <div className={styles.notificationToast} role="status">
-          <span>{t('notifications.newCount', { count: activityUnreadCount })}</span>
+          <span>{t('notifications.newCount', { count: totalUnreadCount })}</span>
         </div>
       )}
       <div className={styles.left}>
@@ -179,7 +238,7 @@ export function TopBar({ pendingApprovalsCount = 0 }: TopBarProps) {
             <span className={styles.planExpiryWarningText}>{planWarningText}</span>
           </button>
         )}
-        {isCompanyManager && (
+        {isManager && (
           <div className={styles.notificationBellWrap} ref={notifRef}>
             <button
               type="button"
@@ -190,42 +249,40 @@ export function TopBar({ pendingApprovalsCount = 0 }: TopBarProps) {
               title={t('notifications.title')}
             >
               <span className={styles.notificationBellIcon} aria-hidden>🔔</span>
-              {activityUnreadCount > 0 && (
-                <span className={styles.notificationBellBadge} aria-hidden>{activityUnreadCount}</span>
+              {totalUnreadCount > 0 && (
+                <span className={styles.notificationBellBadge} aria-hidden>{totalUnreadCount}</span>
               )}
             </button>
             {notificationsOpen && (
               <div className={styles.notificationDropdown}>
                 <div className={styles.notificationDropdownHeader}>
                   <span>{t('notifications.title')}</span>
-                  {activityUnreadCount > 0 && (
+                  {totalUnreadCount > 0 && (
                     <button
                       type="button"
                       className={styles.notificationMarkAllRead}
-                      onClick={() => markAllActivityAsRead(companyId)}
+                      onClick={handleMarkAllRead}
                     >
                       {t('notifications.markAllRead')}
                     </button>
                   )}
                 </div>
                 <ul className={styles.notificationList}>
-                  {activityNotifications.length === 0 ? (
+                  {mergedNotifications.length === 0 ? (
                     <li className={styles.notificationItemEmpty}>{t('notifications.noNotifications')}</li>
                   ) : (
-                    activityNotifications.map((n: ActivityNotification) => (
+                    mergedNotifications.map((n) => (
                       <li
-                        key={n.id}
+                        key={`${n.source}-${n.id}`}
                         className={n.read ? styles.notificationItem : `${styles.notificationItem} ${styles.notificationItemUnread}`}
                       >
                         <button
                           type="button"
                           className={styles.notificationItemBtn}
-                          onClick={() => {
-                            if (!n.read) markActivityAsRead(n.id);
-                          }}
+                          onClick={() => handleMarkRead(n)}
                         >
                           <span className={styles.notificationItemText}>
-                            {t(n.titleKey, n.meta as Record<string, string>)}
+                            {t(n.titleKey, n.meta)}
                           </span>
                           <span className={styles.notificationItemTime}>{formatNotificationTime(n.createdAt)}</span>
                         </button>
