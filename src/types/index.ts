@@ -322,6 +322,8 @@ export interface JobWithDetails extends JobRecord {
   teamEarnings: number;
   companyShare: number;
   teamPercentage: number;
+  /** Work item unit price (full). For TL display use unitPrice * teamPercentage/100. */
+  unitPrice: number;
 }
 
 /** Payroll (Hakediş) period settings per company. */

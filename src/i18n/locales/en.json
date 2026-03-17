@@ -570,6 +570,8 @@
     "totalWorkValue": "Total Work Value",
     "teamEarnings": "Team Earnings",
     "companyShare": "Company Share",
+    "unitPrice": "Unit Price",
+    "yourTeamShare": "Your team share",
     "submitForApproval": "Submit for Approval",
     "approveJob": "Approve Job",
     "rejectJob": "Reject Job",

@@ -32,6 +32,7 @@ export function getJobWithDetails(job: JobRecord, companyId: string): JobWithDet
     teamEarnings,
     companyShare,
     teamPercentage: team.percentage,
+    unitPrice: workItem.unitPrice,
   };
 }
 

@@ -125,6 +125,7 @@ export function TeamDetail() {
           <div className={styles.statBlock}>
             <span className={styles.statLabel}>{t('teamDetail.totalEarnings')}</span>
             <span className={styles.statValue}>{formatPriceForUser(detail.teamTotal, user, 'teamOnly', locale)}</span>
+            <span className={styles.statMeta}>{t('jobs.yourTeamShare')}: {team.percentage}%</span>
           </div>
         )}
         <div className={styles.statBlock}>

@@ -72,6 +72,17 @@ export function getTeamIdsForTeamLeader(companyId: string, user: User | undefine
 }
 
 /**
+ * Team percentage (share) for the current user. Used to show TL their share and to display prices in team share.
+ * - Team Leader: first team they lead (single team) percentage, or undefined if none.
+ * - CM/PM: undefined (they see full prices).
+ */
+export function getTeamPercentageForUser(companyId: string, user: User | undefined): number | undefined {
+  if (!companyId || !user || user.role !== 'teamLeader') return undefined;
+  const teams = getTeamsForUser(companyId, user);
+  return teams.length > 0 ? teams[0].percentage : undefined;
+}
+
+/**
  * Backend-style validation: whether the user is allowed to use this team for job create/update.
  * - Team Leader: team.leaderId must equal user.id
  * - Company Manager / Project Manager: team must exist and belong to same company

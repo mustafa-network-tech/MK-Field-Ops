@@ -36,6 +36,8 @@ export type PayrollReportData = {
   reportType: 'company' | 'team';
   teamCode?: string;
   teamName?: string;
+  /** When reportType is 'team': team's percentage share; used to show team unit price (unitPrice × percentage/100) in export. */
+  teamPercentage?: number;
   totals: {
     approvedJobsCount: number;
     totalAmount: number;
@@ -110,6 +112,7 @@ export function getPayrollReportData(
     reportType,
     teamCode: teamInfo?.code,
     teamName: teamInfo?.description,
+    teamPercentage: teamInfo?.percentage,
     totals: {
       approvedJobsCount: rows.length,
       totalAmount,

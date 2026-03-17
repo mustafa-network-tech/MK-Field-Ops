@@ -559,6 +559,8 @@
     "totalWorkValue": "Valor total del trabajo",
     "teamEarnings": "Ingresos del equipo",
     "companyShare": "Parte empresa",
+    "unitPrice": "Precio unitario",
+    "yourTeamShare": "Su parte de equipo",
     "submitForApproval": "Enviar a aprobación",
     "approveJob": "Aprobar trabajo",
     "rejectJob": "Rechazar trabajo",

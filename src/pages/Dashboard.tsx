@@ -1,6 +1,7 @@
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { getDashboardSummary } from '../services/dashboardSummaryService';
+import { getTeamPercentageForUser } from '../services/teamScopeService';
 import { formatPriceForUser } from '../utils/priceRules';
 import { formatCurrency } from '../utils/formatLocale';
 import { Card } from '../components/ui/Card';
@@ -50,6 +51,9 @@ export function Dashboard() {
         ) : (
           <Card title={t('jobs.teamEarnings')}>
             <p className={styles.bigNumber}>{formatPriceForUser(summary.teamTotal, user, 'teamOnly', locale)}</p>
+            {getTeamPercentageForUser(companyId, user) != null && (
+              <p className={styles.meta}>{t('jobs.yourTeamShare')}: {getTeamPercentageForUser(companyId, user)}%</p>
+            )}
             <p className={styles.meta}>{summary.approvedCount} {t('dashboard.approvedJobs').toLowerCase()}</p>
           </Card>
         )}

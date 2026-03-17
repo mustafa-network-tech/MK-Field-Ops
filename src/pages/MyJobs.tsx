@@ -6,7 +6,7 @@ import { getJobWithDetails } from '../services/jobCalculationService';
 import { getJobsForUser } from '../services/jobScopeService';
 import { getTeamsForUser } from '../services/teamScopeService';
 import { updateJob } from '../services/jobService';
-import { formatPriceForUser } from '../utils/priceRules';
+import { formatPriceForUser, formatUnitPriceForUser } from '../utils/priceRules';
 import { getProjectDisplayKey } from '../utils/projectKey';
 import { Card } from '../components/ui/Card';
 import type { JobRecord, JobMaterialUsage, MaterialMainType } from '../types';
@@ -88,6 +88,7 @@ export function MyJobs() {
               <th>{t('jobs.team')}</th>
               <th>{t('jobs.workItem')}</th>
               <th>{t('jobs.quantity')}</th>
+              <th>{t('jobs.unitPrice')}</th>
               <th>{t('jobs.materialUsage')}</th>
               <th>{t('jobs.status')}</th>
               <th>{t('jobs.totalWorkValue')}</th>
@@ -105,6 +106,11 @@ export function MyJobs() {
                   <td>{getTeamCode(job.teamId)}</td>
                   <td>{getWorkItemCode(job.workItemId)}</td>
                   <td>{job.quantity}</td>
+                  <td>
+                    {details
+                      ? formatUnitPriceForUser(details.unitPrice, user, details.teamPercentage, locale)
+                      : '–'}
+                  </td>
                   <td className={styles.materialCell}>
                     {(job.materialUsages?.length ?? 0) > 0 ? (
                       <ul className={styles.materialUsageList}>

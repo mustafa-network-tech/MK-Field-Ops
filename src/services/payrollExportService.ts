@@ -1,7 +1,7 @@
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { formatNumberByLocale } from '../utils/formatLocale';
+import { formatNumberByLocale, roundMoney } from '../utils/formatLocale';
 import type { Locale } from '../i18n/I18nContext';
 import type { PayrollReportData } from './payrollReportService';
 
@@ -288,9 +288,11 @@ export function exportPayrollReportToExcel(
     const emptyCells = isTeam ? 8 : teamEarningsOnly ? 6 : 9;
     rows.push([tr.noApprovedJobsInPeriod, ...Array(emptyCells - 1).fill('')]);
   } else {
+    const teamPct = data.reportType === 'team' && data.teamPercentage != null ? data.teamPercentage : null;
     for (const j of data.jobs) {
+      const unitPriceDisplay = teamPct != null ? roundMoney(j.unitPrice * teamPct / 100) : j.unitPrice;
       if (isTeam) {
-        rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]);
+        rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(unitPriceDisplay), fmt(j.lineTotal), fmt(j.teamEarnings)]);
       } else if (teamEarningsOnly) {
         rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.teamEarnings)]);
       } else {
@@ -388,6 +390,7 @@ function buildPdfDoc(
       : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare]
   ).map(pdf);
   const totalQuantity = data.jobs.reduce((s, j) => s + j.quantity, 0);
+  const teamPct = data.reportType === 'team' && data.teamPercentage != null ? data.teamPercentage : null;
   const totalsRow = isTeam
     ? [pdf(tr.totalRow), '', '', '', fmtQty(totalQuantity), '', fmt(data.totals.totalAmount), fmt(data.totals.teamEarnings)]
     : teamEarningsOnly
@@ -403,14 +406,15 @@ function buildPdfDoc(
             : [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', '', ''],
         totalsRow,
       ]
-    : [
-        ...data.jobs.map((j) =>
-          isTeam
-            ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]
+: [
+        ...data.jobs.map((j) => {
+          const unitPriceDisplay = teamPct != null ? roundMoney(j.unitPrice * teamPct / 100) : j.unitPrice;
+          return isTeam
+            ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(unitPriceDisplay), fmt(j.lineTotal), fmt(j.teamEarnings)]
             : teamEarningsOnly
               ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.teamEarnings)]
-              : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]
-        ),
+              : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)];
+        }),
         totalsRow,
       ];
 

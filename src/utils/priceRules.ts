@@ -59,6 +59,24 @@ export function formatPriceForUser(
   return formatCurrency(value, locale);
 }
 
+/**
+ * Format unit price for display. Team Leader sees only their share (unitPrice × teamPercentage/100); CM/PM see full.
+ * Use when showing "unit price" so TL sees the amount in their percentage segment.
+ */
+export function formatUnitPriceForUser(
+  unitPrice: number,
+  user: { role?: string; canSeePrices?: boolean } | undefined,
+  teamPercentage: number | undefined,
+  locale: Locale = 'en'
+): string {
+  if (!user) return formatCurrency(unitPrice, locale);
+  if (user.role !== 'teamLeader') return formatCurrency(unitPrice, locale);
+  if (!user.canSeePrices) return PRICE_HIDDEN;
+  if (teamPercentage == null) return PRICE_HIDDEN;
+  const teamShareUnitPrice = roundMoney(unitPrice * (teamPercentage / 100));
+  return formatCurrency(teamShareUnitPrice, locale);
+}
+
 /** Parse user input for price/quantity: accepts "12,50" or "12.50". Returns rounded value for money. */
 export function parseDecimalInput(str: string, locale?: Locale): ParseDecimalResult {
   return parseDecimalFromLocale(str, locale);

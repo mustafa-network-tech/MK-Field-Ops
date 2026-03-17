@@ -7,6 +7,7 @@ import { store } from '../data/store';
 import { getTeamsForJobEntry } from '../services/teamScopeService';
 import { addJob } from '../services/jobService';
 import { parseDecimalFromLocale, roundMoney } from '../utils/formatLocale';
+import { formatUnitPriceForUser } from '../utils/priceRules';
 import { getProjectDisplayKey } from '../utils/projectKey';
 import { Card } from '../components/ui/Card';
 import type { JobMaterialUsage, MaterialMainType } from '../types';
@@ -404,6 +405,11 @@ export function JobEntry() {
                     />
                   </label>
                 </div>
+                {selectedWorkItem && row.teamId && (
+                  <p className={styles.hint}>
+                    {t('jobs.unitPrice')}{user?.role === 'teamLeader' ? ` (${t('jobs.yourTeamShare')})` : ''}: {formatUnitPriceForUser(selectedWorkItem.unitPrice, user, teams.find((t) => t.id === row.teamId)?.percentage, locale)}
+                  </p>
+                )}
 
                 <label className={styles.label}>{t('jobs.usedMaterials')} <span className={styles.muted}>({t('jobs.material.optional')})</span></label>
                 <div className={styles.materialAddSection}>
