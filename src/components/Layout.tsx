@@ -140,6 +140,9 @@ export function Layout() {
       </div>
       <footer className={styles.panelFooter}>
         <span className={styles.panelFooterLeft}>{t('layout.footerDevelopedBy')}</span>
+        <div className={styles.panelFooterCenter}>
+          <img src="/landing-logo.png" alt="MK" className={styles.panelFooterLogo} />
+        </div>
         <a
           href="mailto:mustafa82oner@gmail.com"
           className={styles.panelFooterMail}

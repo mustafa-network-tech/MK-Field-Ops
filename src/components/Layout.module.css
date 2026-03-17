@@ -155,7 +155,7 @@
   color: #2563eb;
 }
 
-/* Panel footer: ince, solda metin sağda e-posta ikonu */
+/* Panel footer: header ile aynı koyu arka plan, beyaz yazı */
 .panelFooter {
   flex-shrink: 0;
   display: flex;
@@ -163,28 +163,44 @@
   justify-content: space-between;
   padding: 0.4rem 1rem;
   font-size: 0.75rem;
-  color: #64748b;
-  background: #f1f5f9;
-  border-top: 1px solid #e2e8f0;
+  color: #f1f5f9;
+  background: #0f172a;
+  border-top: 1px solid #1e293b;
 }
 
 .panelFooterLeft {
-  color: #64748b;
+  color: #f1f5f9;
+  flex: 1;
+}
+
+.panelFooterCenter {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panelFooterLogo {
+  height: 1.5rem;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .panelFooterMail {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  color: #64748b;
+  justify-content: flex-end;
+  color: #f1f5f9;
   padding: 0.25rem;
   border-radius: 6px;
   transition: color 0.2s, background 0.2s;
 }
 
 .panelFooterMail:hover {
-  color: #2563eb;
-  background: #e0e7ff;
+  color: #fff;
+  background: #334155;
 }
 
 .envelopeIcon {
