@@ -171,10 +171,12 @@ export function UsersTab() {
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
       {isCompanyManager && pending.length > 0 && (
         <Card title={t('users.pendingApprovals')}>
+          <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
