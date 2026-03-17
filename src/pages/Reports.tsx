@@ -77,6 +77,7 @@ export function Reports() {
       signatureProjectManager: t('payroll.report.signatureProjectManager'),
       signatureCompanyManager: t('payroll.report.signatureCompanyManager'),
       noApprovedJobsInPeriod: t('payroll.report.noApprovedJobsInPeriod'),
+      totalRow: t('payroll.report.totalRow'),
       footerGeneratedBy: t('payroll.report.footerGeneratedBy'),
       footerPageNumber: t('payroll.report.footerPageNumber'),
     };

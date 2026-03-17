@@ -879,6 +879,7 @@
       "signatureProjectManager": "Proje Müdürü: _______________________",
       "signatureCompanyManager": "Şirket Yöneticisi: _______________________",
       "noApprovedJobsInPeriod": "Bu dönemde onaylanmış iş bulunmamaktadır.",
+      "totalRow": "Toplam",
       "footerGeneratedBy": "MK Digital Systems tarafından oluşturuldu",
       "footerPageNumber": "Sayfa {current} / {total}"
     },

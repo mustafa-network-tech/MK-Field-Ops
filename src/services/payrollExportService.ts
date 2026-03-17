@@ -193,6 +193,7 @@ export type PayrollReportTranslations = {
   signatureProjectManager: string;
   signatureCompanyManager: string;
   noApprovedJobsInPeriod: string;
+  totalRow: string;
   footerGeneratedBy: string;
   footerPageNumber: string;
 };
@@ -298,6 +299,15 @@ export function exportPayrollReportToExcel(
     }
   }
 
+  const totalQuantity = data.jobs.reduce((s, j) => s + j.quantity, 0);
+  if (isTeam) {
+    rows.push([tr.totalRow, '', '', '', fmt(totalQuantity), '', fmt(data.totals.totalAmount), fmt(data.totals.teamEarnings)]);
+  } else if (teamEarningsOnly) {
+    rows.push([tr.totalRow, '', '', '', fmt(totalQuantity), fmt(data.totals.teamEarnings)]);
+  } else {
+    rows.push([tr.totalRow, '', '', '', fmt(totalQuantity), '', fmt(data.totals.totalAmount), fmt(data.totals.teamEarnings), fmt(data.totals.companyShare)]);
+  }
+
   rows.push([]);
   rows.push([]);
   rows.push([]);
@@ -377,6 +387,13 @@ function buildPdfDoc(
       ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.teamEarnings]
       : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare]
   ).map(pdf);
+  const totalQuantity = data.jobs.reduce((s, j) => s + j.quantity, 0);
+  const totalsRow = isTeam
+    ? [pdf(tr.totalRow), '', '', '', fmtQty(totalQuantity), '', fmt(data.totals.totalAmount), fmt(data.totals.teamEarnings)]
+    : teamEarningsOnly
+      ? [pdf(tr.totalRow), '', '', '', fmtQty(totalQuantity), fmt(data.totals.teamEarnings)]
+      : [pdf(tr.totalRow), '', '', '', fmtQty(totalQuantity), '', fmt(data.totals.totalAmount), fmt(data.totals.teamEarnings), fmt(data.totals.companyShare)];
+
   const tableRows = data.isEmpty
     ? [
         isTeam
@@ -384,14 +401,18 @@ function buildPdfDoc(
           : teamEarningsOnly
             ? [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '']
             : [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', '', ''],
+        totalsRow,
       ]
-    : data.jobs.map((j) =>
-        isTeam
-          ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]
-          : teamEarningsOnly
-            ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.teamEarnings)]
-            : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]
-      );
+    : [
+        ...data.jobs.map((j) =>
+          isTeam
+            ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]
+            : teamEarningsOnly
+              ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.teamEarnings)]
+              : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]
+        ),
+        totalsRow,
+      ];
 
   const footerReserve = 36;
   autoTable(doc, {

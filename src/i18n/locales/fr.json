@@ -868,6 +868,7 @@
       "signatureProjectManager": "Chef de Projet: _______________________",
       "signatureCompanyManager": "Responsable d'Entreprise: _______________________",
       "noApprovedJobsInPeriod": "Aucun travail approuvé pour cette période.",
+      "totalRow": "Total",
       "footerGeneratedBy": "Généré par MK Digital Systems",
       "footerPageNumber": "Page {current} / {total}"
     },

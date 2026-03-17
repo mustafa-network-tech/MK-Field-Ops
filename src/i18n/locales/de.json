@@ -868,6 +868,7 @@
       "signatureProjectManager": "Projektleiter: _______________________",
       "signatureCompanyManager": "Unternehmensleiter: _______________________",
       "noApprovedJobsInPeriod": "Für diesen Zeitraum wurden keine genehmigten Arbeiten gefunden.",
+      "totalRow": "Gesamt",
       "footerGeneratedBy": "Erstellt von MK Digital Systems",
       "footerPageNumber": "Seite {current} / {total}"
     },
