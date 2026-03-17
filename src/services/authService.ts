@@ -37,7 +37,7 @@ export const authService = {
       if (!userId) return { ok: false, error: 'auth.loginError' };
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('id, company_id, role, full_name, role_approval_status')
+        .select('id, company_id, role, full_name, role_approval_status, can_see_prices')
         .eq('id', userId)
         .single();
       if (profileError || !profile) return { ok: false, error: 'auth.loginError' };
@@ -191,7 +191,7 @@ export const authService = {
       const userId = authData.user?.id;
       if (!userId) return { ok: false, error: 'auth.loginError' };
       if (authData.session) {
-        const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', userId).single();
+        const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, can_see_prices').eq('id', userId).single();
         if (profile) store.setUserFromProfile(profile, authData.user?.email ?? email);
       }
       return { ok: true };
@@ -228,7 +228,7 @@ export const authService = {
     if (!supabase) return false;
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user?.id) return false;
-    const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email').eq('id', session.user.id).single();
+    const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email, can_see_prices').eq('id', session.user.id).single();
     if (!profile) return false;
     store.setUserFromProfile(profile, profile.email ?? session.user.email ?? '');
     return true;
@@ -239,10 +239,22 @@ export const authService = {
     if (!supabase) return;
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('id, company_id, role, full_name, role_approval_status, email')
+      .select('id, company_id, role, full_name, role_approval_status, email, can_see_prices')
       .eq('company_id', companyId);
     if (!profiles) return;
     profiles.forEach((p) => store.mergeUserFromProfile(p, p.email ?? ''));
+  },
+
+  /** Update can_see_prices for a user (CM only). Persists to Supabase when configured; always updates local store. */
+  async updateUserCanSeePrices(userId: string, canSeePrices: boolean): Promise<boolean> {
+    if (supabase) {
+      const { error } = await supabase.from('profiles').update({ can_see_prices: canSeePrices }).eq('id', userId);
+      if (error) {
+        console.warn('[Supabase] profiles can_see_prices update failed:', error);
+        return false;
+      }
+    }
+    return true;
   },
 
   approveUser(userId: string, assignedRole: Role): boolean {

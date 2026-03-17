@@ -189,15 +189,15 @@ export const store = {
   },
 
   /** Set current user from Supabase profile. Upserts into users list and sets current user. Isolates store to this tenant. */
-  setUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
+  setUserFromProfile(profile: { id: string; company_id: string; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null; can_see_prices?: boolean | null }, email: string): User {
     const u = this.mergeUserFromProfile(profile, email);
     this.setCurrentUserId(profile.id);
     if (profile.company_id) this.isolateTenantData(profile.company_id);
     return u;
   },
 
-  /** Merge Supabase profile into users list (no current user change). For CM/PM to see pending users. company_id can be null for pending join. */
-  mergeUserFromProfile(profile: { id: string; company_id: string | null; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null }, email: string): User {
+  /** Merge Supabase profile into users list (no current user change). For CM/PM to see pending users. company_id can be null for pending join. Preserves canSeePrices when merging existing user. */
+  mergeUserFromProfile(profile: { id: string; company_id: string | null; role: string | null; full_name: string | null; role_approval_status: string; email?: string | null; can_see_prices?: boolean | null }, email: string): User {
     const users = this.getUsers();
     const u: User = {
       id: profile.id,
@@ -208,12 +208,16 @@ export const store = {
       role: (profile.role as User['role']) ?? undefined,
       roleApprovalStatus: (profile.role_approval_status as User['roleApprovalStatus']) ?? 'pending',
       createdAt: new Date().toISOString(),
+      canSeePrices: profile.can_see_prices ?? undefined,
     };
     const i = users.findIndex((x) => x.id === profile.id);
-    if (i >= 0) users[i] = u;
-    else users.push(u);
+    if (i >= 0) {
+      users[i] = { ...u, canSeePrices: u.canSeePrices ?? users[i].canSeePrices };
+    } else {
+      users.push(u);
+    }
     save(STORAGE_KEYS.users, users);
-    return u;
+    return users.find((x) => x.id === profile.id)!;
   },
 
   getTeams(companyId: string): Team[] {

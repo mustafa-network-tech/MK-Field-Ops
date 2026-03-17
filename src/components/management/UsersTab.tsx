@@ -25,6 +25,7 @@ export function UsersTab() {
   const [, setProfilesFetched] = useState(false);
   const [joinRequests, setJoinRequests] = useState<JoinRequestRow[]>([]);
   const [limitError, setLimitError] = useState('');
+  const [usersRefreshKey, setUsersRefreshKey] = useState(0);
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
   const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), users.length);
@@ -62,13 +63,21 @@ export function UsersTab() {
   /** Only company manager can grant/revoke price visibility (price limit) for team leaders. */
   const canGrantPriceVisibility = currentUser?.role === 'companyManager';
 
-  const handleGrantPriceVisibility = (tl: UserType) => {
+  const handleGrantPriceVisibility = async (tl: UserType) => {
     if (tl.role !== 'teamLeader' || !canGrantPriceVisibility) return;
-    store.updateUser(tl.id, { canSeePrices: true });
+    const ok = await authService.updateUserCanSeePrices(tl.id, true);
+    if (ok) {
+      store.updateUser(tl.id, { canSeePrices: true });
+      setUsersRefreshKey((k) => k + 1);
+    }
   };
-  const handleRevokePriceVisibility = (tl: UserType) => {
+  const handleRevokePriceVisibility = async (tl: UserType) => {
     if (tl.role !== 'teamLeader' || !canGrantPriceVisibility) return;
-    store.updateUser(tl.id, { canSeePrices: false });
+    const ok = await authService.updateUserCanSeePrices(tl.id, false);
+    if (ok) {
+      store.updateUser(tl.id, { canSeePrices: false });
+      setUsersRefreshKey((k) => k + 1);
+    }
   };
 
   const handleApproveWithRole = (userId: string) => {
