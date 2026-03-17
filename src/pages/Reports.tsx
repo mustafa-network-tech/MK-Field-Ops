@@ -9,6 +9,7 @@ import {
   exportPayrollReportToPdf,
   getPeriodLabelForTitle,
   type PayrollReportTranslations,
+  type PayrollExportOptions,
 } from '../services/payrollExportService';
 import { getTeamsForUser } from '../services/teamScopeService';
 import { logEvent, actorFromUser } from '../services/auditLogService';
@@ -31,6 +32,8 @@ export function Reports() {
   const [dateRangeEnd, setDateRangeEnd] = useState('');
   /** For company export: empty = all teams; otherwise only selected team IDs. */
   const [selectedCompanyTeamIds, setSelectedCompanyTeamIds] = useState<string[]>([]);
+  /** For company export: full breakdown or only company share column. */
+  const [companyReportView, setCompanyReportView] = useState<'full' | 'teamEarningsOnly'>('full');
 
   const selectedPeriod = periods[selectedPeriodIndex] ?? null;
 
@@ -79,14 +82,16 @@ export function Reports() {
     };
   }
 
+  const companyExportOptions: PayrollExportOptions = { companyViewMode: companyReportView };
+
   async function handleExportCompany(format: 'xlsx' | 'pdf') {
     if (!effectivePeriod) return;
     const teamFilter = selectedCompanyTeamIds.length > 0 ? selectedCompanyTeamIds : undefined;
     const data = getPayrollReportData(companyId, effectivePeriod, 'company', undefined, teamFilter);
     const tr = buildTranslations('company', data);
-    if (format === 'xlsx') exportPayrollReportToExcel(data, tr, locale);
+    if (format === 'xlsx') exportPayrollReportToExcel(data, tr, locale, companyExportOptions);
     else {
-      await exportPayrollReportToPdf(data, tr, locale);
+      await exportPayrollReportToPdf(data, tr, locale, companyExportOptions);
       const actor = actorFromUser(user);
       if (actor) {
         logEvent(actor, {
@@ -206,6 +211,29 @@ export function Reports() {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('payroll.report.sectionCompany')}</h3>
             <p className={styles.desc}>{t('payroll.report.companyName')}</p>
+            <div className={styles.field}>
+              <label className={styles.label}>{t('payroll.report.companyReportContent')}</label>
+              <div className={styles.radioGroup}>
+                <label>
+                  <input
+                    type="radio"
+                    name="companyReportView"
+                    checked={companyReportView === 'full'}
+                    onChange={() => setCompanyReportView('full')}
+                  />
+                  {t('payroll.report.viewFull')}
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="companyReportView"
+                    checked={companyReportView === 'teamEarningsOnly'}
+                    onChange={() => setCompanyReportView('teamEarningsOnly')}
+                  />
+                  {t('payroll.report.viewTeamEarningsOnly')}
+                </label>
+              </div>
+            </div>
             <div className={styles.field}>
               <label className={styles.label}>{t('payroll.report.filterTeams')}</label>
               <p className={styles.hint}>{t('payroll.report.filterTeamsHint')}</p>

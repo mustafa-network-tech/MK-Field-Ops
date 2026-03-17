@@ -238,14 +238,21 @@ export function getPayrollReportFileName(
   return `${safeName(companyName)}_Payroll_${suffix}`;
 }
 
+export type PayrollExportOptions = {
+  /** For company report only: full breakdown or only team earnings column. */
+  companyViewMode?: 'full' | 'teamEarningsOnly';
+};
+
 export function exportPayrollReportToExcel(
   data: PayrollReportData,
   tr: PayrollReportTranslations,
-  locale: Locale = 'en'
+  locale: Locale = 'en',
+  options?: PayrollExportOptions
 ): void {
   const periodRange = `${data.period.start} – ${data.period.end}`;
   const fmt = (n: number) => formatNumberByLocale(n, locale);
   const isTeam = data.reportType === 'team';
+  const teamEarningsOnly = !isTeam && options?.companyViewMode === 'teamEarningsOnly';
 
   const rows: (string | number)[][] = [
     [tr.title],
@@ -258,32 +265,41 @@ export function exportPayrollReportToExcel(
     [tr.totalApprovedJobs, data.totals.approvedJobsCount],
     ...(isTeam
       ? [[tr.teamEarnings, fmt(data.totals.teamEarnings)]]
-      : [
-          [tr.totalAmount, fmt(data.totals.totalAmount)],
-          [tr.totalWorkValue, fmt(data.totals.totalAmount)],
-          [tr.teamEarnings, fmt(data.totals.teamEarnings)],
-          [tr.companyShare, fmt(data.totals.companyShare)],
-        ]),
+      : teamEarningsOnly
+        ? [[tr.teamEarnings, fmt(data.totals.teamEarnings)]]
+        : [
+            [tr.totalAmount, fmt(data.totals.totalAmount)],
+            [tr.totalWorkValue, fmt(data.totals.totalAmount)],
+            [tr.teamEarnings, fmt(data.totals.teamEarnings)],
+            [tr.companyShare, fmt(data.totals.companyShare)],
+          ]),
     [],
   ];
 
   const tableHeaders = isTeam
     ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings]
-    : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare];
+    : teamEarningsOnly
+      ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.teamEarnings]
+      : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare];
   rows.push(tableHeaders);
 
   if (data.isEmpty) {
-    rows.push(isTeam ? [tr.noApprovedJobsInPeriod, '', '', '', '', '', '', ''] : [tr.noApprovedJobsInPeriod, '', '', '', '', '', '', '', '']);
+    const emptyCells = isTeam ? 8 : teamEarningsOnly ? 6 : 9;
+    rows.push([tr.noApprovedJobsInPeriod, ...Array(emptyCells - 1).fill('')]);
   } else {
     for (const j of data.jobs) {
       if (isTeam) {
         rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]);
+      } else if (teamEarningsOnly) {
+        rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.teamEarnings)]);
       } else {
         rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]);
       }
     }
   }
 
+  rows.push([]);
+  rows.push([]);
   rows.push([]);
   rows.push([]);
   rows.push([tr.signatureProjectManager]);
@@ -305,12 +321,12 @@ export function exportPayrollReportToExcel(
 function buildPdfDoc(
   data: PayrollReportData,
   tr: PayrollReportTranslations,
-  options: { logoInfo: LogoWatermarkInfo | null; locale: Locale }
+  options: { logoInfo: LogoWatermarkInfo | null; locale: Locale; companyViewMode?: 'full' | 'teamEarningsOnly' }
 ): jsPDF {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
-  const { logoInfo, locale } = options;
+  const { logoInfo, locale, companyViewMode } = options;
   const fmt = (n: number) => formatNumberByLocale(n, locale);
   const fmtQty = (n: number) => formatNumberByLocale(n, locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   const pdf = (s: string) => toAsciiForPdf(s);
@@ -335,9 +351,13 @@ function buildPdfDoc(
   y += 10;
 
   const isTeam = data.reportType === 'team';
+  const teamEarningsOnly = !isTeam && companyViewMode === 'teamEarningsOnly';
   doc.text(pdf(`${tr.totalApprovedJobs}: ${data.totals.approvedJobsCount}`), 14, y);
   y += 6;
   if (isTeam) {
+    doc.text(pdf(`${tr.teamEarnings}: ${fmt(data.totals.teamEarnings)}`), 14, y);
+    y += 12;
+  } else if (teamEarningsOnly) {
     doc.text(pdf(`${tr.teamEarnings}: ${fmt(data.totals.teamEarnings)}`), 14, y);
     y += 12;
   } else {
@@ -353,20 +373,32 @@ function buildPdfDoc(
 
   const tableHeaders = (isTeam
     ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings]
-    : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare]
+    : teamEarningsOnly
+      ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.teamEarnings]
+      : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare]
   ).map(pdf);
   const tableRows = data.isEmpty
-    ? [isTeam ? [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', ''] : [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', '', '']]
+    ? [
+        isTeam
+          ? [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', '']
+          : teamEarningsOnly
+            ? [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '']
+            : [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', '', ''],
+      ]
     : data.jobs.map((j) =>
         isTeam
           ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]
-          : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]
+          : teamEarningsOnly
+            ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.teamEarnings)]
+            : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]
       );
 
+  const footerReserve = 36;
   autoTable(doc, {
     head: [tableHeaders],
     body: tableRows,
     startY: y,
+    margin: { left: 14, right: 14, bottom: footerReserve },
     styles: { fontSize: 7 },
     headStyles: { fillColor: [220, 220, 220], fontSize: 7 },
     didDrawPage: logoInfo
@@ -410,7 +442,8 @@ function buildPdfDoc(
 export async function exportPayrollReportToPdf(
   data: PayrollReportData,
   tr: PayrollReportTranslations,
-  locale: Locale = 'en'
+  locale: Locale = 'en',
+  options?: PayrollExportOptions
 ): Promise<void> {
   let logoInfo: LogoWatermarkInfo | null = null;
   if (data.logo_url) {
@@ -421,11 +454,12 @@ export async function exportPayrollReportToPdf(
     }
   }
 
+  const buildOptions = { logoInfo, locale, companyViewMode: options?.companyViewMode };
   let doc: jsPDF;
   try {
-    doc = buildPdfDoc(data, tr, { logoInfo, locale });
+    doc = buildPdfDoc(data, tr, buildOptions);
   } catch {
-    doc = buildPdfDoc(data, tr, { logoInfo: null, locale });
+    doc = buildPdfDoc(data, tr, { ...buildOptions, logoInfo: null });
   }
 
   const fileName = getPayrollReportFileName(
