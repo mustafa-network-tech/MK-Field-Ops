@@ -412,6 +412,23 @@ export function JobEntry() {
                         </ul>
                       )}
                     </div>
+                    <select
+                      className={`${styles.input} ${styles.workItemSelectMobile}`}
+                      value={row.workItemId}
+                      onChange={(e) => {
+                        const id = e.target.value;
+                        const wi = workItems.find((w) => w.id === id);
+                        const label = wi ? (wi.description ? `${wi.description} – ${wi.code}` : wi.code) : '';
+                        updateRow(index, { workItemId: id, workItemSearch: label });
+                      }}
+                      aria-label={t('jobs.workItem')}
+                    >
+                      <option value="">-- {t('jobs.workItem')} --</option>
+                      {workItems.map((wi) => {
+                        const label = wi.description ? `${wi.description} – ${wi.code}` : wi.code;
+                        return <option key={wi.id} value={wi.id}>{label}</option>;
+                      })}
+                    </select>
                   </label>
                   <label className={styles.label}>
                     {t('jobs.quantity')}

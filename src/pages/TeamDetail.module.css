@@ -24,6 +24,13 @@
   background: #e2e8f0;
 }
 
+/* Mobil: ekip arası transfer butonu ve formu gizle */
+@media (max-width: 768px) {
+  .transferWrap {
+    display: none !important;
+  }
+}
+
 .title {
   font-size: 1.35rem;
   font-weight: 700;

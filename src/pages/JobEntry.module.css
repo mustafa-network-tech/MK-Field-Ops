@@ -269,6 +269,21 @@
   color: #64748b;
 }
 
+/* Mobil: arama alanı gizle, sadece select göster */
+.workItemSelectMobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .workItemWrap {
+    display: none !important;
+  }
+  .workItemSelectMobile {
+    display: block;
+    width: 100%;
+  }
+}
+
 /* Not / fotoğraf alanı ve modal */
 .noteAreaBtn {
   display: block;

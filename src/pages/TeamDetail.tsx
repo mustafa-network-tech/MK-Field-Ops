@@ -467,22 +467,24 @@ export function TeamDetail() {
                         )}
                         {!showTransfer ? (
                           !showReturnInput && (
-                            <button
-                              type="button"
-                              className={styles.backBtn}
-                              onClick={() => {
-                                setTransferAllocationId(alloc.id);
-                                setTransferTargetTeamId('');
-                                setTransferQuantity(isMeter ? String(alloc.quantityMeters ?? 0) : String(alloc.quantityPcs ?? 0));
-                                setZimmetError('');
-                                setZimmetSuccess('');
-                              }}
-                            >
-                              {t('materials.transferToTeam')}
-                            </button>
+                            <span className={styles.transferWrap}>
+                              <button
+                                type="button"
+                                className={styles.backBtn}
+                                onClick={() => {
+                                  setTransferAllocationId(alloc.id);
+                                  setTransferTargetTeamId('');
+                                  setTransferQuantity(isMeter ? String(alloc.quantityMeters ?? 0) : String(alloc.quantityPcs ?? 0));
+                                  setZimmetError('');
+                                  setZimmetSuccess('');
+                                }}
+                              >
+                                {t('materials.transferToTeam')}
+                              </button>
+                            </span>
                           )
                         ) : (
-                          <>
+                          <span className={styles.transferWrap}>
                             <select
                               value={transferTargetTeamId}
                               onChange={(e) => setTransferTargetTeamId(e.target.value)}
@@ -559,7 +561,7 @@ export function TeamDetail() {
                             >
                               {t('common.cancel')}
                             </button>
-                          </>
+                          </span>
                         )}
                       </td>
                     )}
