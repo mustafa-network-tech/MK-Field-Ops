@@ -168,3 +168,65 @@
 .removeBtn:hover {
   color: #dc2626;
 }
+
+/* Çoklu iş satırı */
+.jobRowCard {
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+}
+
+.jobRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.jobRowTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.removeRowBtn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.35rem;
+}
+
+.removeRowBtn:hover {
+  color: #dc2626;
+}
+
+.formActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+}
+
+.addJobRowBtn {
+  padding: 0.6rem 1.1rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.addJobRowBtn:hover {
+  background: #e2e8f0;
+  color: #334155;
+}
