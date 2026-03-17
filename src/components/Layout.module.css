@@ -54,6 +54,8 @@
   background: #1e293b;
   padding: 1rem 0;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .sidebarHeader {
@@ -92,6 +94,8 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  flex: 1;
+  overflow: auto;
 }
 
 .link,
@@ -123,6 +127,84 @@
 .linkPending:hover {
   background: #1d4ed8;
   color: white;
+}
+
+.sidebarFooter {
+  margin-top: auto;
+  padding: 1rem 1.25rem;
+  border-top: 1px solid #334155;
+  display: none;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sidebarLang {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sidebarLangLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.sidebarLangButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.sidebarLangBtn,
+.sidebarLangBtnActive {
+  padding: 0.35rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.sidebarLangBtn:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.sidebarLangBtnActive {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: white;
+}
+
+.sidebarExportLink {
+  padding: 0.5rem 0;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #94a3b8;
+  text-decoration: none;
+}
+
+.sidebarExportLink:hover {
+  color: #f1f5f9;
+}
+
+.sidebarLogoutBtn {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #f1f5f9;
+  background: #475569;
+  border: 1px solid #64748b;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sidebarLogoutBtn:hover {
+  background: #64748b;
 }
 
 .main {
@@ -310,6 +392,10 @@
   }
 
   .sidebarHeader {
+    display: flex;
+  }
+
+  .sidebarFooter {
     display: flex;
   }
 

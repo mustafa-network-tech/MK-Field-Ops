@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TopBar } from './TopBar';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
+import { authService } from '../services/authService';
+import { updateCompanyLanguageInSupabase } from '../services/companyService';
 import { canPlanAccessFeature } from '../services/planGating';
 import { getSubscriptionState, getEffectivePlan } from '../services/subscriptionService';
 import { getPendingApprovalsCountForUser } from '../services/approvalNotificationService';
@@ -12,10 +14,10 @@ import styles from './Layout.module.css';
 const VALID_LOCALES: CompanyLanguageCode[] = ['en', 'tr', 'es', 'fr', 'de'];
 
 export function Layout() {
-  const { t, setLocale } = useI18n();
-  const { user, company, profilesVersion } = useApp();
-  const location = useLocation();
+  const { t, locale, setLocale } = useI18n();
+  const { user, setUser, company, refreshCompany, profilesVersion } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPlanUpdateSuccess, setShowPlanUpdateSuccess] = useState(() => !!(location.state as { planChangeSuccess?: boolean } | null)?.planChangeSuccess);
   const sub = getSubscriptionState(company);
   const isPlanPage = location.pathname === '/plan';
@@ -50,6 +52,20 @@ export function Layout() {
   useEffect(() => {
     setSidebarOpen(false);
   }, [location.pathname]);
+
+  const handleLogout = () => {
+    authService.logout();
+    setUser(undefined);
+    navigate('/login');
+  };
+
+  const handleLocaleChange = async (loc: CompanyLanguageCode) => {
+    setLocale(loc);
+    if (user?.companyId) {
+      await updateCompanyLanguageInSupabase(user.companyId, loc);
+      refreshCompany();
+    }
+  };
 
   return (
     <div className={styles.layout}>
@@ -121,6 +137,29 @@ export function Layout() {
               </NavLink>
             )}
           </nav>
+          <div className={styles.sidebarFooter}>
+            <div className={styles.sidebarLang}>
+              <span className={styles.sidebarLangLabel}>{t('topBar.language')}</span>
+              <div className={styles.sidebarLangButtons}>
+                {VALID_LOCALES.map((loc) => (
+                  <button
+                    key={loc}
+                    type="button"
+                    className={locale === loc ? styles.sidebarLangBtnActive : styles.sidebarLangBtn}
+                    onClick={() => handleLocaleChange(loc)}
+                  >
+                    {loc.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <NavLink to="/reports" className={styles.sidebarExportLink} onClick={() => setSidebarOpen(false)}>
+              {t('common.export')}
+            </NavLink>
+            <button type="button" className={styles.sidebarLogoutBtn} onClick={handleLogout}>
+              {t('auth.logout')}
+            </button>
+          </div>
         </aside>
         <main className={styles.main}>
           {showPlanUpdateSuccess && (
