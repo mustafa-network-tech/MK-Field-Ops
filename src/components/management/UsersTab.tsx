@@ -59,7 +59,8 @@ export function UsersTab() {
   const [joinReqRole, setJoinReqRole] = useState<Role>('teamLeader');
 
   const isCompanyManager = currentUser?.role === 'companyManager';
-  const canGrantPriceVisibility = currentUser?.role === 'companyManager' || currentUser?.role === 'projectManager';
+  /** Only company manager can grant/revoke price visibility (price limit) for team leaders. */
+  const canGrantPriceVisibility = currentUser?.role === 'companyManager';
 
   const handleGrantPriceVisibility = (tl: UserType) => {
     if (tl.role !== 'teamLeader' || !canGrantPriceVisibility) return;
