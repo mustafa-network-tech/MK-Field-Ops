@@ -854,7 +854,13 @@
       "startDayRange": "Start day must be between 1 and 28."
     },
     "activePeriodLabel": "Current payroll period",
-    "accessRestricted": "Only Company Manager and Project Manager can access Settings."
+    "accessRestricted": "Only Company Manager and Project Manager can access Settings.",
+    "syncToCloudTitle": "Data sync",
+    "syncToCloudHint": "Upload campaigns, projects, teams and jobs from this device to the cloud. When you sign in from another device, the same data will appear.",
+    "syncToCloud": "Upload data to cloud",
+    "syncToCloudLoading": "Uploading…",
+    "syncToCloudSuccess": "Data uploaded to cloud.",
+    "syncToCloudError": "Upload failed. Check connection and Supabase setup."
   },
   "payroll": {
     "title": "Payroll Periods",

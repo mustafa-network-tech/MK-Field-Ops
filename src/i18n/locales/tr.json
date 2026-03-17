@@ -859,7 +859,13 @@
       "startDayRange": "Başlangıç günü 1–28 arasında olmalıdır."
     },
     "activePeriodLabel": "Mevcut hakediş dönemi",
-    "accessRestricted": "Ayarlar sayfasına sadece Şirket Yöneticisi ve Proje Yöneticisi erişebilir."
+    "accessRestricted": "Ayarlar sayfasına sadece Şirket Yöneticisi ve Proje Yöneticisi erişebilir.",
+    "syncToCloudTitle": "Veri senkronizasyonu",
+    "syncToCloudHint": "Kampanyalar, projeler, takımlar ve işler bu cihazdan buluta yüklenir. Başka cihazdan giriş yaptığınızda aynı veriler görünür.",
+    "syncToCloud": "Verileri buluta yükle",
+    "syncToCloudLoading": "Yükleniyor…",
+    "syncToCloudSuccess": "Veriler buluta yüklendi.",
+    "syncToCloudError": "Yükleme başarısız. Bağlantıyı ve Supabase ayarlarını kontrol edin."
   },
   "payroll": {
     "title": "Hakediş Dönemleri",

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
+import { upsertEquipment } from '../../services/supabaseSyncService';
 import { Card } from '../ui/Card';
 import type { Equipment } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -18,10 +19,12 @@ export function EquipmentTab() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) {
-      store.updateEquipment(editing.id, { code: form.code, description: form.description });
+      const updated = store.updateEquipment(editing.id, { code: form.code, description: form.description });
+      if (updated) upsertEquipment(updated).catch(() => {});
       setEditing(null);
     } else {
-      store.addEquipment({ companyId, code: form.code, description: form.description });
+      const added = store.addEquipment({ companyId, code: form.code, description: form.description });
+      upsertEquipment(added).catch(() => {});
       setShowForm(false);
     }
     setForm({ code: '', description: '' });

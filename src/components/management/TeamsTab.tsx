@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
+import { upsertTeam } from '../../services/supabaseSyncService';
 import { addTeam, updateTeam, getEligibleTeamLeaders } from '../../services/teamService';
 import { getTeamsForUser } from '../../services/teamScopeService';
 import { canPlanAddTeam } from '../../services/planGating';
@@ -105,7 +106,8 @@ export function TeamsTab() {
 
   const handleApprove = (teamId: string) => {
     const team = store.getTeam(teamId);
-    store.updateTeam(teamId, { approvalStatus: 'approved', approvedBy: user!.id });
+    const updated = store.updateTeam(teamId, { approvalStatus: 'approved', approvedBy: user!.id });
+    if (updated) upsertTeam(updated).catch(() => {});
     const actor = actorFromUser(user ?? undefined);
     if (actor && team) {
       logEvent(actor, {
@@ -129,7 +131,8 @@ export function TeamsTab() {
 
   const handleReject = (teamId: string) => {
     const team = store.getTeam(teamId);
-    store.updateTeam(teamId, { approvalStatus: 'rejected' });
+    const updated = store.updateTeam(teamId, { approvalStatus: 'rejected' });
+    if (updated) upsertTeam(updated).catch(() => {});
     const actor = actorFromUser(user ?? undefined);
     if (actor && team) {
       logEvent(actor, {

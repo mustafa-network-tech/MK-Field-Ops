@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
+import { upsertVehicle } from '../../services/supabaseSyncService';
 import { Card } from '../ui/Card';
 import type { Vehicle } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -18,10 +19,12 @@ export function VehiclesTab() {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (editing) {
-      store.updateVehicle(editing.id, { plateNumber: form.plateNumber, brand: form.brand, model: form.model, description: form.description || undefined });
+      const updated = store.updateVehicle(editing.id, { plateNumber: form.plateNumber, brand: form.brand, model: form.model, description: form.description || undefined });
+      if (updated) upsertVehicle(updated).catch(() => {});
       setEditing(null);
     } else {
-      store.addVehicle({ companyId, ...form, description: form.description || undefined });
+      const added = store.addVehicle({ companyId, ...form, description: form.description || undefined });
+      upsertVehicle(added).catch(() => {});
       setShowForm(false);
     }
     setForm({ plateNumber: '', brand: '', model: '', description: '' });

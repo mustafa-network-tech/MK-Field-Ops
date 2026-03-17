@@ -1,4 +1,5 @@
 import { store } from '../data/store';
+import { upsertJob } from './supabaseSyncService';
 import { canUserUseTeamForJob } from './teamScopeService';
 import { roundMoney } from '../utils/formatLocale';
 import { logEvent, actorFromUser } from './auditLogService';
@@ -142,6 +143,7 @@ export function addJob(
     notePhotos: (params.notePhotos?.length ? params.notePhotos : []).slice(0, 3),
     status: 'draft',
   });
+  upsertJob(newJob).catch(() => {});
   const team = store.getTeam(params.teamId);
   const actor = actorFromUser(user);
   if (actor) {
@@ -192,13 +194,15 @@ export function updateJob(
       ? { ...patch, status: patch.status as JobRecord['status'] }
       : patch;
 
+  let updated: JobRecord | undefined;
   if (isApproval && !wouldBe.stockDeducted && hasZimmetUsages) {
     const deductResult = tryDeductZimmetForApprovedJob(companyId, wouldBe);
     if (!deductResult.ok) return deductResult;
-    store.updateJob(jobId, { ...jobPatch, stockDeducted: true });
+    updated = store.updateJob(jobId, { ...jobPatch, stockDeducted: true });
   } else {
-    store.updateJob(jobId, jobPatch);
+    updated = store.updateJob(jobId, jobPatch);
   }
+  if (updated) upsertJob(updated).catch(() => {});
 
   const actor = actorFromUser(user);
   const team = store.getTeam(job.teamId);

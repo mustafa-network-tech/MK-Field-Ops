@@ -848,7 +848,13 @@
       "startDayRange": "Starttag muss zwischen 1 und 28 liegen."
     },
     "activePeriodLabel": "Aktueller Abrechnungszeitraum",
-    "accessRestricted": "Nur Unternehmensleiter und Projektleiter haben Zugriff auf Einstellungen."
+    "accessRestricted": "Nur Unternehmensleiter und Projektleiter haben Zugriff auf Einstellungen.",
+    "syncToCloudTitle": "Datensynchronisation",
+    "syncToCloudHint": "Kampagnen, Projekte, Teams und Aufträge werden von diesem Gerät in die Cloud hochgeladen. Bei Anmeldung von einem anderen Gerät erscheinen dieselben Daten.",
+    "syncToCloud": "Daten in Cloud hochladen",
+    "syncToCloudLoading": "Wird hochgeladen…",
+    "syncToCloudSuccess": "Daten in Cloud hochgeladen.",
+    "syncToCloudError": "Upload fehlgeschlagen. Verbindung und Supabase prüfen."
   },
   "payroll": {
     "title": "Abrechnungszeiträume",

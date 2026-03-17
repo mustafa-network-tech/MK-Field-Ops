@@ -43,6 +43,8 @@ export const authService = {
       if (profileError || !profile) return { ok: false, error: 'auth.loginError' };
       if (profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
       store.setUserFromProfile(profile, data.user?.email ?? email);
+      const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
+      await fetchCompanyDataFromSupabase(profile.company_id ?? '');
       return { ok: true };
     }
     const users = companyId ? store.getUsers(companyId) : store.getUsers();
@@ -231,6 +233,8 @@ export const authService = {
     const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email, can_see_prices').eq('id', session.user.id).single();
     if (!profile) return false;
     store.setUserFromProfile(profile, profile.email ?? session.user.email ?? '');
+    const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
+    if (profile.company_id) await fetchCompanyDataFromSupabase(profile.company_id);
     return true;
   },
 

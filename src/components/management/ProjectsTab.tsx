@@ -3,6 +3,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { getProjectDisplayKey } from '../../utils/projectKey';
+import { upsertCampaign, upsertProject } from '../../services/supabaseSyncService';
 import { Card } from '../ui/Card';
 import type { MaterialMainType, Project, ProjectStatus } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -104,7 +105,7 @@ export function ProjectsTab() {
     const receivedDate = form.receivedDate?.trim() && /^\d{4}-\d{2}-\d{2}$/.test(form.receivedDate) ? form.receivedDate : new Date().toISOString().slice(0, 10);
     try {
       if (editing) {
-        store.updateProject(editing.id, {
+        const updated = store.updateProject(editing.id, {
           campaignId: form.campaignId,
           projectYear: yearNum,
           externalProjectId: external,
@@ -112,9 +113,10 @@ export function ProjectsTab() {
           name: form.name.trim() || undefined,
           description: form.description.trim() || undefined,
         });
+        if (updated) upsertProject(updated).catch(() => {});
         setEditing(null);
       } else {
-        store.addProject({
+        const added = store.addProject({
           companyId,
           campaignId: form.campaignId,
           projectYear: yearNum,
@@ -125,6 +127,7 @@ export function ProjectsTab() {
           status: 'ACTIVE',
           createdBy: user?.id ?? '',
         });
+        upsertProject(added).catch(() => {});
         setShowForm(false);
       }
       setForm(defaultForm);
@@ -141,6 +144,7 @@ export function ProjectsTab() {
     const name = newCampaignName.trim();
     if (!name) return;
     const c = store.addCampaign({ companyId, name });
+    upsertCampaign(c).catch(() => {});
     setForm((f) => ({ ...f, campaignId: c.id }));
     setNewCampaignName('');
     setShowNewCampaign(false);
@@ -149,7 +153,8 @@ export function ProjectsTab() {
   const handleArchive = (p: Project) => {
     setError('');
     try {
-      store.updateProject(p.id, { status: 'ARCHIVED' });
+      const updated = store.updateProject(p.id, { status: 'ARCHIVED' });
+      if (updated) upsertProject(updated).catch(() => {});
     } catch {
       setError('messages.error');
     }
@@ -158,7 +163,8 @@ export function ProjectsTab() {
   const handleActivate = (p: Project) => {
     setError('');
     try {
-      store.updateProject(p.id, { status: 'ACTIVE' });
+      const updated = store.updateProject(p.id, { status: 'ACTIVE' });
+      if (updated) upsertProject(updated).catch(() => {});
     } catch {
       setError('messages.error');
     }
@@ -173,7 +179,8 @@ export function ProjectsTab() {
       setCompleteError('projects.cannotCompletePendingApprovals');
       return;
     }
-    store.completeProject(selectedProjectId, user.id);
+    const completed = store.completeProject(selectedProjectId, user.id);
+    if (completed) upsertProject(completed).catch(() => {});
     setConfirmCompleteOpen(false);
     setSelectedProjectId(null);
   };

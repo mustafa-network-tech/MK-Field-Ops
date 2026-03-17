@@ -848,7 +848,13 @@
       "startDayRange": "El día debe estar entre 1 y 28."
     },
     "activePeriodLabel": "Período de liquidación actual",
-    "accessRestricted": "Solo el Responsable de Empresa y el Responsable de Proyecto pueden acceder a Ajustes."
+    "accessRestricted": "Solo el Responsable de Empresa y el Responsable de Proyecto pueden acceder a Ajustes.",
+    "syncToCloudTitle": "Sincronización de datos",
+    "syncToCloudHint": "Suba campañas, proyectos, equipos y trabajos de este dispositivo a la nube. Al iniciar sesión desde otro dispositivo, verá los mismos datos.",
+    "syncToCloud": "Subir datos a la nube",
+    "syncToCloudLoading": "Subiendo…",
+    "syncToCloudSuccess": "Datos subidos a la nube.",
+    "syncToCloudError": "Error al subir. Compruebe la conexión y Supabase."
   },
   "payroll": {
     "title": "Períodos de Liquidación",

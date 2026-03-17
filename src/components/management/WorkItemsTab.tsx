@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
+import { upsertWorkItem } from '../../services/supabaseSyncService';
 import { validatePrice, formatPriceForUser } from '../../utils/priceRules';
 import { parseDecimalFromLocale } from '../../utils/formatLocale';
 import { Card } from '../ui/Card';
@@ -76,10 +77,12 @@ export function WorkItemsTab() {
     }
     const payload = { ...form, code: rawCode, unitPrice: priceResult.value };
     if (editing) {
-      store.updateWorkItem(editing.id, payload);
+      const updated = store.updateWorkItem(editing.id, payload);
+      if (updated) upsertWorkItem(updated).catch(() => {});
       setEditing(null);
     } else {
-      store.addWorkItem({ companyId, ...payload });
+      const added = store.addWorkItem({ companyId, ...payload });
+      upsertWorkItem(added).catch(() => {});
       setShowForm(false);
     }
     setForm({ code: '', unitType: '', unitPrice: 0, description: '' });

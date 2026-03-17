@@ -112,6 +112,7 @@ function save<T>(key: string, value: T): void {
 }
 
 function id(): string {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
@@ -816,6 +817,41 @@ export const store = {
     }
     save(STORAGE_KEYS.payrollPeriodSettings, list);
     return settings;
+  },
+
+  /**
+   * Replace this company's campaigns, vehicles, equipment, work items, teams, projects, jobs
+   * with data fetched from Supabase (e.g. after login on another device or after push).
+   */
+  replaceCompanyDataFromSupabase(
+    companyId: string,
+    data: {
+      campaigns: Campaign[];
+      vehicles: Vehicle[];
+      equipment: Equipment[];
+      workItems: WorkItem[];
+      teams: Team[];
+      projects: Project[];
+      jobs: JobRecord[];
+    }
+  ): void {
+    const campaigns = load<Campaign[]>(STORAGE_KEYS.campaigns, []).filter((c) => c.companyId !== companyId).concat(data.campaigns);
+    save(STORAGE_KEYS.campaigns, campaigns);
+    const vehicles = load<Vehicle[]>(STORAGE_KEYS.vehicles, []).filter((v) => v.companyId !== companyId).concat(data.vehicles);
+    save(STORAGE_KEYS.vehicles, vehicles);
+    const equipment = load<Equipment[]>(STORAGE_KEYS.equipment, []).filter((e) => e.companyId !== companyId).concat(data.equipment);
+    save(STORAGE_KEYS.equipment, equipment);
+    const workItems = load<WorkItem[]>(STORAGE_KEYS.workItems, []).filter((w) => w.companyId !== companyId).concat(data.workItems);
+    save(STORAGE_KEYS.workItems, workItems);
+    const teams = load<Team[]>(STORAGE_KEYS.teams, []).filter((t) => t.companyId !== companyId).concat(data.teams);
+    save(STORAGE_KEYS.teams, teams);
+    const projects = load<unknown[]>(STORAGE_KEYS.projects, []);
+    const migrated = migrateProjects(projects);
+    const otherProjects = migrated.filter((p) => p.companyId !== companyId);
+    const allProjects = [...otherProjects, ...data.projects];
+    save(STORAGE_KEYS.projects, allProjects);
+    const jobs = load<JobRecord[]>(STORAGE_KEYS.jobs, []).filter((j) => j.companyId !== companyId).concat(data.jobs);
+    save(STORAGE_KEYS.jobs, jobs);
   },
 
   /**

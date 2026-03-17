@@ -848,7 +848,13 @@
       "startDayRange": "Le jour doit être entre 1 et 28."
     },
     "activePeriodLabel": "Période de paiement actuelle",
-    "accessRestricted": "Seuls le Responsable d'Entreprise et le Chef de Projet peuvent accéder aux Paramètres."
+    "accessRestricted": "Seuls le Responsable d'Entreprise et le Chef de Projet peuvent accéder aux Paramètres.",
+    "syncToCloudTitle": "Synchronisation des données",
+    "syncToCloudHint": "Envoi des campagnes, projets, équipes et chantiers de cet appareil vers le cloud. En vous connectant depuis un autre appareil, les mêmes données s'afficheront.",
+    "syncToCloud": "Envoyer les données vers le cloud",
+    "syncToCloudLoading": "Envoi en cours…",
+    "syncToCloudSuccess": "Données envoyées vers le cloud.",
+    "syncToCloudError": "Échec de l'envoi. Vérifiez la connexion et Supabase."
   },
   "payroll": {
     "title": "Périodes de Paiement",

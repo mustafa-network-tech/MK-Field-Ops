@@ -105,6 +105,7 @@ export function addTeam(
   if (!leaderCheck.ok) return leaderCheck;
 
   const team = store.addTeam(params);
+  void import('./supabaseSyncService').then(({ upsertTeam }) => upsertTeam(team).catch(() => {}));
   const actor = actorFromUser(currentUser);
   if (actor) {
     logEvent(actor, {
@@ -168,6 +169,7 @@ export function updateTeam(
 
   const updated = store.updateTeam(teamId, patch);
   if (updated) {
+    void import('./supabaseSyncService').then(({ upsertTeam }) => upsertTeam(updated).catch(() => {}));
     const actor = actorFromUser(currentUser);
     if (actor) {
       logEvent(actor, {
