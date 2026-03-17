@@ -150,6 +150,15 @@ export function ProjectsTab() {
     setShowNewCampaign(false);
   };
 
+  const handleAddCampaignFromList = () => {
+    const name = newCampaignName.trim();
+    if (!name) return;
+    const c = store.addCampaign({ companyId, name });
+    upsertCampaign(c).catch(() => {});
+    setNewCampaignName('');
+    setShowNewCampaign(false);
+  };
+
   const handleArchive = (p: Project) => {
     setError('');
     try {
@@ -626,13 +635,37 @@ export function ProjectsTab() {
     );
   }
 
-  // Kampanya seçili değilse: sadece kampanya listesi
+  // Kampanya seçili değilse: sadece kampanya listesi + yeni kampanya ekleme
   if (!selectedCampaignId && !selectedProjectId) {
     return (
       <Card>
         <div className={styles.toolbar}>
           <h3 className={styles.sectionTitle}>{t('campaigns.title')}</h3>
+          {!showNewCampaign ? (
+            <button type="button" className={styles.primaryBtn} onClick={() => setShowNewCampaign(true)}>
+              {campaigns.length === 0 ? t('campaigns.createFirstCampaign') : t('campaigns.createCampaign')}
+            </button>
+          ) : null}
         </div>
+        {showNewCampaign && (
+          <div className={styles.form}>
+            <div className={styles.inputRow}>
+              <input
+                value={newCampaignName}
+                onChange={(e) => setNewCampaignName(e.target.value)}
+                className={styles.input}
+                placeholder={t('campaigns.campaignName')}
+                autoFocus
+              />
+              <button type="button" className={styles.primaryBtn} onClick={handleAddCampaignFromList}>
+                {t('common.add')}
+              </button>
+              <button type="button" className={styles.secondaryBtn} onClick={() => { setShowNewCampaign(false); setNewCampaignName(''); }}>
+                {t('common.cancel')}
+              </button>
+            </div>
+          </div>
+        )}
         <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -642,7 +675,7 @@ export function ProjectsTab() {
             </tr>
           </thead>
           <tbody>
-            {campaigns.length === 0 && (
+            {campaigns.length === 0 && !showNewCampaign && (
               <tr>
                 <td colSpan={2} className={styles.muted}>{t('common.noData')}</td>
               </tr>

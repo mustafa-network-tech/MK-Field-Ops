@@ -424,6 +424,7 @@
     "campaign": "Campagne",
     "campaignName": "Nom de campagne",
     "createCampaign": "Créer une campagne",
+    "createFirstCampaign": "Créer la première campagne",
     "selectCampaign": "Sélectionner une campagne",
     "noCampaigns": "Aucune campagne. Créez-en une d'abord."
   },

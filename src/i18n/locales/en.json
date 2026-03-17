@@ -432,6 +432,7 @@
     "campaign": "Campaign",
     "campaignName": "Campaign name",
     "createCampaign": "Create campaign",
+    "createFirstCampaign": "Create first campaign",
     "selectCampaign": "Select campaign",
     "noCampaigns": "No campaigns. Create one first."
   },

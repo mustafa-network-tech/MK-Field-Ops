@@ -432,6 +432,7 @@
     "campaign": "Kampanya",
     "campaignName": "Kampanya adı",
     "createCampaign": "Kampanya oluştur",
+    "createFirstCampaign": "İlk kampanyayı oluştur",
     "selectCampaign": "Kampanya seçin",
     "noCampaigns": "Kampanya yok. Önce bir kampanya oluşturun."
   },

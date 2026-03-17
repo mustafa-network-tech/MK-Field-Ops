@@ -820,7 +820,7 @@ export const store = {
   },
 
   /**
-   * Replace this company's campaigns, vehicles, equipment, work items, teams, projects, jobs
+   * Replace this company's campaigns, vehicles, equipment, work items, teams, projects, jobs, material stock
    * with data fetched from Supabase (e.g. after login on another device or after push).
    */
   replaceCompanyDataFromSupabase(
@@ -833,6 +833,7 @@ export const store = {
       teams: Team[];
       projects: Project[];
       jobs: JobRecord[];
+      materialStock?: MaterialStockItem[];
     }
   ): void {
     const campaigns = load<Campaign[]>(STORAGE_KEYS.campaigns, []).filter((c) => c.companyId !== companyId).concat(data.campaigns);
@@ -852,6 +853,10 @@ export const store = {
     save(STORAGE_KEYS.projects, allProjects);
     const jobs = load<JobRecord[]>(STORAGE_KEYS.jobs, []).filter((j) => j.companyId !== companyId).concat(data.jobs);
     save(STORAGE_KEYS.jobs, jobs);
+    if (data.materialStock && data.materialStock.length >= 0) {
+      const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId !== companyId);
+      save(STORAGE_KEYS.materialStock, list.concat(data.materialStock));
+    }
   },
 
   /**

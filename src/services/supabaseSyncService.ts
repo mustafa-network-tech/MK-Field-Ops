@@ -15,6 +15,7 @@ import type {
   Project,
   JobRecord,
   JobMaterialUsage,
+  MaterialStockItem,
 } from '../types';
 
 function isUuid(s: string): boolean {
@@ -155,6 +156,28 @@ function materialUsagesToDb(usages: JobMaterialUsage[] | undefined): Record<stri
   }));
 }
 
+/** Map material_stock row to MaterialStockItem (only columns present in DB). */
+function mapMaterialStockItem(row: Record<string, unknown>): MaterialStockItem {
+  return {
+    id: row.id as string,
+    companyId: row.company_id as string,
+    mainType: (row.main_type as MaterialStockItem['mainType']) ?? 'custom',
+    customGroupName: row.custom_group_name as string | undefined,
+    name: (row.name as string) ?? '',
+    sizeOrCapacity: row.size_or_capacity as string | undefined,
+    stockQty: row.stock_qty != null ? Number(row.stock_qty) : undefined,
+    isCable: Boolean(row.is_cable),
+    cableCategory: (row.cable_category as MaterialStockItem['cableCategory']) ?? undefined,
+    capacityLabel: row.capacity_label as string | undefined,
+    spoolId: row.spool_id as string | undefined,
+    lengthTotal: row.length_total != null ? Number(row.length_total) : undefined,
+    lengthRemaining: row.length_remaining != null ? Number(row.length_remaining) : undefined,
+    isExternal: Boolean(row.is_external),
+    externalNote: row.external_note as string | undefined,
+    createdAt: (row.created_at as string) ?? new Date().toISOString(),
+  };
+}
+
 /**
  * Upsert a single entity to Supabase. No-op if supabase is not configured or id is not a valid UUID.
  * Call after store.addX / store.updateX so every change is persisted to the cloud.
@@ -286,7 +309,16 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
   if (!supabase || !companyId) return { ok: false, error: 'Not configured or no company' };
 
   try {
-    const [campaignsRes, vehiclesRes, equipmentRes, workItemsRes, teamsRes, projectsRes, jobsRes] = await Promise.all([
+    const [
+      campaignsRes,
+      vehiclesRes,
+      equipmentRes,
+      workItemsRes,
+      teamsRes,
+      projectsRes,
+      jobsRes,
+      materialStockRes,
+    ] = await Promise.all([
       supabase.from('campaigns').select('*').eq('company_id', companyId),
       supabase.from('vehicles').select('*').eq('company_id', companyId),
       supabase.from('equipment').select('*').eq('company_id', companyId),
@@ -294,6 +326,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
       supabase.from('teams').select('*').eq('company_id', companyId),
       supabase.from('projects').select('*').eq('company_id', companyId),
       supabase.from('jobs').select('*').eq('company_id', companyId),
+      supabase.from('material_stock').select('*').eq('company_id', companyId),
     ]);
 
     if (campaignsRes.error) return { ok: false, error: campaignsRes.error.message };
@@ -303,6 +336,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     if (teamsRes.error) return { ok: false, error: teamsRes.error.message };
     if (projectsRes.error) return { ok: false, error: projectsRes.error.message };
     if (jobsRes.error) return { ok: false, error: jobsRes.error.message };
+    if (materialStockRes.error) return { ok: false, error: materialStockRes.error.message };
 
     const campaigns = (campaignsRes.data ?? []).map(mapCampaign);
     const vehicles = (vehiclesRes.data ?? []).map(mapVehicle);
@@ -311,6 +345,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     const teams = (teamsRes.data ?? []).map(mapTeam);
     const projects = (projectsRes.data ?? []).map(mapProject);
     const jobs = (jobsRes.data ?? []).map(mapJob);
+    const materialStock = (materialStockRes.data ?? []).map(mapMaterialStockItem);
 
     store.replaceCompanyDataFromSupabase(companyId, {
       campaigns,
@@ -320,6 +355,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
       teams,
       projects,
       jobs,
+      materialStock,
     });
 
     return { ok: true };
@@ -346,6 +382,7 @@ export async function pushCompanyDataToSupabase(companyId: string): Promise<{ ok
   const teams = store.getTeams(companyId);
   const projects = store.getProjects(companyId);
   const jobs = store.getJobs(companyId);
+  const materialStock = store.getMaterialStock(companyId);
 
   const campaignIdMap: Record<string, string> = {};
   const vehicleIdMap: Record<string, string> = {};
@@ -503,6 +540,31 @@ export async function pushCompanyDataToSupabase(companyId: string): Promise<{ ok
     if (jobRows.length) {
       const { error } = await supabase.from('jobs').upsert(jobRows, { onConflict: 'id' });
       if (error) return { ok: false, error: `jobs: ${error.message}` };
+    }
+
+    const materialStockRows = materialStock
+      .filter((m) => isUuid(m.id))
+      .map((m) => ({
+        id: m.id,
+        company_id: companyId,
+        main_type: m.mainType,
+        custom_group_name: m.customGroupName ?? null,
+        name: m.name,
+        size_or_capacity: m.sizeOrCapacity ?? null,
+        stock_qty: m.stockQty ?? null,
+        is_cable: m.isCable ?? false,
+        cable_category: m.cableCategory ?? null,
+        capacity_label: m.capacityLabel ?? null,
+        spool_id: m.spoolId ?? null,
+        length_total: m.lengthTotal ?? null,
+        length_remaining: m.lengthRemaining ?? null,
+        is_external: m.isExternal ?? false,
+        external_note: m.externalNote ?? null,
+        created_at: m.createdAt,
+      }));
+    if (materialStockRows.length) {
+      const { error } = await supabase.from('material_stock').upsert(materialStockRows, { onConflict: 'id' });
+      if (error) return { ok: false, error: `material_stock: ${error.message}` };
     }
 
     await fetchCompanyDataFromSupabase(companyId);
