@@ -194,11 +194,13 @@ export function TeamsTab() {
         {(showForm || editing) && (
           <form onSubmit={handleSave} className={styles.form}>
             <label className={styles.label}>
-              {t('teams.teamCode')}
+              {t('teams.teamCode')} <span className={styles.muted}>(3 {t('teams.codeChars')})</span>
               <input
                 value={form.code}
-                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.slice(0, 3) }))}
                 className={styles.input}
+                placeholder="ABC"
+                maxLength={3}
                 required
               />
             </label>

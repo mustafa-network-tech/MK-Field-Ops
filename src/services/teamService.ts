@@ -84,8 +84,19 @@ export function addTeam(
     return { ok: false, error: 'teams.validation.leaderRequired', statusCode: 400 };
   }
 
-  const company = store.getCompany(companyId, companyId);
+  const codeTrimmed = (params.code ?? '').trim();
+  if (codeTrimmed.length !== 3) {
+    return { ok: false, error: 'teams.validation.codeMustBeThree', statusCode: 400 };
+  }
   const existingTeams = store.getTeams(companyId);
+  const codeExists = existingTeams.some(
+    (t) => t.code.trim().toLowerCase() === codeTrimmed.toLowerCase()
+  );
+  if (codeExists) {
+    return { ok: false, error: 'teams.validation.codeAlreadyExists', statusCode: 400 };
+  }
+
+  const company = store.getCompany(companyId, companyId);
   if (!canPlanAddTeam(getEffectivePlan(company) ?? null, existingTeams.length)) {
     return { ok: false, error: 'teams.validation.planTeamLimitReached', statusCode: 403 };
   }
@@ -140,6 +151,20 @@ export function updateTeam(
     true
   );
   if (!leaderCheck.ok) return leaderCheck;
+
+  if (patch.code !== undefined) {
+    const codeTrimmed = patch.code.trim();
+    if (codeTrimmed.length !== 3) {
+      return { ok: false, error: 'teams.validation.codeMustBeThree', statusCode: 400 };
+    }
+    const existingTeams = store.getTeams(existing.companyId);
+    const codeExists = existingTeams.some(
+      (t) => t.id !== teamId && t.code.trim().toLowerCase() === codeTrimmed.toLowerCase()
+    );
+    if (codeExists) {
+      return { ok: false, error: 'teams.validation.codeAlreadyExists', statusCode: 400 };
+    }
+  }
 
   const updated = store.updateTeam(teamId, patch);
   if (updated) {

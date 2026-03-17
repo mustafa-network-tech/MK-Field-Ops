@@ -5,6 +5,18 @@ import { formatNumberByLocale } from '../utils/formatLocale';
 import type { Locale } from '../i18n/I18nContext';
 import type { PayrollReportData } from './payrollReportService';
 
+/** Convert text to ASCII for PDF so Turkish/dotted letters display correctly in default font. */
+export function toAsciiForPdf(text: string): string {
+  const map: Record<string, string> = {
+    'ı': 'i', 'İ': 'I', 'ğ': 'g', 'Ğ': 'G', 'ü': 'u', 'Ü': 'U',
+    'ş': 's', 'Ş': 'S', 'ö': 'o', 'Ö': 'O', 'ç': 'c', 'Ç': 'C',
+    'à': 'a', 'á': 'a', 'â': 'a', 'ä': 'a', 'å': 'a', 'æ': 'ae',
+    'è': 'e', 'é': 'e', 'ê': 'e', 'ë': 'e', 'ì': 'i', 'í': 'i', 'î': 'i', 'ï': 'i',
+    'ò': 'o', 'ó': 'o', 'ô': 'o', 'ù': 'u', 'ú': 'u', 'û': 'u', 'ñ': 'n', 'ÿ': 'y',
+  };
+  return String(text).replace(/[\u0080-\u024f]/g, (ch) => map[ch] ?? ch);
+}
+
 /** Cached logo data for PDF watermark during export session (URL -> { dataUrl, width, height }). */
 const logoWatermarkCache = new Map<string, { dataUrl: string; width: number; height: number }>();
 
@@ -168,6 +180,9 @@ export type PayrollReportTranslations = {
   exportDate: string;
   totalApprovedJobs: string;
   totalAmount: string;
+  totalWorkValue: string;
+  teamEarnings: string;
+  companyShare: string;
   completionDate: string;
   projectId: string;
   teamCode: string;
@@ -230,35 +245,42 @@ export function exportPayrollReportToExcel(
 ): void {
   const periodRange = `${data.period.start} – ${data.period.end}`;
   const fmt = (n: number) => formatNumberByLocale(n, locale);
+  const isTeam = data.reportType === 'team';
+
   const rows: (string | number)[][] = [
     [tr.title],
     [],
     [tr.companyName, data.companyName],
     [tr.payrollPeriod, periodRange],
-    ...(data.reportType === 'team' && data.teamCode ? [[tr.teamCode, data.teamCode]] : []),
+    ...(isTeam && data.teamCode ? [[tr.teamCode, data.teamCode]] : []),
     [tr.exportDate, data.exportDate],
     [],
     [tr.totalApprovedJobs, data.totals.approvedJobsCount],
-    [tr.totalAmount, fmt(data.totals.totalAmount)],
+    ...(isTeam
+      ? [[tr.teamEarnings, fmt(data.totals.teamEarnings)]]
+      : [
+          [tr.totalAmount, fmt(data.totals.totalAmount)],
+          [tr.totalWorkValue, fmt(data.totals.totalAmount)],
+          [tr.teamEarnings, fmt(data.totals.teamEarnings)],
+          [tr.companyShare, fmt(data.totals.companyShare)],
+        ]),
     [],
   ];
 
-  const tableHeaders = [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal];
+  const tableHeaders = isTeam
+    ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings]
+    : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare];
   rows.push(tableHeaders);
 
   if (data.isEmpty) {
-    rows.push([tr.noApprovedJobsInPeriod, '', '', '', '', '', '']);
+    rows.push(isTeam ? [tr.noApprovedJobsInPeriod, '', '', '', '', '', '', ''] : [tr.noApprovedJobsInPeriod, '', '', '', '', '', '', '', '']);
   } else {
     for (const j of data.jobs) {
-      rows.push([
-        j.completionDate,
-        j.projectId,
-        j.teamCode,
-        j.workItemName,
-        j.quantity,
-        fmt(j.unitPrice),
-        fmt(j.lineTotal),
-      ]);
+      if (isTeam) {
+        rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]);
+      } else {
+        rows.push([j.completionDate, j.projectId, j.teamCode, j.workItemName, j.quantity, fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]);
+      }
     }
   }
 
@@ -291,50 +313,62 @@ function buildPdfDoc(
   const { logoInfo, locale } = options;
   const fmt = (n: number) => formatNumberByLocale(n, locale);
   const fmtQty = (n: number) => formatNumberByLocale(n, locale, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  const pdf = (s: string) => toAsciiForPdf(s);
 
   const periodRange = `${data.period.start} – ${data.period.end}`;
   let y = 20;
 
   doc.setFontSize(14);
-  doc.text(tr.title, 14, y);
+  doc.text(pdf(tr.title), 14, y);
   y += 12;
 
   doc.setFontSize(10);
-  doc.text(`${tr.companyName}: ${data.companyName}`, 14, y);
+  doc.text(pdf(`${tr.companyName}: ${data.companyName}`), 14, y);
   y += 6;
-  doc.text(`${tr.payrollPeriod}: ${periodRange}`, 14, y);
+  doc.text(pdf(`${tr.payrollPeriod}: ${periodRange}`), 14, y);
   y += 6;
   if (data.reportType === 'team' && data.teamCode) {
-    doc.text(`${tr.teamCode}: ${data.teamCode}`, 14, y);
+    doc.text(pdf(`${tr.teamCode}: ${data.teamCode}`), 14, y);
     y += 6;
   }
-  doc.text(`${tr.exportDate}: ${data.exportDate}`, 14, y);
+  doc.text(pdf(`${tr.exportDate}: ${data.exportDate}`), 14, y);
   y += 10;
 
-  doc.text(`${tr.totalApprovedJobs}: ${data.totals.approvedJobsCount}`, 14, y);
+  const isTeam = data.reportType === 'team';
+  doc.text(pdf(`${tr.totalApprovedJobs}: ${data.totals.approvedJobsCount}`), 14, y);
   y += 6;
-  doc.text(`${tr.totalAmount}: ${fmt(data.totals.totalAmount)}`, 14, y);
-  y += 12;
+  if (isTeam) {
+    doc.text(pdf(`${tr.teamEarnings}: ${fmt(data.totals.teamEarnings)}`), 14, y);
+    y += 12;
+  } else {
+    doc.text(pdf(`${tr.totalAmount}: ${fmt(data.totals.totalAmount)}`), 14, y);
+    y += 6;
+    doc.text(pdf(`${tr.totalWorkValue}: ${fmt(data.totals.totalAmount)}`), 14, y);
+    y += 6;
+    doc.text(pdf(`${tr.teamEarnings}: ${fmt(data.totals.teamEarnings)}`), 14, y);
+    y += 6;
+    doc.text(pdf(`${tr.companyShare}: ${fmt(data.totals.companyShare)}`), 14, y);
+    y += 12;
+  }
 
-  const tableHeaders = [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal];
+  const tableHeaders = (isTeam
+    ? [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings]
+    : [tr.completionDate, tr.projectId, tr.teamCode, tr.workItemName, tr.quantity, tr.unitPrice, tr.lineTotal, tr.teamEarnings, tr.companyShare]
+  ).map(pdf);
   const tableRows = data.isEmpty
-    ? [[tr.noApprovedJobsInPeriod, '', '', '', '', '', '']]
-    : data.jobs.map((j) => [
-        j.completionDate,
-        j.projectId,
-        j.teamCode,
-        j.workItemName,
-        fmtQty(j.quantity),
-        fmt(j.unitPrice),
-        fmt(j.lineTotal),
-      ]);
+    ? [isTeam ? [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', ''] : [pdf(tr.noApprovedJobsInPeriod), '', '', '', '', '', '', '', '']]
+    : data.jobs.map((j) =>
+        isTeam
+          ? [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings)]
+          : [pdf(j.completionDate), pdf(j.projectId), pdf(j.teamCode), pdf(j.workItemName), fmtQty(j.quantity), fmt(j.unitPrice), fmt(j.lineTotal), fmt(j.teamEarnings), fmt(j.companyShare)]
+      );
 
   autoTable(doc, {
     head: [tableHeaders],
     body: tableRows,
     startY: y,
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [220, 220, 220] },
+    styles: { fontSize: 7 },
+    headStyles: { fillColor: [220, 220, 220], fontSize: 7 },
     didDrawPage: logoInfo
       ? (data) => {
           data.doc.setPage(data.pageNumber);
@@ -346,8 +380,8 @@ function buildPdfDoc(
   const lastTable = (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable;
   const tableFinalY = lastTable?.finalY ?? y;
   const signatureY = tableFinalY + 15;
-  doc.text(tr.signatureProjectManager, 14, signatureY);
-  doc.text(tr.signatureCompanyManager, 14, signatureY + 8);
+  doc.text(pdf(tr.signatureProjectManager), 14, signatureY);
+  doc.text(pdf(tr.signatureCompanyManager), 14, signatureY + 8);
 
   const totalPages = doc.getNumberOfPages();
   const footerY = pageHeight - 18;
@@ -359,10 +393,10 @@ function buildPdfDoc(
     doc.setPage(p);
     doc.setFontSize(fontSize);
     doc.setTextColor(lightGray, lightGray, lightGray);
-    doc.text(tr.footerGeneratedBy, pageWidth / 2, footerY, { align: 'center' });
+    doc.text(pdf(tr.footerGeneratedBy), pageWidth / 2, footerY, { align: 'center' });
     doc.setTextColor(gray, gray, gray);
     const pageText = tr.footerPageNumber.replace(/\{current\}/g, String(p)).replace(/\{total\}/g, String(totalPages));
-    doc.text(pageText, pageWidth - 14, footerY, { align: 'right' });
+    doc.text(pdf(pageText), pageWidth - 14, footerY, { align: 'right' });
   }
   doc.setTextColor(0, 0, 0);
   return doc;

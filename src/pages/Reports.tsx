@@ -26,8 +26,22 @@ export function Reports() {
 
   const [selectedPeriodIndex, setSelectedPeriodIndex] = useState(0);
   const [selectedTeamId, setSelectedTeamId] = useState('');
+  const [useDateRange, setUseDateRange] = useState(false);
+  const [dateRangeStart, setDateRangeStart] = useState('');
+  const [dateRangeEnd, setDateRangeEnd] = useState('');
 
   const selectedPeriod = periods[selectedPeriodIndex] ?? null;
+
+  /** Effective period: payroll period (when not date range) or custom start/end (when date range valid). */
+  const effectivePeriod = useMemo(() => {
+    if (useDateRange) {
+      if (dateRangeStart && dateRangeEnd && dateRangeStart <= dateRangeEnd) {
+        return { start: dateRangeStart, end: dateRangeEnd };
+      }
+      return null;
+    }
+    return selectedPeriod;
+  }, [useDateRange, dateRangeStart, dateRangeEnd, selectedPeriod]);
 
   function buildTranslations(
     reportType: 'company' | 'team',
@@ -45,6 +59,9 @@ export function Reports() {
       exportDate: t('payroll.report.exportDate'),
       totalApprovedJobs: t('payroll.report.totalApprovedJobs'),
       totalAmount: t('payroll.report.totalAmount'),
+      totalWorkValue: t('payroll.report.totalWorkValue'),
+      teamEarnings: t('payroll.report.teamEarnings'),
+      companyShare: t('payroll.report.companyShare'),
       completionDate: t('payroll.report.completionDate'),
       projectId: t('payroll.report.projectId'),
       teamCode: t('payroll.report.teamCode'),
@@ -61,8 +78,8 @@ export function Reports() {
   }
 
   async function handleExportCompany(format: 'xlsx' | 'pdf') {
-    if (!selectedPeriod) return;
-    const data = getPayrollReportData(companyId, selectedPeriod, 'company');
+    if (!effectivePeriod) return;
+    const data = getPayrollReportData(companyId, effectivePeriod, 'company');
     const tr = buildTranslations('company', data);
     if (format === 'xlsx') exportPayrollReportToExcel(data, tr, locale);
     else {
@@ -85,8 +102,8 @@ export function Reports() {
   }
 
   async function handleExportTeam(format: 'xlsx' | 'pdf') {
-    if (!selectedPeriod || !selectedTeamId) return;
-    const data = getPayrollReportData(companyId, selectedPeriod, 'team', selectedTeamId);
+    if (!effectivePeriod || !selectedTeamId) return;
+    const data = getPayrollReportData(companyId, effectivePeriod, 'team', selectedTeamId);
     const tr = buildTranslations('team', data);
     if (format === 'xlsx') exportPayrollReportToExcel(data, tr, locale);
     else {
@@ -123,21 +140,65 @@ export function Reports() {
       {hasPayrollSettings && canAccessCompanyExport && (
         <Card title={t('payroll.title')}>
           <div className={styles.field}>
-            <label htmlFor="report-period">{t('payroll.selectPeriod')}</label>
-            <select
-              id="report-period"
-              value={selectedPeriodIndex}
-              onChange={(e) => setSelectedPeriodIndex(Number(e.target.value))}
-              className={styles.select}
-            >
-              {periods.map((p, i) => (
-                <option key={`${p.start}-${p.end}`} value={i}>
-                  {p.label ?? `${p.start} – ${p.end}`}
-                  {p.isActive ? ` (${t('payroll.active')})` : ''}
-                </option>
-              ))}
-            </select>
+            <label>
+              <input
+                type="radio"
+                checked={!useDateRange}
+                onChange={() => setUseDateRange(false)}
+              />
+              {t('payroll.report.periodModePeriod')}
+            </label>
+            <label>
+              <input
+                type="radio"
+                checked={useDateRange}
+                onChange={() => setUseDateRange(true)}
+              />
+              {t('payroll.report.periodModeDateRange')}
+            </label>
           </div>
+          {!useDateRange && (
+            <div className={styles.field}>
+              <label htmlFor="report-period">{t('payroll.selectPeriod')}</label>
+              <select
+                id="report-period"
+                value={selectedPeriodIndex}
+                onChange={(e) => setSelectedPeriodIndex(Number(e.target.value))}
+                className={styles.select}
+              >
+                {periods.map((p, i) => (
+                  <option key={`${p.start}-${p.end}`} value={i}>
+                    {p.label ?? `${p.start} – ${p.end}`}
+                    {p.isActive ? ` (${t('payroll.active')})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {useDateRange && (
+            <>
+              <div className={styles.field}>
+                <label htmlFor="report-date-start">{t('payroll.report.startDate')}</label>
+                <input
+                  id="report-date-start"
+                  type="date"
+                  value={dateRangeStart}
+                  onChange={(e) => setDateRangeStart(e.target.value)}
+                  className={styles.select}
+                />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="report-date-end">{t('payroll.report.endDate')}</label>
+                <input
+                  id="report-date-end"
+                  type="date"
+                  value={dateRangeEnd}
+                  onChange={(e) => setDateRangeEnd(e.target.value)}
+                  className={styles.select}
+                />
+              </div>
+            </>
+          )}
 
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('payroll.report.sectionCompany')}</h3>
@@ -147,7 +208,7 @@ export function Reports() {
                 type="button"
                 className={styles.primaryBtn}
                 onClick={() => handleExportCompany('xlsx')}
-                disabled={!selectedPeriod}
+                disabled={!effectivePeriod}
               >
                 {t('payroll.exportCompanyPayrollExcel')}
               </button>
@@ -155,7 +216,7 @@ export function Reports() {
                 type="button"
                 className={styles.primaryBtn}
                 onClick={() => handleExportCompany('pdf')}
-                disabled={!selectedPeriod}
+                disabled={!effectivePeriod}
               >
                 {t('payroll.exportCompanyPayrollPdf')}
               </button>
@@ -185,7 +246,7 @@ export function Reports() {
                 type="button"
                 className={styles.primaryBtn}
                 onClick={() => handleExportTeam('xlsx')}
-                disabled={!selectedPeriod || !selectedTeamId}
+                disabled={!effectivePeriod || !selectedTeamId}
               >
                 {t('payroll.exportTeamPayrollExcel')}
               </button>
@@ -193,7 +254,7 @@ export function Reports() {
                 type="button"
                 className={styles.primaryBtn}
                 onClick={() => handleExportTeam('pdf')}
-                disabled={!selectedPeriod || !selectedTeamId}
+                disabled={!effectivePeriod || !selectedTeamId}
               >
                 {t('payroll.exportTeamPayrollPdf')}
               </button>
@@ -206,20 +267,38 @@ export function Reports() {
         <Card title={t('payroll.title')}>
           <p className={styles.desc}>{t('payroll.report.sectionTeam')}</p>
           <div className={styles.field}>
-            <label htmlFor="report-period-tl">{t('payroll.selectPeriod')}</label>
-            <select
-              id="report-period-tl"
-              value={selectedPeriodIndex}
-              onChange={(e) => setSelectedPeriodIndex(Number(e.target.value))}
-              className={styles.select}
-            >
-              {periods.map((p, i) => (
-                <option key={`${p.start}-${p.end}`} value={i}>
-                  {p.label ?? `${p.start} – ${p.end}`}
-                </option>
-              ))}
-            </select>
+            <label><input type="radio" checked={!useDateRange} onChange={() => setUseDateRange(false)} /> {t('payroll.report.periodModePeriod')}</label>
+            <label><input type="radio" checked={useDateRange} onChange={() => setUseDateRange(true)} /> {t('payroll.report.periodModeDateRange')}</label>
           </div>
+          {!useDateRange && (
+            <div className={styles.field}>
+              <label htmlFor="report-period-tl">{t('payroll.selectPeriod')}</label>
+              <select
+                id="report-period-tl"
+                value={selectedPeriodIndex}
+                onChange={(e) => setSelectedPeriodIndex(Number(e.target.value))}
+                className={styles.select}
+              >
+                {periods.map((p, i) => (
+                  <option key={`${p.start}-${p.end}`} value={i}>
+                    {p.label ?? `${p.start} – ${p.end}`}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          {useDateRange && (
+            <>
+              <div className={styles.field}>
+                <label htmlFor="report-date-start-tl">{t('payroll.report.startDate')}</label>
+                <input id="report-date-start-tl" type="date" value={dateRangeStart} onChange={(e) => setDateRangeStart(e.target.value)} className={styles.select} />
+              </div>
+              <div className={styles.field}>
+                <label htmlFor="report-date-end-tl">{t('payroll.report.endDate')}</label>
+                <input id="report-date-end-tl" type="date" value={dateRangeEnd} onChange={(e) => setDateRangeEnd(e.target.value)} className={styles.select} />
+              </div>
+            </>
+          )}
           <div className={styles.field}>
             <label htmlFor="report-team-tl">{t('payroll.teamCode')}</label>
             <select
@@ -241,7 +320,7 @@ export function Reports() {
               type="button"
               className={styles.primaryBtn}
               onClick={() => handleExportTeam('xlsx')}
-              disabled={!selectedPeriod || !selectedTeamId}
+              disabled={!effectivePeriod || !selectedTeamId}
             >
               {t('payroll.exportTeamPayrollExcel')}
             </button>
@@ -249,7 +328,7 @@ export function Reports() {
               type="button"
               className={styles.primaryBtn}
               onClick={() => handleExportTeam('pdf')}
-              disabled={!selectedPeriod || !selectedTeamId}
+              disabled={!effectivePeriod || !selectedTeamId}
             >
               {t('payroll.exportTeamPayrollPdf')}
             </button>

@@ -479,6 +479,7 @@
   "teams": {
     "title": "Équipes",
     "teamCode": "Code équipe",
+    "codeChars": "caractères",
     "description": "Description",
     "percentage": "Pourcentage",
     "createTeam": "Créer une équipe",
@@ -506,6 +507,8 @@
     "validation": {
       "unauthorized": "Non autorisé.",
       "leaderRequired": "Un chef d'équipe est requis pour créer une équipe.",
+      "codeMustBeThree": "Le code d'équipe doit faire exactement 3 caractères.",
+      "codeAlreadyExists": "Une équipe avec ce code existe déjà.",
       "planTeamLimitReached": "Limite d'équipes de votre offre atteinte. Passez à une offre supérieure.",
       "leaderNotFound": "Chef sélectionné introuvable.",
       "leaderMustBeTeamLeader": "Le chef doit avoir le rôle Chef d'Équipe (403).",
@@ -835,6 +838,10 @@
     "report": {
       "sectionCompany": "Rapport Période Entreprise",
       "sectionTeam": "Rapport Période Équipe",
+      "periodModePeriod": "Par période de paiement",
+      "periodModeDateRange": "Par plage de dates",
+      "startDate": "Date de début",
+      "endDate": "Date de fin",
       "titleCompany": "{companyName} – {periodLabel} Relevé de Paiement",
       "titleTeam": "Équipe {teamCode} – {periodLabel} Relevé de Paiement",
       "companyName": "Nom de l'Entreprise",
@@ -842,6 +849,9 @@
       "exportDate": "Date d'Export",
       "totalApprovedJobs": "Nombre Total de Travaux Approuvés",
       "totalAmount": "Montant Total",
+      "totalWorkValue": "Total (Brut)",
+      "teamEarnings": "Revenus Équipe",
+      "companyShare": "Part Entreprise",
       "completionDate": "Date de Réalisation",
       "projectId": "ID Projet",
       "teamCode": "Code Équipe",

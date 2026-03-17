@@ -479,6 +479,7 @@
   "teams": {
     "title": "Teams",
     "teamCode": "Team-Code",
+    "codeChars": "Zeichen",
     "description": "Beschreibung",
     "percentage": "Prozentsatz",
     "createTeam": "Team anlegen",
@@ -506,6 +507,8 @@
     "validation": {
       "unauthorized": "Nicht autorisiert.",
       "leaderRequired": "Zum Erstellen eines Teams muss ein Teamleiter ausgewählt werden.",
+      "codeMustBeThree": "Der Teamcode muss genau 3 Zeichen haben.",
+      "codeAlreadyExists": "Ein Team mit diesem Code existiert bereits.",
       "planTeamLimitReached": "Teamlimit für Ihren Plan erreicht. Upgrade für mehr Teams.",
       "leaderNotFound": "Gewählter Leiter nicht gefunden.",
       "leaderMustBeTeamLeader": "Leiter muss die Rolle Teamleiter haben (403).",
@@ -835,6 +838,10 @@
     "report": {
       "sectionCompany": "Unternehmens-Zeitraumbericht",
       "sectionTeam": "Team-Zeitraumbericht",
+      "periodModePeriod": "Nach Abrechnungszeitraum",
+      "periodModeDateRange": "Nach Datumsbereich",
+      "startDate": "Startdatum",
+      "endDate": "Enddatum",
       "titleCompany": "{companyName} – {periodLabel} Abrechnungsübersicht",
       "titleTeam": "Team {teamCode} – {periodLabel} Abrechnungsübersicht",
       "companyName": "Unternehmensname",
@@ -842,6 +849,9 @@
       "exportDate": "Exportdatum",
       "totalApprovedJobs": "Anzahl genehmigter Arbeiten",
       "totalAmount": "Gesamtbetrag",
+      "totalWorkValue": "Gesamt (Brutto)",
+      "teamEarnings": "Team-Einnahmen",
+      "companyShare": "Unternehmensanteil",
       "completionDate": "Fertigstellungsdatum",
       "projectId": "Projekt-ID",
       "teamCode": "Teamkennung",

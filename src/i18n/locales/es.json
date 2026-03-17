@@ -479,6 +479,7 @@
   "teams": {
     "title": "Equipos",
     "teamCode": "Código de equipo",
+    "codeChars": "caracteres",
     "description": "Descripción",
     "percentage": "Porcentaje",
     "createTeam": "Crear equipo",
@@ -506,6 +507,8 @@
     "validation": {
       "unauthorized": "No autorizado.",
       "leaderRequired": "Se requiere un Líder de equipo para crear un equipo.",
+      "codeMustBeThree": "El código del equipo debe tener exactamente 3 caracteres.",
+      "codeAlreadyExists": "Ya existe un equipo con este código.",
       "planTeamLimitReached": "Límite de equipos de su plan alcanzado. Actualice para añadir más.",
       "leaderNotFound": "Líder seleccionado no encontrado.",
       "leaderMustBeTeamLeader": "El líder debe tener el rol de Líder de Equipo (403).",
@@ -835,6 +838,10 @@
     "report": {
       "sectionCompany": "Informe Período Empresa",
       "sectionTeam": "Informe Período Equipo",
+      "periodModePeriod": "Por período de liquidación",
+      "periodModeDateRange": "Por rango de fechas",
+      "startDate": "Fecha inicio",
+      "endDate": "Fecha fin",
       "titleCompany": "{companyName} – {periodLabel} Estado de Liquidación",
       "titleTeam": "Equipo {teamCode} – {periodLabel} Estado de Liquidación",
       "companyName": "Nombre de Empresa",
@@ -842,6 +849,9 @@
       "exportDate": "Fecha de Exportación",
       "totalApprovedJobs": "Total de Trabajos Aprobados",
       "totalAmount": "Importe Total",
+      "totalWorkValue": "Total (Bruto)",
+      "teamEarnings": "Ingresos Equipo",
+      "companyShare": "Parte Empresa",
       "completionDate": "Fecha de Finalización",
       "projectId": "ID Proyecto",
       "teamCode": "Código de Equipo",

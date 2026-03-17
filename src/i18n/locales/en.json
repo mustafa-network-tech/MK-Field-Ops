@@ -489,6 +489,7 @@
   "teams": {
     "title": "Teams",
     "teamCode": "Team Code",
+    "codeChars": "characters",
     "description": "Description",
     "percentage": "Percentage",
     "createTeam": "Create Team",
@@ -516,6 +517,8 @@
     "validation": {
       "unauthorized": "Not authorized.",
       "leaderRequired": "Team Leader is required to create a team.",
+      "codeMustBeThree": "Team code must be exactly 3 characters.",
+      "codeAlreadyExists": "A team with this code already exists.",
       "planTeamLimitReached": "Team limit reached for your plan. Upgrade to add more teams.",
       "leaderNotFound": "Selected leader not found.",
       "leaderMustBeTeamLeader": "Leader must have the Team Leader role (403).",
@@ -841,6 +844,10 @@
     "report": {
       "sectionCompany": "Company Period Report",
       "sectionTeam": "Team Period Report",
+      "periodModePeriod": "By payroll period",
+      "periodModeDateRange": "By date range",
+      "startDate": "Start date",
+      "endDate": "End date",
       "titleCompany": "{companyName} – {periodLabel} Payroll Statement",
       "titleTeam": "Team {teamCode} – {periodLabel} Payroll Statement",
       "companyName": "Company Name",
@@ -848,6 +855,9 @@
       "exportDate": "Export Date",
       "totalApprovedJobs": "Total Approved Jobs Count",
       "totalAmount": "Total Amount",
+      "totalWorkValue": "Total (Gross)",
+      "teamEarnings": "Team Earnings",
+      "companyShare": "Company Share",
       "completionDate": "Completion Date",
       "projectId": "Project ID",
       "teamCode": "Team Code",

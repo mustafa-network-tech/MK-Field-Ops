@@ -489,6 +489,7 @@
   "teams": {
     "title": "Takımlar",
     "teamCode": "Takım Kodu",
+    "codeChars": "karakter",
     "description": "Açıklama",
     "percentage": "Yüzde",
     "createTeam": "Takım Oluştur",
@@ -516,6 +517,8 @@
     "validation": {
       "unauthorized": "Yetkiniz yok.",
       "leaderRequired": "Takım oluşturmak için Takım Lideri seçilmelidir.",
+      "codeMustBeThree": "Takım kodu tam 3 karakter olmalıdır.",
+      "codeAlreadyExists": "Bu kodda bir takım zaten mevcut.",
       "planTeamLimitReached": "Planınız için takım limitine ulaşıldı. Daha fazla takım için planı yükseltin.",
       "leaderNotFound": "Seçilen lider bulunamadı.",
       "leaderMustBeTeamLeader": "Lider Takım Lideri rolüne sahip olmalıdır (403).",
@@ -846,6 +849,10 @@
     "report": {
       "sectionCompany": "Şirket Dönem Hakedişi",
       "sectionTeam": "Ekip Dönem Hakedişi",
+      "periodModePeriod": "Hakediş dönemine göre",
+      "periodModeDateRange": "Tarih aralığına göre",
+      "startDate": "Başlangıç tarihi",
+      "endDate": "Bitiş tarihi",
       "titleCompany": "{companyName} – {periodLabel} Hakediş Dökümü",
       "titleTeam": "Ekip {teamCode} – {periodLabel} Hakediş Dökümü",
       "companyName": "Şirket Adı",
@@ -853,6 +860,9 @@
       "exportDate": "Dışa Aktarma Tarihi",
       "totalApprovedJobs": "Toplam Onaylanan İş Sayısı",
       "totalAmount": "Toplam Tutar",
+      "totalWorkValue": "Toplam (Brüt)",
+      "teamEarnings": "Takım Kazancı",
+      "companyShare": "Şirket Payı",
       "completionDate": "Tamamlanma Tarihi",
       "projectId": "Proje ID",
       "teamCode": "Takım Kodu",

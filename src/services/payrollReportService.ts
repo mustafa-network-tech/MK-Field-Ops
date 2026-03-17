@@ -23,6 +23,8 @@ export type PayrollReportRow = {
   quantity: number;
   unitPrice: number;
   lineTotal: number;
+  teamEarnings: number;
+  companyShare: number;
 };
 
 export type PayrollReportData = {
@@ -34,7 +36,12 @@ export type PayrollReportData = {
   reportType: 'company' | 'team';
   teamCode?: string;
   teamName?: string;
-  totals: { approvedJobsCount: number; totalAmount: number };
+  totals: {
+    approvedJobsCount: number;
+    totalAmount: number;
+    teamEarnings: number;
+    companyShare: number;
+  };
   jobs: PayrollReportRow[];
   isEmpty: boolean;
 };
@@ -73,8 +80,6 @@ export function getPayrollReportData(
     const teamCode = team?.code ?? j.teamId;
     const workItemName = workItem ? (workItem.description || workItem.code) : j.workItemId;
     const unitPrice = workItem?.unitPrice ?? 0;
-    const lineTotal = roundMoney(j.quantity * unitPrice);
-
     rows.push({
       completionDate: compDate,
       projectId,
@@ -82,13 +87,17 @@ export function getPayrollReportData(
       workItemName,
       quantity: j.quantity,
       unitPrice,
-      lineTotal,
+      lineTotal: j.totalWorkValue,
+      teamEarnings: j.teamEarnings,
+      companyShare: j.companyShare,
     });
   }
 
   rows.sort((a, b) => a.completionDate.localeCompare(b.completionDate));
 
   const totalAmount = roundMoney(rows.reduce((s, r) => s + r.lineTotal, 0));
+  const totalTeamEarnings = roundMoney(rows.reduce((s, r) => s + r.teamEarnings, 0));
+  const totalCompanyShare = roundMoney(rows.reduce((s, r) => s + r.companyShare, 0));
   const teamInfo = reportType === 'team' && teamId ? teams.find((t) => t.id === teamId) : undefined;
 
   return {
@@ -99,7 +108,12 @@ export function getPayrollReportData(
     reportType,
     teamCode: teamInfo?.code,
     teamName: teamInfo?.description,
-    totals: { approvedJobsCount: rows.length, totalAmount },
+    totals: {
+      approvedJobsCount: rows.length,
+      totalAmount,
+      teamEarnings: totalTeamEarnings,
+      companyShare: totalCompanyShare,
+    },
     jobs: rows,
     isEmpty: rows.length === 0,
   };
