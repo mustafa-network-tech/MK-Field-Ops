@@ -123,6 +123,7 @@ export function addJob(
     materialUsages?: JobMaterialUsage[];
     equipmentIds: string[];
     notes: string;
+    notePhoto?: string | null;
     createdBy: string;
   }
 ): AddJobResult {
@@ -138,6 +139,7 @@ export function addJob(
     ...params,
     quantity: roundMoney(params.quantity),
     materialUsages: params.materialUsages ?? [],
+    notePhoto: params.notePhoto ?? null,
     status: 'draft',
   });
   const team = store.getTeam(params.teamId);

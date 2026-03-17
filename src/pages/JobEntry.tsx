@@ -45,6 +45,7 @@ export interface JobRowState {
   materialUsages: JobMaterialUsage[];
   equipmentIds: string[];
   notes: string;
+  notePhoto: string | null;
   addMaterialId: string;
   addQuantity: number;
   addIsExternal: boolean;
@@ -65,6 +66,7 @@ function createDefaultRow(): JobRowState {
     materialUsages: [],
     equipmentIds: [],
     notes: '',
+    notePhoto: null,
     addMaterialId: '',
     addQuantity: 1,
     addIsExternal: false,
@@ -94,6 +96,7 @@ export function JobEntry() {
   const [jobRows, setJobRows] = useState<JobRowState[]>(() => [createDefaultRow()]);
   const [submitError, setSubmitError] = useState('');
   const [workItemDropdownRow, setWorkItemDropdownRow] = useState<number | null>(null);
+  const [noteModalRowIndex, setNoteModalRowIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (effectivePlan !== 'starter' || !starterProjectId) return;
@@ -231,6 +234,7 @@ export function JobEntry() {
         materialUsages: row.materialUsages,
         equipmentIds: row.equipmentIds,
         notes: row.notes,
+        notePhoto: row.notePhoto ?? null,
         createdBy: user.id,
       });
       if (!result.ok) {
@@ -586,16 +590,105 @@ export function JobEntry() {
                 </label>
                 <label className={styles.label}>
                   {t('jobs.notes')}
-                  <textarea
-                    value={row.notes}
-                    onChange={(e) => updateRow(index, { notes: e.target.value })}
-                    className={styles.input}
-                    rows={2}
-                  />
+                  <button
+                    type="button"
+                    className={styles.noteAreaBtn}
+                    onClick={() => setNoteModalRowIndex(index)}
+                  >
+                    {row.notes || row.notePhoto
+                      ? t('jobs.noteAndPhotoEdit')
+                      : t('jobs.noteAndPhotoAdd')}
+                  </button>
+                  {(row.notes || row.notePhoto) && (
+                    <span className={styles.noteAreaHint}>
+                      {row.notes ? `${row.notes.slice(0, 40)}${row.notes.length > 40 ? '…' : ''}` : ''}
+                      {row.notePhoto && ` ${t('jobs.photoAttached')}`}
+                    </span>
+                  )}
                 </label>
               </div>
             );
           })}
+
+          {noteModalRowIndex !== null && (() => {
+            const row = jobRows[noteModalRowIndex];
+            if (!row) return null;
+            return (
+              <div
+                className={styles.modalOverlay}
+                onClick={() => setNoteModalRowIndex(null)}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="job-note-modal-title"
+              >
+                <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                  <div className={styles.modalHeader}>
+                    <h2 id="job-note-modal-title" className={styles.modalTitle}>
+                      {t('jobs.noteAndPhotoTitle')}
+                    </h2>
+                    <button
+                      type="button"
+                      className={styles.modalClose}
+                      onClick={() => setNoteModalRowIndex(null)}
+                      aria-label={t('common.close')}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className={styles.modalBody}>
+                    <label className={styles.label}>
+                      {t('jobs.noteDescription')}
+                      <textarea
+                        value={row.notes}
+                        onChange={(e) => updateRow(noteModalRowIndex, { notes: e.target.value })}
+                        className={styles.input}
+                        rows={3}
+                        placeholder={t('jobs.noteDescriptionPlaceholder')}
+                      />
+                    </label>
+                    <label className={styles.label}>
+                      {t('jobs.notePhotoUpload')}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className={styles.fileInput}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const dataUrl = reader.result as string;
+                            updateRow(noteModalRowIndex, { notePhoto: dataUrl });
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      {row.notePhoto && (
+                        <div className={styles.notePhotoPreview}>
+                          <img src={row.notePhoto} alt="" />
+                          <button
+                            type="button"
+                            className={styles.removePhotoBtn}
+                            onClick={() => updateRow(noteModalRowIndex, { notePhoto: null })}
+                          >
+                            {t('common.delete')}
+                          </button>
+                        </div>
+                      )}
+                    </label>
+                  </div>
+                  <div className={styles.modalFooter}>
+                    <button type="button" className={styles.secondaryBtn} onClick={() => setNoteModalRowIndex(null)}>
+                      {t('common.close')}
+                    </button>
+                    <button type="button" className={styles.primaryBtn} onClick={() => setNoteModalRowIndex(null)}>
+                      {t('common.save')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {submitError && <p className={styles.error}>{t(submitError)}</p>}
           <div className={styles.formActions}>

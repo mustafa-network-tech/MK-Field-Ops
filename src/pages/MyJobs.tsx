@@ -57,6 +57,19 @@ export function MyJobs() {
   };
   const [actionError, setActionError] = useState('');
   const [listRefreshKey, setListRefreshKey] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [modalJobId, setModalJobId] = useState<string | null>(null);
+
+  const handleCopyJobId = (jobId: string) => {
+    navigator.clipboard?.writeText(jobId).then(() => {
+      setCopiedId(jobId);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
+  };
+
+  const handleOpenJobDetailModal = (jobId: string) => {
+    setModalJobId(jobId);
+  };
 
   function formatMaterialUsage(u: JobMaterialUsage, t: (key: string) => string): string {
     const q = `${u.quantity} ${u.quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}`;
@@ -95,6 +108,7 @@ export function MyJobs() {
               <th>{t('jobs.status')}</th>
               <th>{t('jobs.totalWorkValue')}</th>
               <th>{t('jobs.teamEarnings')}</th>
+              <th>{t('jobs.jobCode')}</th>
               <th>{t('common.actions')}</th>
             </tr>
           </thead>
@@ -142,6 +156,17 @@ export function MyJobs() {
                   <td>{details ? formatPriceForUser(details.totalWorkValue, user, 'companyOrTotal', locale) : '–'}</td>
                   <td>{details ? formatPriceForUser(details.teamEarnings, user, 'teamOnly', locale) : '–'}</td>
                   <td>
+                    <button
+                      type="button"
+                      className={styles.jobCodeBtn}
+                      onClick={() => handleOpenJobDetailModal(job.id)}
+                      title={t('jobs.jobCodeModalTitle')}
+                    >
+                      #{job.id.slice(0, 8)}
+                    </button>
+                    {copiedId === job.id && <span className={styles.copiedHint}>{t('common.copied')}</span>}
+                  </td>
+                  <td>
                     {job.status === 'draft' && (
                       <button type="button" className={styles.smallBtn} onClick={() => handleSubmitForApproval(job)}>
                         {t('jobs.submitForApproval')}
@@ -158,6 +183,24 @@ export function MyJobs() {
         </table>
         {jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
+
+      {modalJobId && (
+        <div className={styles.modalOverlay} onClick={() => setModalJobId(null)} role="dialog" aria-modal="true" aria-labelledby="job-detail-modal-title">
+          <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2 id="job-detail-modal-title" className={styles.modalTitle}>
+                {t('jobs.jobDetailModalTitle')} #{modalJobId.slice(0, 8)}
+              </h2>
+              <button type="button" className={styles.modalClose} onClick={() => setModalJobId(null)} aria-label={t('common.close')}>
+                ×
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <p className={styles.modalPlaceholder}>{t('jobs.jobDetailModalPlaceholder')}</p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

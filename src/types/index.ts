@@ -305,6 +305,8 @@ export interface JobRecord {
   materialUsages?: JobMaterialUsage[];
   equipmentIds: string[];
   notes: string;
+  /** Base64 data URL of optional note photo (camera or file upload). */
+  notePhoto?: string | null;
   status: JobStatus;
   /** Stok düşümü sadece onay sonrası yapılır; bir kez yapıldığında true */
   stockDeducted?: boolean;
