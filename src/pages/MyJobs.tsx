@@ -56,6 +56,7 @@ export function MyJobs() {
     return p ? getProjectDisplayKey(p) : '–';
   };
   const [actionError, setActionError] = useState('');
+  const [listRefreshKey, setListRefreshKey] = useState(0);
 
   function formatMaterialUsage(u: JobMaterialUsage, t: (key: string) => string): string {
     const q = `${u.quantity} ${u.quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}`;
@@ -69,9 +70,10 @@ export function MyJobs() {
   const handleSubmitForApproval = (job: JobRecord) => {
     setActionError('');
     const result = updateJob(user ?? undefined, companyId, job.id, { status: 'submitted' });
-    if (!result.ok) {
+    if (result.ok) {
+      setListRefreshKey((k) => k + 1);
+    } else {
       setActionError(t(result.error));
-      return;
     }
   };
 
@@ -79,7 +81,7 @@ export function MyJobs() {
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('nav.myJobs')}</h1>
       {actionError && <p className={styles.error}>{actionError}</p>}
-      <Card>
+      <Card key={listRefreshKey}>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -123,7 +125,9 @@ export function MyJobs() {
                     )}
                   </td>
                   <td>
-                    <span className={styles[`badge_${job.status}`] ?? styles.badge}>{t(statusKeys[job.status])}</span>
+                    <span className={styles[`badge_${job.status}`] ?? styles.badge}>
+                      {job.status === 'submitted' ? t('jobs.waitingForApproval') : t(statusKeys[job.status])}
+                    </span>
                     {job.status === 'approved' && job.approvedBy && (
                       <div className={styles.approverLine}>
                         {t('jobs.approvedBy')}: {getUserName(job.approvedBy)}
@@ -142,6 +146,9 @@ export function MyJobs() {
                       <button type="button" className={styles.smallBtn} onClick={() => handleSubmitForApproval(job)}>
                         {t('jobs.submitForApproval')}
                       </button>
+                    )}
+                    {job.status === 'submitted' && (
+                      <span className={styles.waitingLabel}>{t('jobs.waitingForApproval')}</span>
                     )}
                   </td>
                 </tr>

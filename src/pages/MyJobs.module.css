@@ -80,6 +80,12 @@
   background: #1d4ed8;
 }
 
+.waitingLabel {
+  font-size: 0.85rem;
+  color: #92400e;
+  font-weight: 500;
+}
+
 .noData {
   color: #94a3b8;
   margin: 1rem 0 0;
