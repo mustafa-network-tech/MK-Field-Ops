@@ -76,3 +76,53 @@
   color: #94a3b8;
   margin: 0 0 0.5rem;
 }
+
+.label {
+  display: block;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.hint {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0 0 0.5rem;
+}
+
+.teamCheckboxGroup {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.checkboxLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+}
+
+.checkboxLabel input {
+  margin: 0;
+}
+
+.secondaryBtn {
+  padding: 0.45rem 0.9rem;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.secondaryBtn:hover {
+  background: #e2e8f0;
+}

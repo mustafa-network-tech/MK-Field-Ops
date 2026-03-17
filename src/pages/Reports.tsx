@@ -29,6 +29,8 @@ export function Reports() {
   const [useDateRange, setUseDateRange] = useState(false);
   const [dateRangeStart, setDateRangeStart] = useState('');
   const [dateRangeEnd, setDateRangeEnd] = useState('');
+  /** For company export: empty = all teams; otherwise only selected team IDs. */
+  const [selectedCompanyTeamIds, setSelectedCompanyTeamIds] = useState<string[]>([]);
 
   const selectedPeriod = periods[selectedPeriodIndex] ?? null;
 
@@ -79,7 +81,8 @@ export function Reports() {
 
   async function handleExportCompany(format: 'xlsx' | 'pdf') {
     if (!effectivePeriod) return;
-    const data = getPayrollReportData(companyId, effectivePeriod, 'company');
+    const teamFilter = selectedCompanyTeamIds.length > 0 ? selectedCompanyTeamIds : undefined;
+    const data = getPayrollReportData(companyId, effectivePeriod, 'company', undefined, teamFilter);
     const tr = buildTranslations('company', data);
     if (format === 'xlsx') exportPayrollReportToExcel(data, tr, locale);
     else {
@@ -203,6 +206,47 @@ export function Reports() {
           <div className={styles.section}>
             <h3 className={styles.sectionTitle}>{t('payroll.report.sectionCompany')}</h3>
             <p className={styles.desc}>{t('payroll.report.companyName')}</p>
+            <div className={styles.field}>
+              <label className={styles.label}>{t('payroll.report.filterTeams')}</label>
+              <p className={styles.hint}>{t('payroll.report.filterTeamsHint')}</p>
+              <div className={styles.teamCheckboxGroup}>
+                {teams.map((team) => {
+                  const isAll = selectedCompanyTeamIds.length === 0;
+                  const checked = isAll || selectedCompanyTeamIds.includes(team.id);
+                  return (
+                    <label key={team.id} className={styles.checkboxLabel}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(e) => {
+                          if (isAll) {
+                            if (e.target.checked) {
+                              setSelectedCompanyTeamIds([team.id]);
+                            } else {
+                              setSelectedCompanyTeamIds(teams.filter((t) => t.id !== team.id).map((t) => t.id));
+                            }
+                          } else if (e.target.checked) {
+                            setSelectedCompanyTeamIds((prev) => [...prev, team.id]);
+                          } else {
+                            setSelectedCompanyTeamIds((prev) => prev.filter((id) => id !== team.id));
+                          }
+                        }}
+                      />
+                      {team.code} {team.description ? ` – ${team.description}` : ''}
+                    </label>
+                  );
+                })}
+              </div>
+              {teams.length > 0 && (
+                <button
+                  type="button"
+                  className={styles.secondaryBtn}
+                  onClick={() => setSelectedCompanyTeamIds([])}
+                >
+                  {t('payroll.report.allTeams')}
+                </button>
+              )}
+            </div>
             <div className={styles.actions}>
               <button
                 type="button"

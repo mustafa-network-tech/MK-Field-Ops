@@ -48,13 +48,14 @@ export type PayrollReportData = {
 
 /**
  * Build report data: approved jobs whose completion date (approvedAt or date) falls within period.
- * No company/team share breakdown - only totals and job lines.
+ * For company report, optional filterTeamIds limits to selected teams; when empty/omitted, all teams.
  */
 export function getPayrollReportData(
   companyId: string,
   period: PayrollPeriod,
   reportType: 'company' | 'team',
-  teamId?: string
+  teamId?: string,
+  filterTeamIds?: string[]
 ): PayrollReportData {
   const company = store.getCompany(companyId, companyId);
   const companyName = company?.name ?? companyId;
@@ -72,6 +73,7 @@ export function getPayrollReportData(
     const compDate = completionDate(j);
     if (!isInPeriod(compDate, period)) continue;
     if (reportType === 'team' && teamId && j.teamId !== teamId) continue;
+    if (reportType === 'company' && filterTeamIds && filterTeamIds.length > 0 && !filterTeamIds.includes(j.teamId)) continue;
 
     const team = teams.find((t) => t.id === j.teamId);
     const workItem = workItems.find((w) => w.id === j.workItemId);
