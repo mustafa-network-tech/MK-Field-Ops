@@ -45,7 +45,7 @@ export interface JobRowState {
   materialUsages: JobMaterialUsage[];
   equipmentIds: string[];
   notes: string;
-  notePhoto: string | null;
+  notePhotos: string[];
   addMaterialId: string;
   addQuantity: number;
   addIsExternal: boolean;
@@ -66,7 +66,7 @@ function createDefaultRow(): JobRowState {
     materialUsages: [],
     equipmentIds: [],
     notes: '',
-    notePhoto: null,
+    notePhotos: [],
     addMaterialId: '',
     addQuantity: 1,
     addIsExternal: false,
@@ -234,7 +234,7 @@ export function JobEntry() {
         materialUsages: row.materialUsages,
         equipmentIds: row.equipmentIds,
         notes: row.notes,
-        notePhoto: row.notePhoto ?? null,
+        notePhotos: (row.notePhotos?.length ? row.notePhotos : []).slice(0, 3),
         createdBy: user.id,
       });
       if (!result.ok) {
@@ -595,14 +595,14 @@ export function JobEntry() {
                     className={styles.noteAreaBtn}
                     onClick={() => setNoteModalRowIndex(index)}
                   >
-                    {row.notes || row.notePhoto
+                    {row.notes || (row.notePhotos?.length ?? 0) > 0
                       ? t('jobs.noteAndPhotoEdit')
                       : t('jobs.noteAndPhotoAdd')}
                   </button>
-                  {(row.notes || row.notePhoto) && (
+                  {(row.notes || (row.notePhotos?.length ?? 0) > 0) && (
                     <span className={styles.noteAreaHint}>
                       {row.notes ? `${row.notes.slice(0, 40)}${row.notes.length > 40 ? '…' : ''}` : ''}
-                      {row.notePhoto && ` ${t('jobs.photoAttached')}`}
+                      {(row.notePhotos?.length ?? 0) > 0 && ` ${t('jobs.photoAttached')} (${row.notePhotos!.length})`}
                     </span>
                   )}
                 </label>
@@ -647,32 +647,40 @@ export function JobEntry() {
                       />
                     </label>
                     <label className={styles.label}>
-                      {t('jobs.notePhotoUpload')}
+                      {t('jobs.notePhotoUpload')} ({t('jobs.notePhotoMax', { max: 3 })})
                       <input
                         type="file"
                         accept="image/*"
                         className={styles.fileInput}
+                        disabled={(row.notePhotos?.length ?? 0) >= 3}
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (!file) return;
+                          const current = row.notePhotos ?? [];
+                          if (current.length >= 3) return;
                           const reader = new FileReader();
                           reader.onload = () => {
                             const dataUrl = reader.result as string;
-                            updateRow(noteModalRowIndex, { notePhoto: dataUrl });
+                            updateRow(noteModalRowIndex, { notePhotos: [...current, dataUrl] });
                           };
                           reader.readAsDataURL(file);
+                          e.target.value = '';
                         }}
                       />
-                      {row.notePhoto && (
-                        <div className={styles.notePhotoPreview}>
-                          <img src={row.notePhoto} alt="" />
-                          <button
-                            type="button"
-                            className={styles.removePhotoBtn}
-                            onClick={() => updateRow(noteModalRowIndex, { notePhoto: null })}
-                          >
-                            {t('common.delete')}
-                          </button>
+                      {(row.notePhotos?.length ?? 0) > 0 && (
+                        <div className={styles.notePhotoList}>
+                          {(row.notePhotos ?? []).map((src, i) => (
+                            <div key={i} className={styles.notePhotoPreview}>
+                              <img src={src} alt="" />
+                              <button
+                                type="button"
+                                className={styles.removePhotoBtn}
+                                onClick={() => updateRow(noteModalRowIndex, { notePhotos: (row.notePhotos ?? []).filter((_, idx) => idx !== i) })}
+                              >
+                                {t('common.delete')}
+                              </button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </label>

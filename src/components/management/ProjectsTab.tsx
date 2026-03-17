@@ -66,6 +66,7 @@ export function ProjectsTab() {
   const [filterWorkItemId, setFilterWorkItemId] = useState('');
   const [filterStartDate, setFilterStartDate] = useState('');
   const [filterEndDate, setFilterEndDate] = useState('');
+  const [modalJobId, setModalJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedProjectId) {
@@ -465,6 +466,7 @@ export function ProjectsTab() {
                   <th>{t('jobs.team')}</th>
                   <th>{t('jobs.workItem')}</th>
                   <th>{t('jobs.quantity')}</th>
+                  <th aria-label={t('jobs.jobCode')}></th>
                   <th>{t('jobs.createdAt')}</th>
                   <th>{t('jobs.approvedAt')}</th>
                   <th>{t('jobs.status')}</th>
@@ -472,7 +474,7 @@ export function ProjectsTab() {
               </thead>
               <tbody>
                 {projectJobsFiltered.length === 0 && (
-                  <tr><td colSpan={7} className={styles.muted}>{t('common.noData')}</td></tr>
+                  <tr><td colSpan={8} className={styles.muted}>{t('common.noData')}</td></tr>
                 )}
                 {projectJobsFiltered.map((job) => (
                   <tr key={job.id}>
@@ -480,6 +482,11 @@ export function ProjectsTab() {
                     <td>{getTeamCode(job.teamId)}</td>
                     <td>{getWorkItemLabel(job.workItemId)}</td>
                     <td>{job.quantity}</td>
+                    <td>
+                      <button type="button" className={styles.jobCodeBtn} onClick={() => setModalJobId(job.id)} title={t('jobs.jobCodeModalTitle')}>
+                        #{job.id.slice(0, 8)}
+                      </button>
+                    </td>
                     <td>{job.createdAt ? new Date(job.createdAt).toLocaleString() : '–'}</td>
                     <td>{job.approvedAt ? new Date(job.approvedAt).toLocaleString() : '–'}</td>
                     <td>
@@ -499,6 +506,47 @@ export function ProjectsTab() {
                 ))}
               </tbody>
             </table>
+
+            {modalJobId && (() => {
+              const allJobs = store.getJobs(companyId);
+              const modalJob = allJobs.find((j) => j.id === modalJobId);
+              const photos = modalJob?.notePhotos?.length ? modalJob.notePhotos : (modalJob?.notePhoto ? [modalJob.notePhoto] : []);
+              return (
+                <div className={styles.modalOverlay} onClick={() => setModalJobId(null)} role="dialog" aria-modal="true" aria-labelledby="project-job-detail-modal-title">
+                  <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>
+                    <div className={styles.modalHeader}>
+                      <h2 id="project-job-detail-modal-title" className={styles.modalTitle}>
+                        {t('jobs.jobDetailModalTitle')} #{modalJobId.slice(0, 8)}
+                      </h2>
+                      <button type="button" className={styles.modalClose} onClick={() => setModalJobId(null)} aria-label={t('common.close')}>
+                        ×
+                      </button>
+                    </div>
+                    <div className={styles.modalBody}>
+                      {modalJob?.notes ? (
+                        <div className={styles.modalNoteSection}>
+                          <strong>{t('jobs.notes')}</strong>
+                          <p className={styles.modalNoteText}>{modalJob.notes}</p>
+                        </div>
+                      ) : null}
+                      {photos.length > 0 ? (
+                        <div className={styles.modalPhotoSection}>
+                          <strong>{t('jobs.photo')}</strong>
+                          <div className={styles.modalPhotoList}>
+                            {photos.map((src, i) => (
+                              <img key={i} src={src} alt="" className={styles.modalPhotoImg} />
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                      {!modalJob?.notes && photos.length === 0 && (
+                        <p className={styles.modalPlaceholder}>{t('jobs.jobDetailModalPlaceholder')}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             <h4 className={styles.sectionTitle} style={{ marginTop: '1.5rem' }}>{t('projects.projectMaterialsUsed')}</h4>
 

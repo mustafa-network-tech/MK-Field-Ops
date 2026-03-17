@@ -562,6 +562,7 @@
     "noteDescription": "Descripción de la nota",
     "noteDescriptionPlaceholder": "Escriba una nota sobre este trabajo…",
     "notePhotoUpload": "Foto (tomar con el móvil o subir archivo)",
+    "notePhotoMax": "máx. {max}",
     "photo": "Foto",
     "photoAttached": "— Foto adjunta",
     "status": "Estado",

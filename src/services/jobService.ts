@@ -123,7 +123,7 @@ export function addJob(
     materialUsages?: JobMaterialUsage[];
     equipmentIds: string[];
     notes: string;
-    notePhoto?: string | null;
+    notePhotos?: string[] | null;
     createdBy: string;
   }
 ): AddJobResult {
@@ -139,7 +139,7 @@ export function addJob(
     ...params,
     quantity: roundMoney(params.quantity),
     materialUsages: params.materialUsages ?? [],
-    notePhoto: params.notePhoto ?? null,
+    notePhotos: (params.notePhotos?.length ? params.notePhotos : []).slice(0, 3),
     status: 'draft',
   });
   const team = store.getTeam(params.teamId);

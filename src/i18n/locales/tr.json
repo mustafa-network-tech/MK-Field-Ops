@@ -573,6 +573,7 @@
     "noteDescription": "Not açıklaması",
     "noteDescriptionPlaceholder": "İşle ilgili not yazın…",
     "notePhotoUpload": "Fotoğraf (telefonda çekebilir veya dosya yükleyebilirsiniz)",
+    "notePhotoMax": "en fazla {max} adet",
     "photo": "Fotoğraf",
     "photoAttached": "— Fotoğraf eklendi",
     "status": "Durum",

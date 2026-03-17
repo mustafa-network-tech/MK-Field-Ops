@@ -340,13 +340,20 @@ export function TeamDetail() {
                     <p className={styles.modalNoteText}>{modalJob.notes}</p>
                   </div>
                 ) : null}
-                {modalJob?.notePhoto ? (
-                  <div className={styles.modalPhotoSection}>
-                    <strong>{t('jobs.photo')}</strong>
-                    <img src={modalJob.notePhoto} alt="" className={styles.modalPhotoImg} />
-                  </div>
-                ) : null}
-                {!modalJob?.notes && !modalJob?.notePhoto && (
+                {(() => {
+                  const photos = modalJob?.notePhotos?.length ? modalJob.notePhotos : (modalJob?.notePhoto ? [modalJob.notePhoto] : []);
+                  return photos.length > 0 ? (
+                    <div className={styles.modalPhotoSection}>
+                      <strong>{t('jobs.photo')}</strong>
+                      <div className={styles.modalPhotoList}>
+                        {photos.map((src, i) => (
+                          <img key={i} src={src} alt="" className={styles.modalPhotoImg} />
+                        ))}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+                {!modalJob?.notes && !(modalJob?.notePhotos?.length || modalJob?.notePhoto) && (
                   <p className={styles.modalPlaceholder}>{t('jobs.jobDetailModalPlaceholder')}</p>
                 )}
               </div>

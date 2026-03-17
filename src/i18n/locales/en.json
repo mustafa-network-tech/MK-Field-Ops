@@ -573,6 +573,7 @@
     "noteDescription": "Note description",
     "noteDescriptionPlaceholder": "Write a note about this job…",
     "notePhotoUpload": "Photo (take with phone or upload file)",
+    "notePhotoMax": "max {max}",
     "photo": "Photo",
     "photoAttached": "— Photo attached",
     "status": "Status",
