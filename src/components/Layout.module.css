@@ -12,11 +12,80 @@
   overflow: hidden;
 }
 
+/* Mobil: üstte menü butonu */
+.mobileMenuBtn {
+  display: none;
+  position: fixed;
+  top: 0.85rem;
+  left: 1rem;
+  z-index: 102;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 8px;
+  background: #334155;
+  color: #f1f5f9;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.mobileMenuBtn:hover {
+  background: #475569;
+}
+
+.mobileMenuIcon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.sidebarBackdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 101;
+}
+
 .sidebar {
   width: 220px;
   background: #1e293b;
   padding: 1rem 0;
   flex-shrink: 0;
+}
+
+.sidebarHeader {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #334155;
+}
+
+.sidebarTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sidebarClose {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.sidebarClose:hover {
+  color: #f1f5f9;
+  background: #334155;
 }
 
 .nav {
@@ -206,4 +275,60 @@
 .envelopeIcon {
   width: 1.1rem;
   height: 1.1rem;
+}
+
+/* Mobil: menü üstte açılır, içerik tam genişlik */
+@media (max-width: 768px) {
+  .mobileMenuBtn {
+    display: flex;
+  }
+
+  .sidebarBackdrop {
+    display: block;
+  }
+
+  .body {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    z-index: 102;
+    width: 280px;
+    max-width: 85vw;
+    padding: 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease-out;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+
+  .sidebarHeader {
+    display: flex;
+  }
+
+  .main {
+    width: 100%;
+    padding: 1rem;
+    padding-bottom: 2rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .panelFooter {
+    padding: 0.35rem 0.75rem;
+    font-size: 0.7rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  .panelFooterLogo {
+    height: 1.25rem;
+  }
 }

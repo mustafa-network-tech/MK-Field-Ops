@@ -90,6 +90,7 @@ export function Approvals() {
         {!canApproveJobs && <p className={styles.muted}>{t('approvals.noPending')}</p>}
         {canApproveJobs && jobs.length === 0 && <p className={styles.muted}>{t('approvals.noPending')}</p>}
         {canApproveJobs && jobs.length > 0 && (
+          <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -131,6 +132,7 @@ export function Approvals() {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

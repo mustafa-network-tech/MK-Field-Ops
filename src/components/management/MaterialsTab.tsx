@@ -170,6 +170,7 @@ export function MaterialsTab() {
           </div>
         )}
       </div>
+      <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -207,6 +208,7 @@ export function MaterialsTab() {
           ))}
         </tbody>
       </table>
+      </div>
       {stockListFiltered.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
 
       {canManageStock && (

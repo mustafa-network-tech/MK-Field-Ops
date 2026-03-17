@@ -45,12 +45,32 @@ export function Layout() {
     [companyId, user, profilesVersion]
   );
   const showApprovalsPending = pendingApprovalsCount > 0;
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   return (
     <div className={styles.layout}>
       <TopBar pendingApprovalsCount={pendingApprovalsCount} />
+      <button
+        type="button"
+        className={styles.mobileMenuBtn}
+        onClick={() => setSidebarOpen(true)}
+        aria-label={t('layout.openMenu')}
+      >
+        <span className={styles.mobileMenuIcon} aria-hidden>☰</span>
+      </button>
+      {sidebarOpen && (
+        <div className={styles.sidebarBackdrop} onClick={() => setSidebarOpen(false)} aria-hidden />
+      )}
       <div className={styles.body}>
-        <aside className={styles.sidebar}>
+        <aside className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}>
+          <div className={styles.sidebarHeader}>
+            <span className={styles.sidebarTitle}>{t('layout.menu')}</span>
+            <button type="button" className={styles.sidebarClose} onClick={() => setSidebarOpen(false)} aria-label={t('common.close')}>×</button>
+          </div>
           <nav className={styles.nav}>
             <NavLink to="/" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)} end>
               {t('nav.dashboard')}

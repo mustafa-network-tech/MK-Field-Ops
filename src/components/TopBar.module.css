@@ -417,3 +417,25 @@
   color: #94a3b8;
   font-size: 0.875rem;
 }
+
+@media (max-width: 768px) {
+  .topBar {
+    padding-left: 3.75rem;
+    padding-right: 0.75rem;
+    min-height: 3.5rem;
+  }
+
+  .companyLogo {
+    max-height: 48px;
+  }
+
+  .companyName,
+  .userName {
+    font-size: 0.9rem;
+  }
+
+  .role,
+  .companyPlan {
+    font-size: 0.8rem;
+  }
+}

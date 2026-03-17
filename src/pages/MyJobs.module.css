@@ -9,6 +9,12 @@
   margin: 0 0 1rem;
 }
 
+.tableWrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -0.5rem 0;
+}
+
 .error {
   font-size: 0.9rem;
   color: #dc2626;
@@ -17,6 +23,7 @@
 
 .table {
   width: 100%;
+  min-width: 800px;
   border-collapse: collapse;
   font-size: 0.9rem;
 }

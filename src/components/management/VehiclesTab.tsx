@@ -67,6 +67,7 @@ export function VehiclesTab() {
           </div>
         </form>
       )}
+      <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -92,6 +93,7 @@ export function VehiclesTab() {
           ))}
         </tbody>
       </table>
+      </div>
       {vehicles.length === 0 && !showForm && <p className={styles.noData}>{t('common.noData')}</p>}
     </Card>
   );

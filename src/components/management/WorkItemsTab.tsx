@@ -167,6 +167,7 @@ export function WorkItemsTab() {
           </div>
         </form>
       )}
+      <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -192,6 +193,7 @@ export function WorkItemsTab() {
           ))}
         </tbody>
       </table>
+      </div>
       {workItems.length === 0 && !showForm && <p className={styles.noData}>{t('common.noData')}</p>}
     </Card>
   );

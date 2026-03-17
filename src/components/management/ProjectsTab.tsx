@@ -459,6 +459,7 @@ export function ProjectsTab() {
                 />
               </label>
             </div>
+            <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -506,6 +507,7 @@ export function ProjectsTab() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             {modalJobId && (() => {
               const allJobs = store.getJobs(companyId);
@@ -553,6 +555,7 @@ export function ProjectsTab() {
             <h4 className={styles.sectionTitle} style={{ marginTop: '0.75rem', fontSize: '1rem' }}>
               {t('projects.projectMaterialsUsedByJob')}
             </h4>
+            <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -582,10 +585,12 @@ export function ProjectsTab() {
                 ))}
               </tbody>
             </table>
+            </div>
 
             <h4 className={styles.sectionTitle} style={{ marginTop: '0.75rem', fontSize: '1rem' }}>
               {t('projects.projectMaterialsUsedSummary')}
             </h4>
+            <div className={styles.tableWrap}>
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -607,6 +612,7 @@ export function ProjectsTab() {
                 ))}
               </tbody>
             </table>
+            </div>
           </>
         )}
       </Card>
@@ -620,6 +626,7 @@ export function ProjectsTab() {
         <div className={styles.toolbar}>
           <h3 className={styles.sectionTitle}>{t('campaigns.title')}</h3>
         </div>
+        <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -652,6 +659,7 @@ export function ProjectsTab() {
             ))}
           </tbody>
         </table>
+        </div>
       </Card>
     );
   }
@@ -821,6 +829,7 @@ export function ProjectsTab() {
           </div>
         </form>
       )}
+      <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -832,6 +841,13 @@ export function ProjectsTab() {
           </tr>
         </thead>
         <tbody>
+          {projectsInSelectedCampaign.length === 0 && !showForm && (
+            <tr>
+              <td colSpan={listFilter === 'COMPLETED' ? 5 : 4} className={styles.noData}>
+                {t('common.noData')}
+              </td>
+            </tr>
+          )}
           {projectsInSelectedCampaign.map((p) => (
             <tr key={p.id}>
               <td>
@@ -881,13 +897,7 @@ export function ProjectsTab() {
           ))}
         </tbody>
       </table>
-          {projectsInSelectedCampaign.length === 0 && !showForm && (
-            <tr>
-              <td colSpan={listFilter === 'COMPLETED' ? 4 : 3} className={styles.noData}>
-                {t('common.noData')}
-              </td>
-            </tr>
-          )}
+      </div>
     </Card>
   );
 }

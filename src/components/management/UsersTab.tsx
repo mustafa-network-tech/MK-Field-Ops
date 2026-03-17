@@ -122,6 +122,7 @@ export function UsersTab() {
       {limitError && <p className={styles.errorText}>{limitError}</p>}
       {isCompanyManager && joinRequests.length > 0 && (
         <Card title={t('joinRequests.title')}>
+          <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -224,9 +225,11 @@ export function UsersTab() {
               ))}
             </tbody>
           </table>
+          </div>
         </Card>
       )}
       <Card key={usersRefreshKey} title={t('nav.users')}>
+        <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -265,6 +268,7 @@ export function UsersTab() {
             ))}
           </tbody>
         </table>
+        </div>
         {users.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
     </>

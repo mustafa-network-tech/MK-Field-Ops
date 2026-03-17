@@ -351,7 +351,9 @@
   },
   "layout": {
     "footerDevelopedBy": "Bu uygulama MK Digital Systems tarafından geliştirilmiştir.",
-    "supportEmailTitle": "Destek için e-posta gönder"
+    "supportEmailTitle": "Destek için e-posta gönder",
+    "openMenu": "Menüyü aç",
+    "menu": "Menü"
   },
   "topBar": {
     "managementPanel": "Yönetim Paneli",

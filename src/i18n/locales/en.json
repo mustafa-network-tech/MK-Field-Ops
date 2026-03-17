@@ -351,7 +351,9 @@
   },
   "layout": {
     "footerDevelopedBy": "This application is developed by MK Digital Systems.",
-    "supportEmailTitle": "Send email for support"
+    "supportEmailTitle": "Send email for support",
+    "openMenu": "Open menu",
+    "menu": "Menu"
   },
   "topBar": {
     "managementPanel": "Management Panel",

@@ -111,6 +111,7 @@ export function DeliveryNotes() {
             </dl>
           </div>
           <h3 className={styles.sectionTitle} style={{ marginTop: '1rem' }}>{t('deliveryNotes.lineItems')}</h3>
+          <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -143,6 +144,7 @@ export function DeliveryNotes() {
               })}
             </tbody>
           </table>
+          </div>
         </Card>
       </div>
     );
@@ -346,6 +348,7 @@ export function DeliveryNotes() {
       )}
 
       <Card>
+        <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -378,6 +381,7 @@ export function DeliveryNotes() {
             })}
           </tbody>
         </table>
+        </div>
       </Card>
     </div>
   );

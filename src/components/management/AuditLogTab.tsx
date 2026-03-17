@@ -52,6 +52,7 @@ export function AuditLogTab() {
       <div className={styles.toolbar}>
         <h3 className={styles.sectionTitle}>{t('audit.title')}</h3>
       </div>
+      <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
@@ -98,6 +99,7 @@ export function AuditLogTab() {
           ))}
         </tbody>
       </table>
+      </div>
       {entries.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
     </Card>
   );

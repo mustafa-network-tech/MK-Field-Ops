@@ -87,6 +87,7 @@ export function MyJobs() {
       <h1 className={styles.pageTitle}>{t('nav.myJobs')}</h1>
       {actionError && <p className={styles.error}>{actionError}</p>}
       <Card key={listRefreshKey}>
+        <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
@@ -172,6 +173,7 @@ export function MyJobs() {
             })}
           </tbody>
         </table>
+        </div>
         {jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
 
