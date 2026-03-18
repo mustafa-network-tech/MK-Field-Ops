@@ -1,5 +1,8 @@
+/* Masaüstünde ana içerik alanını doldur (dar kart + gereksiz yan boşluk olmasın) */
 .page {
-  max-width: 1000px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .pageTitle {
@@ -12,7 +15,8 @@
 .tableWrap {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-  margin: 0 -0.5rem 0;
+  margin: 0;
+  width: 100%;
 }
 
 .error {
@@ -23,9 +27,17 @@
 
 .table {
   width: 100%;
-  min-width: 800px;
+  min-width: 960px;
+  table-layout: auto;
   border-collapse: collapse;
   font-size: 0.9rem;
+}
+
+.actionsCol {
+  white-space: nowrap;
+  vertical-align: middle;
+  min-width: 10.5rem;
+  width: 1%;
 }
 
 .table th,

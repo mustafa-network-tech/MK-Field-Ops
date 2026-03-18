@@ -116,7 +116,7 @@ export function MyJobs() {
               <th>{t('jobs.totalWorkValue')}</th>
               <th>{t('jobs.teamEarnings')}</th>
               <th>{t('jobs.jobCode')}</th>
-              <th aria-label={t('common.actions')}></th>
+              <th className={styles.actionsCol} aria-label={t('common.actions')}></th>
             </tr>
           </thead>
           <tbody>
@@ -172,7 +172,7 @@ export function MyJobs() {
                       #{job.id.slice(0, 8)}
                     </button>
                   </td>
-                  <td>
+                  <td className={styles.actionsCol}>
                     {job.status === 'draft' && (
                       <button type="button" className={styles.smallBtn} onClick={() => handleSubmitForApproval(job)}>
                         {t('jobs.submitForApproval')}
