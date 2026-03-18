@@ -4,7 +4,11 @@ import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
 import { Card } from '../components/ui/Card';
 import { uploadCompanyLogo, isAllowedLogoFile } from '../services/companyLogoService';
-import { fetchCompanyJoinCodeFromSupabase, updateCompanyJoinCodeInSupabase } from '../services/companyService';
+import {
+  fetchCompanyJoinCodeFromSupabase,
+  updateCompanyJoinCodeInSupabase,
+  updateCompanyBrandingInSupabase,
+} from '../services/companyService';
 import { logEvent, actorFromUser } from '../services/auditLogService';
 import styles from './Settings.module.css';
 
@@ -136,7 +140,17 @@ export function Settings() {
       }
       const prevName = company?.name;
       const prevLogo = company?.logo_url ?? null;
-      store.updateCompany(companyId, { name: companyName.trim() || company?.name, logo_url: newLogoUrl }, companyId);
+      const nextName = companyName.trim() || company?.name || 'Company';
+      const branding = await updateCompanyBrandingInSupabase(companyId, {
+        name: nextName,
+        logo_url: newLogoUrl,
+      });
+      if (!branding.ok) {
+        setLogoError(branding.error ?? t('settings.logoUploadError'));
+        setCompanyMessage('error');
+        return;
+      }
+      store.updateCompany(companyId, { name: nextName, logo_url: newLogoUrl }, companyId);
       setLogoUrl(newLogoUrl);
       setPendingFile(null);
       setRemoveLogo(false);

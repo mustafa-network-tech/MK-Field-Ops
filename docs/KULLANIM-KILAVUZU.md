@@ -163,4 +163,23 @@ Kullanıcı mevcut bir şirkete katılmak isterse aşağıdaki bilgileri girmeli
 
 ---
 
+## Ayarlar (Settings)
+
+Bu bölüm paneldeki **Ayarlar** sayfasında şirket bilgilerinin ve şirket logosunun nasıl yönetildiğini açıklar.
+
+### Şirket bilgileri ve logo
+
+| Alan / İşlem | Zorunluluk | Açıklama |
+|--------------|------------|----------|
+| Şirket adı   | Zorunlu    | Şirketin görünen adı. Sadece **Company Manager** düzenleyebilir. |
+| Şirket logosu| Opsiyonel  | Panelde (ör. sidebar, ayarlar) görünen şirket logosu. Yükleme veya kaldırma yalnızca **Company Manager** tarafından yapılabilir. |
+
+#### Logo kuralları
+
+- Logo dosyası Supabase Storage’da **company-logos** bucket’ına yüklenir.
+- Kaydedildiğinde logo adresi hem yerel olarak gösterilir hem de veritabanında **`companies.logo_url`** alanına yazılır; böylece sayfa yenilense bile logo kaybolmaz.
+- Dosya boyutu ve format kısıtları uygulama tarafında tanımlıdır; aşılırsa hata mesajı gösterilir.
+
+---
+
 *Devam eden bölümler eklenecektir. Üstteki arama alanı ile istenen kurallara hızlı erişim sağlanacaktır.*

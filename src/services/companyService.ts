@@ -195,6 +195,27 @@ export async function renewCompanyPlanInSupabase(
 }
 
 /**
+ * Şirket adı + logo URL (Ayarlar). CM/PM; RLS companies satırını günceller.
+ * Logo Storage'a yüklendikten sonra mutlaka çağrılmalı — aksi halde sayfa yenilenince logo kaybolur.
+ */
+export async function updateCompanyBrandingInSupabase(
+  companyId: string,
+  payload: { name: string; logo_url: string | null }
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: true };
+  const name = (payload.name != null && String(payload.name).trim()) ? String(payload.name).trim() : 'Company';
+  const { error } = await supabase
+    .from('companies')
+    .update({ name, logo_url: payload.logo_url })
+    .eq('id', companyId);
+  if (error) {
+    console.warn('updateCompanyBrandingInSupabase', error);
+    return { ok: false, error: error.message };
+  }
+  return { ok: true };
+}
+
+/**
  * Update company join code in Supabase. Only Company Manager; 4 digits only.
  */
 export async function updateCompanyJoinCodeInSupabase(
