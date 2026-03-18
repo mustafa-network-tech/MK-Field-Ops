@@ -2,6 +2,8 @@
   min-height: 100vh;
   font-family: 'DM Sans', sans-serif;
   background: #fff;
+  /* Dil menüsü açılınca scrollbar kayması azalsın */
+  scrollbar-gutter: stable;
 }
 
 /* —— 1) NAVBAR —— */
@@ -17,11 +19,13 @@
 .navInner {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0.85rem 1.5rem;
+  padding: 0.85rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1.5rem;
+  gap: 1rem;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .logo {
@@ -48,14 +52,17 @@
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 1.75rem;
+  gap: 1.1rem;
+  min-width: 0;
+  flex-shrink: 1;
 }
 
 .navLinks a {
   color: #475569;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-weight: 500;
+  white-space: nowrap;
 }
 
 .navLinks a:hover {
@@ -65,16 +72,19 @@
 .navActions {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  min-width: 0;
 }
 
 .navBtnSecondary {
-  padding: 0.5rem 1rem;
+  padding: 0.5rem 0.75rem;
   color: #475569;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   border-radius: 8px;
+  white-space: nowrap;
 }
 
 .navBtnSecondary:hover {
@@ -83,35 +93,40 @@
 }
 
 .navBtnPrimary {
-  padding: 0.5rem 1.15rem;
+  padding: 0.5rem 0.85rem;
   background: #2563eb;
   color: white;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   border-radius: 8px;
+  white-space: nowrap;
 }
 
 .navBtnPrimary:hover {
   background: #1d4ed8;
 }
 
-/* Dil menüsü (panel TopBar ile aynı yapı, 5 dil) — Ücretsiz Başla ile arasında boşluk */
+/* Dil menüsü — geniş margin kaldırıldı (taşma nedeni) */
 .langDropdown {
   position: relative;
-  margin-left: 4rem;
+  flex-shrink: 0;
 }
 
 .langTrigger {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  padding: 0.45rem 0.65rem;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.45rem 0.5rem;
+  min-width: 2.5rem;
+  min-height: 2.35rem;
+  box-sizing: border-box;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   background: #fff;
   color: #475569;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s, color 0.2s, border-color 0.2s;
@@ -145,18 +160,18 @@
 }
 
 .langMenu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin: 0.25rem 0 0;
+  /* Konum: Landing.tsx useLayoutEffect (fixed, viewport içinde) */
+  margin: 0;
   padding: 0.25rem 0;
-  min-width: 100%;
+  min-width: 7rem;
+  width: max-content;
+  max-width: min(11rem, calc(100vw - 1rem));
   background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   list-style: none;
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: 200;
 }
 
 .langOption {

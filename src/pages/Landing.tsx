@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import styles from './Landing.module.css';
@@ -59,8 +60,10 @@ export function Landing() {
   const location = useLocation();
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
+  const [langMenuPos, setLangMenuPos] = useState<CSSProperties>({});
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const langRef = useRef<HTMLDivElement>(null);
+  const langMenuRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
     if (location.pathname === '/pricing' || location.hash === '#pricing') {
@@ -85,6 +88,42 @@ export function Landing() {
     };
     document.addEventListener('click', close);
     return () => document.removeEventListener('click', close);
+  }, [langOpen]);
+
+  /** Dil listesi viewport içinde kalsın; kaydırınca kapanır (titreme olmaz) */
+  useLayoutEffect(() => {
+    if (!langOpen) {
+      setLangMenuPos({});
+      return;
+    }
+    const positionMenu = () => {
+      const wrap = langRef.current;
+      const menu = langMenuRef.current;
+      if (!wrap || !menu) return;
+      const tr = wrap.getBoundingClientRect();
+      const pad = 8;
+      const mw = menu.offsetWidth;
+      const mh = menu.offsetHeight;
+      let left = tr.right - mw;
+      if (left < pad) left = pad;
+      if (left + mw > window.innerWidth - pad) {
+        left = Math.max(pad, window.innerWidth - mw - pad);
+      }
+      let top = tr.bottom + 4;
+      if (top + mh > window.innerHeight - pad && tr.top > mh + pad) {
+        top = tr.top - mh - 4;
+      }
+      setLangMenuPos({
+        position: 'fixed',
+        top: Math.round(top),
+        left: Math.round(left),
+        right: 'auto',
+        margin: 0,
+      });
+    };
+    positionMenu();
+    window.addEventListener('resize', positionMenu);
+    return () => window.removeEventListener('resize', positionMenu);
   }, [langOpen]);
 
   return (
@@ -120,7 +159,7 @@ export function Landing() {
                 <span className={styles.langChevron} aria-hidden>{langOpen ? '▴' : '▾'}</span>
               </button>
               {langOpen && (
-                <ul className={styles.langMenu} role="listbox">
+                <ul ref={langMenuRef} className={styles.langMenu} style={langMenuPos} role="listbox">
                   {LOCALES.map((loc) => (
                     <li key={loc} role="option" aria-selected={locale === loc}>
                       <button
