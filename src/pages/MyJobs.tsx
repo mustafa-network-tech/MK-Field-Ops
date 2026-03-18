@@ -63,7 +63,10 @@ export function MyJobs() {
     setModalJobId(jobId);
   };
 
-  function formatMaterialUsage(u: JobMaterialUsage, t: (key: string) => string): string {
+  function formatMaterialUsage(
+    u: JobMaterialUsage,
+    t: (key: string, params?: Record<string, string | number>) => string
+  ): string {
     const q = `${u.quantity} ${u.quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}`;
     if (u.isExternal) return `${u.externalDescription ?? t('jobs.material.external')} – ${q} (${t('jobs.material.external')})`;
     let stockId = u.materialStockItemId;
@@ -73,7 +76,13 @@ export function MyJobs() {
     }
     const item = stockId ? stockItems.find((m) => m.id === stockId) : undefined;
     const typeLabel = item ? t(TYPE_DISPLAY_KEYS[item.mainType]) : '–';
-    const name = item ? (item.spoolId ? `${item.name ?? item.capacityLabel} (${item.spoolId})` : (item.name ?? item.capacityLabel ?? '')) : '–';
+    const name = item
+      ? item.spoolId
+        ? `${item.name ?? item.capacityLabel} (${item.spoolId})`
+        : (item.name ?? item.capacityLabel ?? '')
+      : stockId
+        ? t('jobs.material.zimmetUsageNoStockDetail', { id: stockId.slice(0, 8) })
+        : '–';
     return `${typeLabel} — ${name} – ${q} (${u.teamZimmetId ? t('jobs.material.fromZimmet') : t('jobs.material.fromStock')})`;
   }
 

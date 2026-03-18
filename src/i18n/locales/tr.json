@@ -640,6 +640,9 @@
     "zimmetRemaining": "Zimmet Kalan",
     "materialUsage": "Malzeme kullanımı",
     "material": {
+      "zimmetOptionWithoutStock": "Zimmet malzemesi — kalan: {remaining} {unit}",
+      "zimmetStockSyncHint": "İsim görünmese de satırı seçebilirsiniz; miktar zimmetten alınır. İsimler için sayfayı yenileyin veya tekrar giriş yapın.",
+      "zimmetUsageNoStockDetail": "Zimmet malzemesi (kod {id}…)",
       "selectMaterial": "Malzeme seçin",
       "available": "Mevcut",
       "useExternal": "Harici malzeme kullan (stoktan değil)",

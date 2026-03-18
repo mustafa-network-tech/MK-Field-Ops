@@ -621,6 +621,9 @@
     "zimmetRemaining": "Assigné restant",
     "materialUsage": "Utilisation de matériel",
     "material": {
+      "zimmetOptionWithoutStock": "Matériel assigné — restant : {remaining} {unit}",
+      "zimmetStockSyncHint": "Vous pouvez choisir la ligne même sans le nom. Actualisez ou reconnectez-vous.",
+      "zimmetUsageNoStockDetail": "Matériel assigné (réf. {id}…)",
       "selectMaterial": "Sélectionner le matériel",
       "available": "Disponible",
       "useExternal": "Utiliser un matériel externe (hors stock)",

@@ -33,6 +33,15 @@ function isMeterType(mainType: string): boolean {
   return mainType === 'boru' || mainType === 'kablo_ic' || mainType === 'kablo_yeraltı' || mainType === 'kablo_havai';
 }
 
+/** Stok kalemi bu cihazda yoksa bile zimmet satırından metre/adet çıkarımı. */
+function zimmetQuantityIsMeters(
+  alloc: { quantityMeters?: number; quantityPcs?: number },
+  stock: { mainType: string } | undefined
+): boolean {
+  if (stock) return isMeterType(stock.mainType);
+  return (alloc.quantityMeters ?? 0) > 0;
+}
+
 export interface JobRowState {
   id: string;
   date: string;
@@ -148,7 +157,12 @@ export function JobEntry() {
       stockId = alloc?.materialStockItemId ?? null;
     }
     const item = stockId ? stockItems.find((m) => m.id === stockId) : null;
-    if (!item) return '–';
+    if (!item) {
+      const sid = stockId ?? '';
+      return sid
+        ? t('jobs.material.zimmetUsageNoStockDetail', { id: sid.slice(0, 8) })
+        : '–';
+    }
     const typeLabel = t(TYPE_DISPLAY_KEYS[item.mainType]);
     const namePart = item.spoolId ? `${item.name ?? item.capacityLabel} (${item.spoolId})` : (item.name ?? item.capacityLabel ?? item.id);
     return `${typeLabel} — ${namePart}`;
@@ -185,8 +199,8 @@ export function JobEntry() {
     }
     const teamZimmet = row.teamId ? store.getTeamMaterialAllocations(companyId, row.teamId) : [];
     const selectedZimmet = row.addMaterialId ? teamZimmet.find((a) => a.id === row.addMaterialId) : null;
-    const selectedStockItem = selectedZimmet ? stockItems.find((m) => m.id === selectedZimmet.materialStockItemId) : null;
-    if (!row.addMaterialId || !selectedZimmet || !selectedStockItem) {
+    const selectedStockItem = selectedZimmet ? stockItems.find((m) => m.id === selectedZimmet.materialStockItemId) : undefined;
+    if (!row.addMaterialId || !selectedZimmet) {
       setAddMaterialError('validation.required');
       return;
     }
@@ -194,7 +208,7 @@ export function JobEntry() {
       setAddMaterialError('validation.positiveNumber');
       return;
     }
-    const isCableType = isMeterType(selectedStockItem.mainType);
+    const isCableType = zimmetQuantityIsMeters(selectedZimmet, selectedStockItem);
     const availableQty = isCableType ? (selectedZimmet.quantityMeters ?? 0) : (selectedZimmet.quantityPcs ?? 0);
     if (row.addQuantity > availableQty) {
       setAddMaterialError('jobs.insufficientZimmet');
@@ -336,12 +350,21 @@ export function JobEntry() {
                 ? t('deliveryNotes.unitPiece')
                 : selectedWorkItem?.unitType ?? '';
             const selectedZimmet = row.addMaterialId ? teamZimmet.find((a) => a.id === row.addMaterialId) : null;
-            const selectedStockItem = selectedZimmet ? stockItems.find((m) => m.id === selectedZimmet.materialStockItemId) : null;
-            const isCable = selectedStockItem ? isMeterType(selectedStockItem.mainType) : false;
-            const availableQty = selectedZimmet && selectedStockItem
-              ? isCable ? (selectedZimmet.quantityMeters ?? 0) : (selectedZimmet.quantityPcs ?? 0)
+            const selectedStockItem = selectedZimmet
+              ? stockItems.find((m) => m.id === selectedZimmet.materialStockItemId)
+              : undefined;
+            const isCable = selectedZimmet
+              ? zimmetQuantityIsMeters(selectedZimmet, selectedStockItem)
+              : false;
+            const availableQty = selectedZimmet
+              ? isCable
+                ? (selectedZimmet.quantityMeters ?? 0)
+                : (selectedZimmet.quantityPcs ?? 0)
               : 0;
             const quantityUnit = isCable ? 'm' : 'pcs';
+            const zimmetMissingStockDetail = teamZimmet.some(
+              (a) => !stockItems.find((s) => s.id === a.materialStockItemId)
+            );
 
             return (
               <div key={row.id} className={styles.jobRowCard}>
@@ -552,19 +575,34 @@ export function JobEntry() {
                             <option value="">-- {t('jobs.material.selectMaterial')} --</option>
                             {teamZimmet.map((alloc) => {
                               const m = stockItems.find((s) => s.id === alloc.materialStockItemId);
-                              if (!m) return null;
-                              const isC = isMeterType(m.mainType);
+                              const isC = zimmetQuantityIsMeters(alloc, m);
                               const remaining = isC ? (alloc.quantityMeters ?? 0) : (alloc.quantityPcs ?? 0);
-                              const typeLabel = t(TYPE_DISPLAY_KEYS[m.mainType]);
-                              const namePart = m.spoolId ? `${m.name ?? m.capacityLabel} (${m.spoolId})` : (m.name ?? m.capacityLabel ?? m.id);
-                              const remLabel = isC ? `${remaining} m` : String(remaining);
-                              const label = `${typeLabel} — ${namePart} — ${t('jobs.zimmetRemaining')}: ${remLabel}`;
-                              return <option key={alloc.id} value={alloc.id}>{label}</option>;
+                              if (remaining <= 0) return null;
+                              const remUnit = isC ? 'm' : t('jobs.material.pcs');
+                              const label = m
+                                ? `${t(TYPE_DISPLAY_KEYS[m.mainType])} — ${
+                                    m.spoolId
+                                      ? `${m.name ?? m.capacityLabel} (${m.spoolId})`
+                                      : (m.name ?? m.capacityLabel ?? m.id)
+                                  } — ${t('jobs.zimmetRemaining')}: ${isC ? `${remaining} m` : remaining}`
+                                : t('jobs.material.zimmetOptionWithoutStock', {
+                                    remaining: String(remaining),
+                                    unit: remUnit,
+                                  });
+                              return (
+                                <option key={alloc.id} value={alloc.id}>
+                                  {label}
+                                </option>
+                              );
                             })}
                           </select>
-                          {selectedZimmet && selectedStockItem && (
+                          {zimmetMissingStockDetail && (
+                            <p className={styles.hint}>{t('jobs.material.zimmetStockSyncHint')}</p>
+                          )}
+                          {selectedZimmet && (
                             <span className={styles.helper}>
-                              {t('jobs.zimmetRemaining')}: {availableQty} {quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}
+                              {t('jobs.zimmetRemaining')}: {availableQty}{' '}
+                              {quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}
                             </span>
                           )}
                         </>

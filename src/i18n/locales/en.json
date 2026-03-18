@@ -640,6 +640,9 @@
     "zimmetRemaining": "Assigned Remaining",
     "materialUsage": "Material usage",
     "material": {
+      "zimmetOptionWithoutStock": "Assigned material — remaining: {remaining} {unit}",
+      "zimmetStockSyncHint": "If product names are missing, you can still pick a line; quantity is from team stock. Refresh or sign in again to load names.",
+      "zimmetUsageNoStockDetail": "Assigned material (ref. {id}…)",
       "selectMaterial": "Select material",
       "available": "Available",
       "useExternal": "Use external material (not from stock)",

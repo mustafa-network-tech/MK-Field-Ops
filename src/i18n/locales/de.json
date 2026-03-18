@@ -621,6 +621,9 @@
     "zimmetRemaining": "Zugewiesen verbleibend",
     "materialUsage": "Materialverbrauch",
     "material": {
+      "zimmetOptionWithoutStock": "Zugewiesenes Material — rest: {remaining} {unit}",
+      "zimmetStockSyncHint": "Ohne Produktnamen können Sie die Zeile trotzdem wählen. Seite neu laden oder erneut anmelden.",
+      "zimmetUsageNoStockDetail": "Zugewiesenes Material (Ref. {id}…)",
       "selectMaterial": "Material wählen",
       "available": "Verfügbar",
       "useExternal": "Externes Material verwenden (nicht aus Bestand)",
