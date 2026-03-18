@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 import { canPlanAccessFeature } from '../services/planGating';
 import { getEffectivePlan } from '../services/subscriptionService';
 import { store } from '../data/store';
+import { persistDeliveryReceiveToSupabase } from '../services/supabaseSyncService';
 import { Card } from '../components/ui/Card';
 import type { DeliveryNote, DeliveryNoteItem } from '../types';
 import styles from './DeliveryNotes.module.css';
@@ -211,6 +212,11 @@ export function DeliveryNotes() {
     setLines([{ ...emptyLine }]);
     setShowForm(false);
     setSelectedNoteId(note.id);
+    void persistDeliveryReceiveToSupabase(companyId, note.id).then((r) => {
+      if (!r.ok && r.error && r.error !== 'skip') {
+        console.error('[MK-OPS] İrsaliye buluta yazılamadı:', r.error);
+      }
+    });
   };
 
   return (

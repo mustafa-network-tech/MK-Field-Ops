@@ -95,6 +95,10 @@ export function JobEntry() {
 
   const [jobRows, setJobRows] = useState<JobRowState[]>(() => [createDefaultRow()]);
   const [submitError, setSubmitError] = useState('');
+  const [submitErrorParams, setSubmitErrorParams] = useState<Record<string, string | number> | undefined>();
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState('');
+  const submitErrorRef = useRef<HTMLParagraphElement>(null);
+  const saveSuccessRef = useRef<HTMLDivElement>(null);
   const [workItemDropdownRow, setWorkItemDropdownRow] = useState<number | null>(null);
   const [noteModalRowIndex, setNoteModalRowIndex] = useState<number | null>(null);
   const notePhotoInputRef = useRef<HTMLInputElement>(null);
@@ -113,7 +117,23 @@ export function JobEntry() {
   };
 
   const addRow = () => {
-    setJobRows((prev) => [...prev, createDefaultRow()]);
+    setJobRows((prev) => {
+      const last = prev[prev.length - 1];
+      const base = createDefaultRow();
+      if (last) {
+        return [
+          ...prev,
+          {
+            ...base,
+            date: last.date,
+            campaignId: last.campaignId,
+            projectId: last.projectId,
+            teamId: last.teamId,
+          },
+        ];
+      }
+      return [...prev, base];
+    });
   };
 
   const removeRow = (index: number) => {
@@ -199,28 +219,52 @@ export function JobEntry() {
     });
   };
 
+  useEffect(() => {
+    if (!submitError) return;
+    submitErrorRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [submitError]);
+
+  useEffect(() => {
+    if (!saveSuccessMsg) return;
+    saveSuccessRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [saveSuccessMsg]);
+
   const handleSaveAll = (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
+    setSubmitErrorParams(undefined);
+    setSaveSuccessMsg('');
     if (!user) return;
     for (let i = 0; i < jobRows.length; i++) {
       const row = jobRows[i];
-      if (!row.teamId || !row.workItemId) {
-        setSubmitError('validation.required');
-        return;
-      }
-      if (row.quantity < 0.01) {
-        setSubmitError('validation.positiveNumber');
-        return;
+      const n = i + 1;
+      if (planAllowsProjects) {
+        if (!row.campaignId || !row.projectId) {
+          setSubmitError('jobs.saveAllRowCampaignProject');
+          setSubmitErrorParams({ n });
+          return;
+        }
       }
       const effectiveProjectId = planAllowsProjects ? row.projectId : starterProjectId;
       if (!effectiveProjectId) {
         setSubmitError('projects.projectNotFound');
+        setSubmitErrorParams(planAllowsProjects ? { n } : undefined);
+        return;
+      }
+      if (!row.teamId || !row.workItemId) {
+        setSubmitError('jobs.saveAllRowTeamWork');
+        setSubmitErrorParams({ n });
+        return;
+      }
+      if (row.quantity < 0.01) {
+        setSubmitError('jobs.saveAllRowQuantity');
+        setSubmitErrorParams({ n });
         return;
       }
       for (const u of row.materialUsages) {
         if (u.isExternal && !(u.externalDescription?.trim())) {
           setSubmitError('jobs.material.externalDescriptionRequired');
+          setSubmitErrorParams({ n });
           return;
         }
       }
@@ -240,17 +284,26 @@ export function JobEntry() {
       });
       if (!result.ok) {
         setSubmitError(result.error);
+        setSubmitErrorParams({ n });
         return;
       }
     }
+    const savedCount = jobRows.length;
     setJobRows([createDefaultRow()]);
+    setSaveSuccessMsg(t('jobs.saveAllSuccess', { count: savedCount }));
+    window.setTimeout(() => setSaveSuccessMsg(''), 6000);
   };
 
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('jobs.title')}</h1>
       <Card title={t('jobs.addJob')}>
-        <form onSubmit={handleSaveAll} className={styles.form}>
+        {saveSuccessMsg && (
+          <div ref={saveSuccessRef} className={styles.successBanner} role="status">
+            {saveSuccessMsg}
+          </div>
+        )}
+        <form onSubmit={handleSaveAll} className={styles.form} noValidate>
           {jobRows.map((row, index) => {
             const projectsInCampaign = row.campaignId
               ? activeProjects.filter((p) => p.campaignId === row.campaignId)
@@ -728,7 +781,11 @@ export function JobEntry() {
             );
           })()}
 
-          {submitError && <p className={styles.error}>{t(submitError)}</p>}
+          {submitError && (
+            <p ref={submitErrorRef} className={styles.error}>
+              {t(submitError, submitErrorParams)}
+            </p>
+          )}
           <div className={styles.formActions}>
             <button type="button" className={styles.addJobRowBtn} onClick={addRow}>
               + {t('jobs.addJobRow')}

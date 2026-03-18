@@ -22,6 +22,100 @@ function isUuid(s: string): boolean {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(s);
 }
 
+/** Tek stok satırını DB şemasına map et (push / anlık senkron). */
+export function materialStockItemToDbRow(m: MaterialStockItem, companyId: string): Record<string, unknown> | null {
+  if (!isUuid(m.id) || !isUuid(companyId)) return null;
+  return {
+    id: m.id,
+    company_id: companyId,
+    main_type: m.mainType,
+    custom_group_name: m.customGroupName ?? null,
+    name: m.name,
+    size_or_capacity: m.sizeOrCapacity ?? null,
+    stock_qty: m.stockQty ?? null,
+    is_cable: m.isCable ?? false,
+    cable_category: m.cableCategory ?? null,
+    capacity_label: m.capacityLabel ?? null,
+    spool_id: m.spoolId ?? null,
+    length_total: m.lengthTotal ?? null,
+    length_remaining: m.lengthRemaining ?? null,
+    is_external: m.isExternal ?? false,
+    external_note: m.externalNote ?? null,
+    created_at: m.createdAt,
+  };
+}
+
+/**
+ * İrsaliye tesliminden sonra stok + irsaliye kayıtlarını Supabase'e yazar.
+ * Aksi halde bir sonraki girişte fetch eski stoku getirip yerel teslimi siler gibi görünür.
+ */
+export async function persistDeliveryReceiveToSupabase(
+  companyId: string,
+  noteId: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase || !isUuid(companyId)) return { ok: false, error: 'skip' };
+  const note = store.getDeliveryNote(noteId);
+  if (!note || note.companyId !== companyId) return { ok: false, error: 'note not found' };
+  if (!isUuid(note.id)) return { ok: false, error: 'invalid note id' };
+
+  const items = store.getDeliveryNoteItems(noteId);
+  const stockIds = [...new Set(items.map((i) => i.materialStockItemId))];
+  const allStock = store.getMaterialStock(companyId);
+  const stockRows = stockIds
+    .map((sid) => allStock.find((m) => m.id === sid))
+    .map((m) => (m ? materialStockItemToDbRow(m, companyId) : null))
+    .filter(Boolean) as Record<string, unknown>[];
+
+  if (stockRows.length) {
+    const { error } = await supabase.from('material_stock').upsert(stockRows, { onConflict: 'id' });
+    if (error) return { ok: false, error: error.message };
+  }
+
+  const receivedDate =
+    note.receivedDate && note.receivedDate.length >= 10 ? note.receivedDate.slice(0, 10) : note.receivedDate;
+  const { error: eNote } = await supabase.from('delivery_notes').upsert(
+    {
+      id: note.id,
+      company_id: companyId,
+      supplier: note.supplier,
+      received_date: receivedDate,
+      irsaliye_no: note.irsaliyeNo,
+      received_by: note.receivedBy && isUuid(note.receivedBy) ? note.receivedBy : null,
+      received_at: note.receivedAt ?? null,
+      created_at: note.createdAt,
+    },
+    { onConflict: 'id' }
+  );
+  if (eNote) return { ok: false, error: eNote.message };
+
+  const itemRows = items
+    .filter((it) => isUuid(it.id) && isUuid(it.materialStockItemId))
+    .map((it) => ({
+      id: it.id,
+      delivery_note_id: note.id,
+      material_stock_item_id: it.materialStockItemId,
+      quantity: it.quantity,
+      quantity_unit: it.quantityUnit,
+      created_at: it.createdAt,
+    }));
+  if (itemRows.length) {
+    const { error: eItems } = await supabase.from('delivery_note_items').upsert(itemRows, { onConflict: 'id' });
+    if (eItems) return { ok: false, error: eItems.message };
+  }
+
+  return { ok: true };
+}
+
+/** Merkez stok miktarı değişince (dağıtım, iade) tek kalemi buluta yazar. */
+export async function syncMaterialStockItemToSupabase(companyId: string, materialStockItemId: string): Promise<void> {
+  if (!supabase || !isUuid(companyId) || !isUuid(materialStockItemId)) return;
+  const m = store.getMaterialStock(companyId).find((x) => x.id === materialStockItemId);
+  if (!m) return;
+  const row = materialStockItemToDbRow(m, companyId);
+  if (!row) return;
+  await supabase.from('material_stock').upsert(row, { onConflict: 'id' });
+}
+
 /** Map DB row (snake_case) to app type (camelCase). */
 function mapCampaign(row: Record<string, unknown>): Campaign {
   return {
@@ -543,25 +637,8 @@ export async function pushCompanyDataToSupabase(companyId: string): Promise<{ ok
     }
 
     const materialStockRows = materialStock
-      .filter((m) => isUuid(m.id))
-      .map((m) => ({
-        id: m.id,
-        company_id: companyId,
-        main_type: m.mainType,
-        custom_group_name: m.customGroupName ?? null,
-        name: m.name,
-        size_or_capacity: m.sizeOrCapacity ?? null,
-        stock_qty: m.stockQty ?? null,
-        is_cable: m.isCable ?? false,
-        cable_category: m.cableCategory ?? null,
-        capacity_label: m.capacityLabel ?? null,
-        spool_id: m.spoolId ?? null,
-        length_total: m.lengthTotal ?? null,
-        length_remaining: m.lengthRemaining ?? null,
-        is_external: m.isExternal ?? false,
-        external_note: m.externalNote ?? null,
-        created_at: m.createdAt,
-      }));
+      .map((m) => materialStockItemToDbRow(m, companyId))
+      .filter(Boolean) as Record<string, unknown>[];
     if (materialStockRows.length) {
       const { error } = await supabase.from('material_stock').upsert(materialStockRows, { onConflict: 'id' });
       if (error) return { ok: false, error: `material_stock: ${error.message}` };

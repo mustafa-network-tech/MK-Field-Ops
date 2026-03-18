@@ -3,6 +3,7 @@
  * Sadece Company Manager ve Project Manager stok/dağıtım mutasyonu yapabilir.
  */
 import { store } from '../data/store';
+import { syncMaterialStockItemToSupabase } from './supabaseSyncService';
 import { logEvent, actorFromUser } from './auditLogService';
 import type { User, MaterialStockItem, MaterialAuditActionType } from '../types';
 
@@ -97,6 +98,7 @@ export const materialStockService = {
         qtyMeters: payload.lengthTotal ?? payload.lengthRemaining ?? null,
         spoolId: payload.spoolId ?? null,
       });
+      void syncMaterialStockItemToSupabase(companyId, item.id).catch(() => {});
       return { ok: true, item };
     }
 
@@ -111,10 +113,12 @@ export const materialStockService = {
         const updated = store.updateMaterialStock(existingBoru.id, { lengthTotal: newTotal, lengthRemaining: newRem });
         if (!updated) return { ok: false, error: 'common.noData' };
         writeAudit(companyId, 'STOCK_EDIT', user!, existingBoru.id, { qtyMeters: newRem, note: `+${addM} m eklendi` });
+        void syncMaterialStockItemToSupabase(companyId, existingBoru.id).catch(() => {});
         return { ok: true, item: updated };
       }
       const item = store.addMaterialStock({ ...payload, companyId });
       writeAudit(companyId, 'STOCK_ADD', user!, item.id, { qtyMeters: payload.lengthTotal ?? payload.lengthRemaining ?? null });
+      void syncMaterialStockItemToSupabase(companyId, item.id).catch(() => {});
       return { ok: true, item };
     }
 
@@ -130,6 +134,7 @@ export const materialStockService = {
         qtyCount: newQty,
         note: `+${addQty} mevcut kaleme eklendi`,
       });
+      void syncMaterialStockItemToSupabase(companyId, existing.id).catch(() => {});
       return { ok: true, item: updated };
     }
 
@@ -139,6 +144,7 @@ export const materialStockService = {
       qtyMeters: payload.lengthTotal ?? payload.lengthRemaining ?? null,
       spoolId: payload.spoolId ?? null,
     });
+    void syncMaterialStockItemToSupabase(companyId, item.id).catch(() => {});
     return { ok: true, item };
   },
 
@@ -155,6 +161,7 @@ export const materialStockService = {
       qtyMeters: patch.lengthRemaining ?? patch.lengthTotal ?? item.lengthRemaining ?? item.lengthTotal ?? null,
       spoolId: item.spoolId ?? null,
     });
+    void syncMaterialStockItemToSupabase(item.companyId, item.id).catch(() => {});
     return { ok: true, item };
   },
 
@@ -231,6 +238,7 @@ export const materialStockService = {
         },
       });
     }
+    void syncMaterialStockItemToSupabase(companyId, item.id).catch(() => {});
     return { ok: true };
   },
 
@@ -290,6 +298,7 @@ export const materialStockService = {
         },
       });
     }
+    void syncMaterialStockItemToSupabase(companyId, item.id).catch(() => {});
     return { ok: true };
   },
 
