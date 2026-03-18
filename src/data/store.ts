@@ -840,6 +840,7 @@ export const store = {
       projects: Project[];
       jobs: JobRecord[];
       materialStock?: MaterialStockItem[];
+      teamMaterialAllocations?: TeamMaterialAllocation[];
     }
   ): void {
     const campaigns = load<Campaign[]>(STORAGE_KEYS.campaigns, []).filter((c) => c.companyId !== companyId).concat(data.campaigns);
@@ -862,6 +863,12 @@ export const store = {
     if (data.materialStock && data.materialStock.length >= 0) {
       const list = load<MaterialStockItem[]>(STORAGE_KEYS.materialStock, []).filter((m) => m.companyId !== companyId);
       save(STORAGE_KEYS.materialStock, list.concat(data.materialStock));
+    }
+
+    if (data.teamMaterialAllocations) {
+      const list = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []).filter((a) => a.companyId !== companyId);
+      const allocationsForCompany = data.teamMaterialAllocations.filter((a) => a.companyId === companyId);
+      save(STORAGE_KEYS.teamMaterialAllocations, list.concat(allocationsForCompany));
     }
   },
 

@@ -16,6 +16,7 @@ import type {
   JobRecord,
   JobMaterialUsage,
   MaterialStockItem,
+  TeamMaterialAllocation,
 } from '../types';
 
 function isUuid(s: string): boolean {
@@ -114,6 +115,43 @@ export async function syncMaterialStockItemToSupabase(companyId: string, materia
   const row = materialStockItemToDbRow(m, companyId);
   if (!row) return;
   await supabase.from('material_stock').upsert(row, { onConflict: 'id' });
+}
+
+function teamMaterialAllocationToDbRow(a: TeamMaterialAllocation, companyId: string): Record<string, unknown> | null {
+  if (!isUuid(companyId) || !isUuid(a.id) || !isUuid(a.teamId) || !isUuid(a.materialStockItemId)) return null;
+  return {
+    id: a.id,
+    company_id: companyId,
+    team_id: a.teamId,
+    material_stock_item_id: a.materialStockItemId,
+    quantity_meters: a.quantityMeters ?? null,
+    quantity_pcs: a.quantityPcs ?? null,
+    created_at: a.createdAt,
+  };
+}
+
+/** Upsert a single team material allocation to Supabase. */
+export async function upsertTeamMaterialAllocationToSupabase(
+  companyId: string,
+  allocation: TeamMaterialAllocation
+): Promise<void> {
+  if (!supabase) return;
+  const row = teamMaterialAllocationToDbRow(allocation, companyId);
+  if (!row) return;
+  await supabase.from('team_material_allocations').upsert(row, { onConflict: 'id' });
+}
+
+/** Delete a single team material allocation from Supabase. */
+export async function deleteTeamMaterialAllocationFromSupabase(
+  companyId: string,
+  allocationId: string
+): Promise<void> {
+  if (!supabase || !isUuid(companyId) || !isUuid(allocationId)) return;
+  await supabase
+    .from('team_material_allocations')
+    .delete()
+    .eq('id', allocationId)
+    .eq('company_id', companyId);
 }
 
 /** Map DB row (snake_case) to app type (camelCase). */
@@ -273,6 +311,18 @@ function mapMaterialStockItem(row: Record<string, unknown>): MaterialStockItem {
   };
 }
 
+function mapTeamMaterialAllocation(row: Record<string, unknown>): TeamMaterialAllocation {
+  return {
+    id: row.id as string,
+    companyId: row.company_id as string,
+    teamId: row.team_id as string,
+    materialStockItemId: row.material_stock_item_id as string,
+    quantityMeters: row.quantity_meters != null ? Number(row.quantity_meters) : undefined,
+    quantityPcs: row.quantity_pcs != null ? Number(row.quantity_pcs) : undefined,
+    createdAt: (row.created_at as string) ?? new Date().toISOString(),
+  };
+}
+
 /**
  * Upsert a single entity to Supabase. No-op if supabase is not configured or id is not a valid UUID.
  * Call after store.addX / store.updateX so every change is persisted to the cloud.
@@ -414,6 +464,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
       projectsRes,
       jobsRes,
       materialStockRes,
+      teamMaterialAllocationsRes,
     ] = await Promise.all([
       supabase.from('campaigns').select('*').eq('company_id', companyId),
       supabase.from('vehicles').select('*').eq('company_id', companyId),
@@ -423,6 +474,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
       supabase.from('projects').select('*').eq('company_id', companyId),
       supabase.from('jobs').select('*').eq('company_id', companyId),
       supabase.from('material_stock').select('*').eq('company_id', companyId),
+      supabase.from('team_material_allocations').select('*').eq('company_id', companyId),
     ]);
 
     if (campaignsRes.error) return { ok: false, error: campaignsRes.error.message };
@@ -433,6 +485,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     if (projectsRes.error) return { ok: false, error: projectsRes.error.message };
     if (jobsRes.error) return { ok: false, error: jobsRes.error.message };
     if (materialStockRes.error) return { ok: false, error: materialStockRes.error.message };
+    if (teamMaterialAllocationsRes.error) return { ok: false, error: teamMaterialAllocationsRes.error.message };
 
     const campaigns = (campaignsRes.data ?? []).map(mapCampaign);
     const vehicles = (vehiclesRes.data ?? []).map(mapVehicle);
@@ -442,6 +495,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     const projects = (projectsRes.data ?? []).map(mapProject);
     const jobs = (jobsRes.data ?? []).map(mapJob);
     const materialStock = (materialStockRes.data ?? []).map(mapMaterialStockItem);
+    const teamMaterialAllocations = (teamMaterialAllocationsRes.data ?? []).map(mapTeamMaterialAllocation);
 
     store.replaceCompanyDataFromSupabase(companyId, {
       campaigns,
@@ -452,6 +506,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
       projects,
       jobs,
       materialStock,
+      teamMaterialAllocations,
     });
 
     return { ok: true };

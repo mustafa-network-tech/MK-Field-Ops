@@ -3,7 +3,11 @@
  * Sadece Company Manager ve Project Manager stok/dağıtım mutasyonu yapabilir.
  */
 import { store } from '../data/store';
-import { syncMaterialStockItemToSupabase } from './supabaseSyncService';
+import {
+  deleteTeamMaterialAllocationFromSupabase,
+  syncMaterialStockItemToSupabase,
+  upsertTeamMaterialAllocationToSupabase,
+} from './supabaseSyncService';
 import { logEvent, actorFromUser } from './auditLogService';
 import type { User, MaterialStockItem, MaterialAuditActionType } from '../types';
 
@@ -203,18 +207,20 @@ export const materialStockService = {
     const allocations = store.getTeamMaterialAllocations(companyId, params.teamId);
     const existing = allocations.find((a) => a.materialStockItemId === params.materialStockItemId);
     if (existing) {
-      store.updateTeamMaterialAllocation(existing.id, {
+      const updated = store.updateTeamMaterialAllocation(existing.id, {
         quantityMeters: isMeter ? (existing.quantityMeters ?? 0) + qty : undefined,
         quantityPcs: !isMeter ? (existing.quantityPcs ?? 0) + qty : undefined,
       });
+      if (updated) void upsertTeamMaterialAllocationToSupabase(companyId, updated).catch(() => {});
     } else {
-      store.addTeamMaterialAllocation({
+      const created = store.addTeamMaterialAllocation({
         companyId,
         teamId: params.teamId,
         materialStockItemId: params.materialStockItemId,
         quantityMeters: isMeter ? qty : undefined,
         quantityPcs: !isMeter ? qty : undefined,
       });
+      void upsertTeamMaterialAllocationToSupabase(companyId, created).catch(() => {});
     }
     writeAudit(companyId, 'DISTRIBUTE_TO_TEAM', user!, item.id, {
       toTeamId: params.teamId,
@@ -270,11 +276,13 @@ export const materialStockService = {
     const remainingP = maxP - qtyP;
     if (remainingM <= 0 && remainingP <= 0) {
       store.deleteTeamMaterialAllocation(allocationId);
+      void deleteTeamMaterialAllocationFromSupabase(companyId, allocationId).catch(() => {});
     } else {
-      store.updateTeamMaterialAllocation(allocationId, {
+      const updated = store.updateTeamMaterialAllocation(allocationId, {
         quantityMeters: isMeter ? remainingM : undefined,
         quantityPcs: !isMeter ? remainingP : undefined,
       });
+      if (updated) void upsertTeamMaterialAllocationToSupabase(companyId, updated).catch(() => {});
     }
     writeAudit(companyId, 'RETURN_TO_STOCK', user!, item.id, {
       fromTeamId: alloc.teamId,
@@ -322,28 +330,32 @@ export const materialStockService = {
     const targetAllocs = store.getTeamMaterialAllocations(companyId, params.targetTeamId);
     const existingTarget = targetAllocs.find((a) => a.materialStockItemId === alloc.materialStockItemId);
     if (existingTarget) {
-      store.updateTeamMaterialAllocation(existingTarget.id, {
+      const updatedTarget = store.updateTeamMaterialAllocation(existingTarget.id, {
         quantityMeters: isMeter ? (existingTarget.quantityMeters ?? 0) + qtyM : undefined,
         quantityPcs: !isMeter ? (existingTarget.quantityPcs ?? 0) + qtyP : undefined,
       });
+      if (updatedTarget) void upsertTeamMaterialAllocationToSupabase(companyId, updatedTarget).catch(() => {});
     } else {
-      store.addTeamMaterialAllocation({
+      const createdTarget = store.addTeamMaterialAllocation({
         companyId,
         teamId: params.targetTeamId,
         materialStockItemId: alloc.materialStockItemId,
         quantityMeters: isMeter ? qtyM : undefined,
         quantityPcs: !isMeter ? qtyP : undefined,
       });
+      void upsertTeamMaterialAllocationToSupabase(companyId, createdTarget).catch(() => {});
     }
     const remainingM = maxM - qtyM;
     const remainingP = maxP - qtyP;
     if (remainingM <= 0 && remainingP <= 0) {
       store.deleteTeamMaterialAllocation(params.allocationId);
+      void deleteTeamMaterialAllocationFromSupabase(companyId, params.allocationId).catch(() => {});
     } else {
-      store.updateTeamMaterialAllocation(params.allocationId, {
+      const updatedSource = store.updateTeamMaterialAllocation(params.allocationId, {
         quantityMeters: isMeter ? remainingM : undefined,
         quantityPcs: !isMeter ? remainingP : undefined,
       });
+      if (updatedSource) void upsertTeamMaterialAllocationToSupabase(companyId, updatedSource).catch(() => {});
     }
     const item = store.getMaterialStock(companyId).find((m) => m.id === alloc.materialStockItemId);
     writeAudit(companyId, 'TRANSFER_BETWEEN_TEAMS', user!, alloc.materialStockItemId, {

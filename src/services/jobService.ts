@@ -1,5 +1,9 @@
 import { store } from '../data/store';
-import { upsertJob } from './supabaseSyncService';
+import {
+  deleteTeamMaterialAllocationFromSupabase,
+  upsertJob,
+  upsertTeamMaterialAllocationToSupabase,
+} from './supabaseSyncService';
 import { canUserUseTeamForJob } from './teamScopeService';
 import { roundMoney } from '../utils/formatLocale';
 import { logEvent, actorFromUser } from './auditLogService';
@@ -45,6 +49,9 @@ function tryDeductZimmetForApprovedJob(
   const usages = job.materialUsages ?? [];
   const allAllocations = store.getTeamMaterialAllocations(companyId);
   const stock = store.getMaterialStock(companyId);
+
+  const deletedAllocIds = new Set<string>();
+  const updatedAllocIds = new Set<string>();
 
   type Agg = { quantityM: number; quantityPcs: number };
   const byZimmetId = new Map<string, Agg>();
@@ -95,12 +102,37 @@ function tryDeductZimmetForApprovedJob(
     const isCable = isMeterType(item.mainType);
     if (isCable) {
       const remaining = (alloc.quantityMeters ?? 0) - agg.quantityM;
-      if (remaining <= 0) store.deleteTeamMaterialAllocation(allocId);
-      else store.updateTeamMaterialAllocation(allocId, { quantityMeters: remaining });
+      if (remaining <= 0) {
+        store.deleteTeamMaterialAllocation(allocId);
+        deletedAllocIds.add(allocId);
+      } else {
+        store.updateTeamMaterialAllocation(allocId, { quantityMeters: remaining });
+        updatedAllocIds.add(allocId);
+      }
     } else {
       const remaining = (alloc.quantityPcs ?? 0) - agg.quantityPcs;
-      if (remaining <= 0) store.deleteTeamMaterialAllocation(allocId);
-      else store.updateTeamMaterialAllocation(allocId, { quantityPcs: remaining });
+      if (remaining <= 0) {
+        store.deleteTeamMaterialAllocation(allocId);
+        deletedAllocIds.add(allocId);
+      } else {
+        store.updateTeamMaterialAllocation(allocId, { quantityPcs: remaining });
+        updatedAllocIds.add(allocId);
+      }
+    }
+  }
+
+  // Deduction affects cross-device UI; sync changed allocations in background.
+  if (deletedAllocIds.size) {
+    for (const allocationId of deletedAllocIds) {
+      void deleteTeamMaterialAllocationFromSupabase(companyId, allocationId).catch(() => {});
+    }
+  }
+  if (updatedAllocIds.size) {
+    const freshAllocs = store.getTeamMaterialAllocations(companyId);
+    const allocMap = new Map(freshAllocs.map((a) => [a.id, a]));
+    for (const allocationId of updatedAllocIds) {
+      const alloc = allocMap.get(allocationId);
+      if (alloc) void upsertTeamMaterialAllocationToSupabase(companyId, alloc).catch(() => {});
     }
   }
 
