@@ -236,21 +236,37 @@ function mapProject(row: Record<string, unknown>): Project {
 }
 
 function mapMaterialUsage(u: Record<string, unknown>): JobMaterialUsage {
+  const teamZimmet =
+    (u.team_zimmet_id as string | undefined) ?? (u.teamZimmetId as string | undefined);
+  const matStock =
+    (u.material_stock_item_id as string | undefined) ?? (u.materialStockItemId as string | undefined);
   return {
-    teamZimmetId: u.team_zimmet_id as string | undefined,
-    materialStockItemId: u.material_stock_item_id as string | undefined,
-    isExternal: Boolean(u.is_external),
-    externalDescription: u.external_description as string | undefined,
+    teamZimmetId: teamZimmet,
+    materialStockItemId: matStock,
+    isExternal: Boolean(u.is_external ?? u.isExternal),
+    externalDescription: (u.external_description ?? u.externalDescription) as string | undefined,
     quantity: Number(u.quantity) ?? 0,
-    quantityUnit: (u.quantity_unit as 'm' | 'pcs') ?? 'pcs',
+    quantityUnit: ((u.quantity_unit ?? u.quantityUnit) as 'm' | 'pcs') ?? 'pcs',
   };
 }
 
+/** DB jsonb bazen dizi, bazen JSON string dönebiliyor; aksi halde onay/zimmet bozuluyor. */
+function parseMaterialUsagesFromRow(raw: unknown): JobMaterialUsage[] {
+  let v: unknown = raw;
+  if (v == null) return [];
+  if (typeof v === 'string') {
+    try {
+      v = JSON.parse(v) as unknown;
+    } catch {
+      return [];
+    }
+  }
+  if (!Array.isArray(v)) return [];
+  return (v as Record<string, unknown>[]).map(mapMaterialUsage);
+}
+
 function mapJob(row: Record<string, unknown>): JobRecord {
-  const usages = row.material_usages;
-  const materialUsages: JobMaterialUsage[] = Array.isArray(usages)
-    ? (usages as Record<string, unknown>[]).map(mapMaterialUsage)
-    : [];
+  const materialUsages = parseMaterialUsagesFromRow(row.material_usages);
   const notePhotos = (row as Record<string, unknown>).note_photos;
   const notePhotosArr = Array.isArray(notePhotos) ? (notePhotos as string[]) : null;
 
@@ -485,7 +501,16 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     if (projectsRes.error) return { ok: false, error: projectsRes.error.message };
     if (jobsRes.error) return { ok: false, error: jobsRes.error.message };
     if (materialStockRes.error) return { ok: false, error: materialStockRes.error.message };
-    if (teamMaterialAllocationsRes.error) return { ok: false, error: teamMaterialAllocationsRes.error.message };
+    /** Zimmet tablosu yok / RLS / ağ hatası: tüm fetch'i düşürme (ekipman/iş girişi kırılıyor). */
+    let teamMaterialAllocations: TeamMaterialAllocation[] = [];
+    if (teamMaterialAllocationsRes.error) {
+      console.warn(
+        '[MKfieldOPS] team_material_allocations yüklenemedi (zimmet mobilde boş kalabilir):',
+        teamMaterialAllocationsRes.error.message
+      );
+    } else {
+      teamMaterialAllocations = (teamMaterialAllocationsRes.data ?? []).map(mapTeamMaterialAllocation);
+    }
 
     const campaigns = (campaignsRes.data ?? []).map(mapCampaign);
     const vehicles = (vehiclesRes.data ?? []).map(mapVehicle);
@@ -495,7 +520,6 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     const projects = (projectsRes.data ?? []).map(mapProject);
     const jobs = (jobsRes.data ?? []).map(mapJob);
     const materialStock = (materialStockRes.data ?? []).map(mapMaterialStockItem);
-    const teamMaterialAllocations = (teamMaterialAllocationsRes.data ?? []).map(mapTeamMaterialAllocation);
 
     store.replaceCompanyDataFromSupabase(companyId, {
       campaigns,
