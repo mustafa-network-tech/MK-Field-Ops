@@ -643,6 +643,7 @@
       "zimmetOptionWithoutStock": "Assigned material — remaining: {remaining} {unit}",
       "zimmetStockSyncHint": "If product names are missing, you can still pick a line; quantity is from team stock. Refresh or sign in again to load names.",
       "zimmetUsageNoStockDetail": "Assigned material (ref. {id}…)",
+      "includedOnDraftSave": "When you save the job as draft, the material and quantity you selected below are included even if you do not click “Add material”.",
       "selectMaterial": "Select material",
       "available": "Available",
       "useExternal": "Use external material (not from stock)",

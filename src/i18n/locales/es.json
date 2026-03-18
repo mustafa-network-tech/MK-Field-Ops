@@ -624,6 +624,7 @@
       "zimmetOptionWithoutStock": "Material asignado — restante: {remaining} {unit}",
       "zimmetStockSyncHint": "Puede elegir la línea aunque falte el nombre. Actualice o vuelva a entrar.",
       "zimmetUsageNoStockDetail": "Material asignado (ref. {id}…)",
+      "includedOnDraftSave": "Al guardar como borrador, el material y la cantidad elegidos se incluyen aunque no pulse «Añadir material».",
       "selectMaterial": "Seleccionar material",
       "available": "Disponible",
       "useExternal": "Usar material externo (no de stock)",

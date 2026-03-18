@@ -624,6 +624,7 @@
       "zimmetOptionWithoutStock": "Zugewiesenes Material — rest: {remaining} {unit}",
       "zimmetStockSyncHint": "Ohne Produktnamen können Sie die Zeile trotzdem wählen. Seite neu laden oder erneut anmelden.",
       "zimmetUsageNoStockDetail": "Zugewiesenes Material (Ref. {id}…)",
+      "includedOnDraftSave": "Beim Speichern als Entwurf werden gewähltes Material und Menge mitgespeichert, auch ohne „Material hinzufügen“.",
       "selectMaterial": "Material wählen",
       "available": "Verfügbar",
       "useExternal": "Externes Material verwenden (nicht aus Bestand)",

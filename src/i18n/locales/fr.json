@@ -624,6 +624,7 @@
       "zimmetOptionWithoutStock": "Matériel assigné — restant : {remaining} {unit}",
       "zimmetStockSyncHint": "Vous pouvez choisir la ligne même sans le nom. Actualisez ou reconnectez-vous.",
       "zimmetUsageNoStockDetail": "Matériel assigné (réf. {id}…)",
+      "includedOnDraftSave": "En enregistrant le brouillon, le matériel et la quantité choisis sont inclus même sans cliquer sur « Ajouter ».",
       "selectMaterial": "Sélectionner le matériel",
       "available": "Disponible",
       "useExternal": "Utiliser un matériel externe (hors stock)",

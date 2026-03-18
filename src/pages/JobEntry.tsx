@@ -62,6 +62,49 @@ export interface JobRowState {
   addExternalUnit: 'm' | 'pcs';
 }
 
+/**
+ * Taslak kaydederken: kullanıcı malzeme seçip miktar girmiş ama "Malzeme ekle"ye basmamışsa
+ * bu satırı da materialUsages içine alır (Taslakta malzeme boş kalmasın).
+ */
+function mergePendingMaterialIntoUsages(
+  row: JobRowState,
+  companyId: string,
+  stockItems: { id: string; mainType: string }[]
+): { usages: JobMaterialUsage[]; error: string | null } {
+  const usages = [...row.materialUsages];
+
+  if (row.addIsExternal) {
+    if (!row.addExternalDesc.trim() || row.addQuantity <= 0) return { usages, error: null };
+    usages.push({
+      materialStockItemId: null,
+      isExternal: true,
+      externalDescription: row.addExternalDesc.trim(),
+      quantity: row.addQuantity,
+      quantityUnit: row.addExternalUnit,
+    });
+    return { usages, error: null };
+  }
+
+  if (!row.teamId || !row.addMaterialId || row.addQuantity <= 0) return { usages, error: null };
+  const teamZimmet = store.getTeamMaterialAllocations(companyId, row.teamId);
+  const selectedZimmet = teamZimmet.find((a) => a.id === row.addMaterialId);
+  if (!selectedZimmet) return { usages, error: null };
+
+  const selectedStockItem = stockItems.find((m) => m.id === selectedZimmet.materialStockItemId);
+  const isCableType = zimmetQuantityIsMeters(selectedZimmet, selectedStockItem);
+  const availableQty = isCableType ? (selectedZimmet.quantityMeters ?? 0) : (selectedZimmet.quantityPcs ?? 0);
+  if (row.addQuantity > availableQty) return { usages, error: 'jobs.insufficientZimmet' };
+
+  usages.push({
+    teamZimmetId: selectedZimmet.id,
+    materialStockItemId: selectedZimmet.materialStockItemId,
+    isExternal: false,
+    quantity: row.addQuantity,
+    quantityUnit: (isCableType ? 'm' : 'pcs') as 'm' | 'pcs',
+  });
+  return { usages, error: null };
+}
+
 function createDefaultRow(): JobRowState {
   return {
     id: crypto.randomUUID?.() ?? `row-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -279,7 +322,17 @@ export function JobEntry() {
         setSubmitErrorParams({ n });
         return;
       }
-      for (const u of row.materialUsages) {
+      const { usages: usagesForSave, error: pendingMatError } = mergePendingMaterialIntoUsages(
+        row,
+        companyId,
+        stockItems
+      );
+      if (pendingMatError) {
+        setSubmitError(pendingMatError);
+        setSubmitErrorParams({ n });
+        return;
+      }
+      for (const u of usagesForSave) {
         if (u.isExternal && !(u.externalDescription?.trim())) {
           setSubmitError('jobs.material.externalDescriptionRequired');
           setSubmitErrorParams({ n });
@@ -294,7 +347,7 @@ export function JobEntry() {
         workItemId: row.workItemId,
         quantity: row.quantity,
         materialIds: [],
-        materialUsages: row.materialUsages,
+        materialUsages: usagesForSave,
         equipmentIds: row.equipmentIds,
         notes: row.notes,
         notePhotos: (row.notePhotos?.length ? row.notePhotos : []).slice(0, 3),
@@ -662,6 +715,9 @@ export function JobEntry() {
                   >
                     {t('jobs.material.addMaterial')}
                   </button>
+                  <p className={styles.muted} style={{ marginTop: 8, fontSize: '0.85rem' }}>
+                    {t('jobs.material.includedOnDraftSave')}
+                  </p>
                 </div>
                 {row.materialUsages.length > 0 && (
                   <ul className={styles.usageList}>
