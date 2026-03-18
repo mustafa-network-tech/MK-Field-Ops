@@ -435,9 +435,12 @@ export async function upsertProject(p: Project): Promise<void> {
   );
 }
 
-export async function upsertJob(j: JobRecord): Promise<void> {
-  if (!supabase || !isUuid(j.id)) return;
-  await supabase.from('jobs').upsert(
+export async function upsertJob(j: JobRecord): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: true };
+  if (!isUuid(j.id) || !isUuid(j.companyId)) {
+    return { ok: false, error: 'invalid_job_or_company_id' };
+  }
+  const { error } = await supabase.from('jobs').upsert(
     {
       id: j.id,
       company_id: j.companyId,
@@ -461,6 +464,8 @@ export async function upsertJob(j: JobRecord): Promise<void> {
     },
     { onConflict: 'id' }
   );
+  if (error) return { ok: false, error: error.message };
+  return { ok: true };
 }
 
 /**

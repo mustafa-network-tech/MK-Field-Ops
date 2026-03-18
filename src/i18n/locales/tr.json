@@ -618,6 +618,7 @@
     "jobNumber": "İş {n}",
     "saveAllJobs": "Tümünü Kaydet",
     "saveAllSuccess": "{count} iş kaydı taslak olarak kaydedildi.",
+    "cloudSaveFailed": "Sunucuya kaydedilemedi. Bağlantı ve yetkilerinizi kontrol edin. Devam ederse yöneticiye bildirin.",
     "saveAllRowCampaignProject": "İş {n}: Kampanya ve proje seçin.",
     "saveAllRowTeamWork": "İş {n}: Ekip ve iş kalemi seçin.",
     "saveAllRowQuantity": "İş {n}: Geçerli miktar girin (en az 0,01).",

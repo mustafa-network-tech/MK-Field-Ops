@@ -599,6 +599,7 @@
     "jobNumber": "Trabajo {n}",
     "saveAllJobs": "Guardar todo",
     "saveAllSuccess": "{count} trabajo(s) guardado(s) como borrador.",
+    "cloudSaveFailed": "No se pudo guardar en el servidor. Compruebe conexión y permisos.",
     "saveAllRowCampaignProject": "Trabajo {n}: Seleccione campaña y proyecto.",
     "saveAllRowTeamWork": "Trabajo {n}: Seleccione equipo y partida.",
     "saveAllRowQuantity": "Trabajo {n}: Introduzca una cantidad válida (mín. 0,01).",

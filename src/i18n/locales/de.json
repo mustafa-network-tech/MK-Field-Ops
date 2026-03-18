@@ -599,6 +599,7 @@
     "jobNumber": "Arbeit {n}",
     "saveAllJobs": "Alle speichern",
     "saveAllSuccess": "{count} Auftrag/Aufträge als Entwurf gespeichert.",
+    "cloudSaveFailed": "Server speichern fehlgeschlagen. Verbindung und Berechtigungen prüfen.",
     "saveAllRowCampaignProject": "Auftrag {n}: Kampagne und Projekt wählen.",
     "saveAllRowTeamWork": "Auftrag {n}: Team und Leistungsposition wählen.",
     "saveAllRowQuantity": "Auftrag {n}: Gültige Menge eingeben (mind. 0,01).",

@@ -599,6 +599,7 @@
     "jobNumber": "Travail {n}",
     "saveAllJobs": "Tout enregistrer",
     "saveAllSuccess": "{count} travail(aux) enregistré(s) en brouillon.",
+    "cloudSaveFailed": "Enregistrement serveur impossible. Vérifiez la connexion et les droits.",
     "saveAllRowCampaignProject": "Travail {n} : sélectionnez campagne et projet.",
     "saveAllRowTeamWork": "Travail {n} : sélectionnez équipe et poste.",
     "saveAllRowQuantity": "Travail {n} : saisissez une quantité valide (min. 0,01).",

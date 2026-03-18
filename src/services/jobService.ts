@@ -9,19 +9,13 @@ import { roundMoney } from '../utils/formatLocale';
 import { logEvent, actorFromUser } from './auditLogService';
 import { addActivityNotification } from './activityNotificationService';
 import { getProjectDisplayKey } from '../utils/projectKey';
-import type { User, JobRecord, JobMaterialUsage } from '../types';
+import type { User, JobRecord, JobMaterialUsage, TeamMaterialAllocation } from '../types';
 
 export type AddJobResult = { ok: true } | { ok: false; error: string };
 export type UpdateJobResult = { ok: true } | { ok: false; error: string };
 
-/** When DB/API raises PAYROLL_PERIOD_LOCKED, use this i18n key for the user message. */
 export const PAYROLL_PERIOD_LOCKED_ERROR = 'jobs.payrollPeriodClosed' as const;
 
-/**
- * Map API/DB error to app error key. Use when integrating Supabase (or any backend) for jobs.
- * Example: const { error } = await supabase.from('jobs').insert(...);
- *          if (error) return { ok: false, error: normalizeJobApiError(error) ?? error.message };
- */
 export function normalizeJobApiError(apiError: { code?: string; message?: string } | null): string | null {
   if (!apiError) return null;
   const msg = (apiError.message ?? '').toUpperCase();
@@ -35,12 +29,33 @@ function isMeterType(mainType: string): boolean {
   return mainType === 'boru' || mainType === 'kablo_ic' || mainType === 'kablo_yeraltı' || mainType === 'kablo_havai';
 }
 
-/**
- * Validates and deducts from team ZIMMET (assignments) when job is FINAL APPROVED.
- * Only usages with teamZimmetId (or legacy materialStockItemId) are deducted.
- * Idempotent: only runs when job.stockDeducted is false.
- * Returns error if insufficient zimmet; then no deduction and approval is aborted.
- */
+function captureZimmetSnapshotsBeforeDeduct(companyId: string, job: JobRecord): Map<string, TeamMaterialAllocation> {
+  const snaps = new Map<string, TeamMaterialAllocation>();
+  const usages = job.materialUsages ?? [];
+  const allAllocations = store.getTeamMaterialAllocations(companyId);
+  const seen = new Set<string>();
+
+  for (const u of usages) {
+    if (u.isExternal) continue;
+    let allocId: string | null = null;
+    if (u.teamZimmetId) {
+      const alloc = allAllocations.find((a) => a.id === u.teamZimmetId);
+      if (alloc && alloc.teamId === job.teamId) allocId = alloc.id;
+    } else if (u.materialStockItemId) {
+      const alloc = allAllocations.find(
+        (a) => a.teamId === job.teamId && a.materialStockItemId === u.materialStockItemId
+      );
+      allocId = alloc?.id ?? null;
+    }
+    if (allocId && !seen.has(allocId)) {
+      seen.add(allocId);
+      const alloc = allAllocations.find((a) => a.id === allocId);
+      if (alloc) snaps.set(allocId, { ...alloc });
+    }
+  }
+  return snaps;
+}
+
 function tryDeductZimmetForApprovedJob(
   companyId: string,
   job: JobRecord
@@ -121,7 +136,6 @@ function tryDeductZimmetForApprovedJob(
     }
   }
 
-  // Deduction affects cross-device UI; sync changed allocations in background.
   if (deletedAllocIds.size) {
     for (const allocationId of deletedAllocIds) {
       void deleteTeamMaterialAllocationFromSupabase(companyId, allocationId).catch(() => {});
@@ -139,11 +153,11 @@ function tryDeductZimmetForApprovedJob(
   return { ok: true };
 }
 
-/**
- * Validates teamId for current user (TL = only own teams) then creates job.
- * Use this instead of store.addJob to enforce team leader scope.
- */
-export function addJob(
+function cloudSaveErrorKey(syncError: string | undefined): string {
+  return normalizeJobApiError({ message: syncError ?? '' }) ?? 'jobs.cloudSaveFailed';
+}
+
+export async function addJob(
   user: User | undefined,
   params: {
     companyId: string;
@@ -159,7 +173,7 @@ export function addJob(
     notePhotos?: string[] | null;
     createdBy: string;
   }
-): AddJobResult {
+): Promise<AddJobResult> {
   if (!user) return { ok: false, error: 'jobs.validation.unauthorized' };
   const project = store.getProject(params.projectId, params.companyId);
   if (!project || project.status !== 'ACTIVE') {
@@ -175,7 +189,16 @@ export function addJob(
     notePhotos: (params.notePhotos?.length ? params.notePhotos : []).slice(0, 3),
     status: 'draft',
   });
-  upsertJob(newJob).catch(() => {});
+
+  const { supabase } = await import('./supabaseClient');
+  if (supabase) {
+    const sync = await upsertJob(newJob);
+    if (!sync.ok) {
+      store.deleteJob(newJob.id);
+      return { ok: false, error: cloudSaveErrorKey(sync.error) };
+    }
+  }
+
   const team = store.getTeam(params.teamId);
   const actor = actorFromUser(user);
   if (actor) {
@@ -192,17 +215,18 @@ export function addJob(
   return { ok: true };
 }
 
-/**
- * Validates that the job's team (and patch.teamId if present) is allowed for current user, then updates.
- * When status becomes 'approved', deducts from team ZIMMET first; if insufficient, approval is aborted.
- * Deduction runs only once per job (stockDeducted flag). Use this instead of store.updateJob.
- */
-export function updateJob(
+async function persistJobToCloud(job: JobRecord): Promise<{ ok: boolean; error?: string }> {
+  const { supabase } = await import('./supabaseClient');
+  if (!supabase) return { ok: true };
+  return upsertJob(job);
+}
+
+export async function updateJob(
   user: User | undefined,
   companyId: string,
   jobId: string,
   patch: Partial<JobRecord>
-): UpdateJobResult {
+): Promise<UpdateJobResult> {
   if (!user) return { ok: false, error: 'jobs.validation.unauthorized' };
   const job = store.getJobs(companyId).find((j) => j.id === jobId);
   if (!job) return { ok: false, error: 'jobs.validation.jobNotFound' };
@@ -215,61 +239,115 @@ export function updateJob(
     }
   }
 
+  const now = new Date().toISOString();
+  const jobPatch: Partial<JobRecord> =
+    patch.status !== undefined
+      ? { ...patch, status: patch.status as JobRecord['status'] }
+      : patch;
+
+  const emitAudit = () => {
+    const actor = actorFromUser(user);
+    const team = store.getTeam(job.teamId);
+    if (actor) {
+      const action =
+        patch.status === 'submitted'
+          ? 'JOB_SUBMITTED'
+          : patch.status === 'approved'
+            ? 'JOB_APPROVED'
+            : patch.status === 'rejected'
+              ? 'JOB_REJECTED'
+              : 'JOB_UPDATED';
+      logEvent(actor, {
+        action,
+        entity_type: 'job',
+        entity_id: jobId,
+        team_code: team?.code ?? null,
+        project_id: job.projectId ?? null,
+        company_id: companyId,
+        meta: patch.status ? { previousStatus: job.status, newStatus: patch.status } : {},
+      });
+    }
+    if (patch.status === 'approved' && user.role === 'projectManager') {
+      const project = job.projectId ? store.getProject(job.projectId, companyId) : undefined;
+      const projectKey = project ? getProjectDisplayKey(project) : '–';
+      addActivityNotification({
+        companyId,
+        type: 'pm_job_approved',
+        titleKey: 'notifications.pmJobApproved',
+        meta: {
+          actorName: user.fullName ?? '–',
+          teamCode: team?.code ?? '–',
+          projectKey,
+        },
+      });
+    }
+  };
+
+  if (patch.status === 'submitted') {
+    const merged = { ...job, ...patch, status: 'submitted' as const, updatedAt: now };
+    const sync = await persistJobToCloud(merged);
+    if (!sync.ok) return { ok: false, error: cloudSaveErrorKey(sync.error) };
+    const updated = store.updateJob(jobId, patch);
+    if (!updated) return { ok: false, error: 'jobs.validation.jobNotFound' };
+    emitAudit();
+    return { ok: true };
+  }
+
+  if (patch.status === 'rejected') {
+    const merged = { ...job, ...patch, status: 'rejected' as const, updatedAt: now };
+    const sync = await persistJobToCloud(merged);
+    if (!sync.ok) return { ok: false, error: cloudSaveErrorKey(sync.error) };
+    store.updateJob(jobId, patch);
+    emitAudit();
+    return { ok: true };
+  }
+
   const isApproval = patch.status === 'approved';
   const wouldBe = { ...job, ...patch } as JobRecord;
   const hasZimmetUsages =
     (wouldBe.materialUsages?.length ?? 0) > 0 &&
     wouldBe.materialUsages!.some((u) => !u.isExternal && (u.teamZimmetId || u.materialStockItemId));
 
-  const jobPatch: Partial<JobRecord> =
-    patch.status !== undefined
-      ? { ...patch, status: patch.status as JobRecord['status'] }
-      : patch;
+  if (isApproval) {
+    let snapshots = new Map<string, TeamMaterialAllocation>();
+    let updated: JobRecord | undefined;
 
-  let updated: JobRecord | undefined;
-  if (isApproval && !wouldBe.stockDeducted && hasZimmetUsages) {
-    const deductResult = tryDeductZimmetForApprovedJob(companyId, wouldBe);
-    if (!deductResult.ok) return deductResult;
-    updated = store.updateJob(jobId, { ...jobPatch, stockDeducted: true });
-  } else {
-    updated = store.updateJob(jobId, jobPatch);
-  }
-  if (updated) upsertJob(updated).catch(() => {});
+    if (!wouldBe.stockDeducted && hasZimmetUsages) {
+      snapshots = captureZimmetSnapshotsBeforeDeduct(companyId, wouldBe);
+      const deductResult = tryDeductZimmetForApprovedJob(companyId, wouldBe);
+      if (!deductResult.ok) return deductResult;
+      updated = store.updateJob(jobId, { ...jobPatch, stockDeducted: true });
+    } else {
+      updated = store.updateJob(jobId, jobPatch);
+    }
 
-  const actor = actorFromUser(user);
-  const team = store.getTeam(job.teamId);
-  if (actor) {
-    const action =
-      patch.status === 'submitted'
-        ? 'JOB_SUBMITTED'
-        : patch.status === 'approved'
-          ? 'JOB_APPROVED'
-          : patch.status === 'rejected'
-            ? 'JOB_REJECTED'
-            : 'JOB_UPDATED';
-    logEvent(actor, {
-      action,
-      entity_type: 'job',
-      entity_id: jobId,
-      team_code: team?.code ?? null,
-      project_id: job.projectId ?? null,
-      company_id: companyId,
-      meta: patch.status ? { previousStatus: job.status, newStatus: patch.status } : {},
-    });
+    if (!updated) return { ok: false, error: 'jobs.validation.jobNotFound' };
+
+    const sync = await persistJobToCloud(updated);
+    if (!sync.ok) {
+      if (snapshots.size > 0) {
+        for (const snap of snapshots.values()) {
+          store.replaceTeamMaterialAllocation(snap);
+          void upsertTeamMaterialAllocationToSupabase(companyId, snap).catch(() => {});
+        }
+      }
+      store.updateJob(jobId, {
+        status: job.status,
+        stockDeducted: job.stockDeducted,
+        approvedBy: job.approvedBy,
+        approvedAt: job.approvedAt,
+      });
+      return { ok: false, error: cloudSaveErrorKey(sync.error) };
+    }
+    emitAudit();
+    return { ok: true };
   }
-  if (patch.status === 'approved' && user.role === 'projectManager') {
-    const project = job.projectId ? store.getProject(job.projectId, companyId) : undefined;
-    const projectKey = project ? getProjectDisplayKey(project) : '–';
-    addActivityNotification({
-      companyId,
-      type: 'pm_job_approved',
-      titleKey: 'notifications.pmJobApproved',
-      meta: {
-        actorName: user.fullName ?? '–',
-        teamCode: team?.code ?? '–',
-        projectKey,
-      },
-    });
+
+  const updated = store.updateJob(jobId, jobPatch);
+  if (updated) {
+    const sync = await persistJobToCloud(updated);
+    if (!sync.ok) return { ok: false, error: cloudSaveErrorKey(sync.error) };
   }
+  emitAudit();
   return { ok: true };
 }

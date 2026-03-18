@@ -229,12 +229,16 @@ export function JobEntry() {
     saveSuccessRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, [saveSuccessMsg]);
 
-  const handleSaveAll = (e: React.FormEvent) => {
+  const [savePending, setSavePending] = useState(false);
+
+  const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError('');
     setSubmitErrorParams(undefined);
     setSaveSuccessMsg('');
     if (!user) return;
+    setSavePending(true);
+    try {
     for (let i = 0; i < jobRows.length; i++) {
       const row = jobRows[i];
       const n = i + 1;
@@ -268,7 +272,7 @@ export function JobEntry() {
           return;
         }
       }
-      const result = addJob(user, {
+      const result = await addJob(user, {
         companyId,
         date: row.date,
         projectId: effectiveProjectId,
@@ -287,6 +291,9 @@ export function JobEntry() {
         setSubmitErrorParams({ n });
         return;
       }
+    }
+    } finally {
+      setSavePending(false);
     }
     const savedCount = jobRows.length;
     setJobRows([createDefaultRow()]);
@@ -790,8 +797,8 @@ export function JobEntry() {
             <button type="button" className={styles.addJobRowBtn} onClick={addRow}>
               + {t('jobs.addJobRow')}
             </button>
-            <button type="submit" className={styles.primaryBtn}>
-              {t('jobs.saveAllJobs')} ({t('jobs.draft')})
+            <button type="submit" className={styles.primaryBtn} disabled={savePending}>
+              {savePending ? '…' : `${t('jobs.saveAllJobs')} (${t('jobs.draft')})`}
             </button>
           </div>
         </form>

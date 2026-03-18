@@ -53,26 +53,31 @@ export function Approvals() {
   function formatMaterialUsage(u: JobMaterialUsage, t: (key: string) => string): string {
     const q = `${u.quantity} ${u.quantityUnit === 'm' ? 'm' : t('jobs.material.pcs')}`;
     if (u.isExternal) return `${u.externalDescription ?? t('jobs.material.external')} – ${q} (${t('jobs.material.external')})`;
-    const item = stockItems.find((m) => m.id === u.materialStockItemId);
+    let stockId = u.materialStockItemId;
+    if (!stockId && u.teamZimmetId) {
+      const alloc = store.getTeamMaterialAllocations(companyId).find((a) => a.id === u.teamZimmetId);
+      stockId = alloc?.materialStockItemId;
+    }
+    const item = stockId ? stockItems.find((m) => m.id === stockId) : undefined;
     const typeLabel = item ? t(TYPE_DISPLAY_KEYS[item.mainType]) : '–';
     const name = item ? (item.spoolId ? `${item.name ?? item.capacityLabel} (${item.spoolId})` : (item.name ?? item.capacityLabel ?? '')) : '–';
     return `${typeLabel} — ${name} – ${q} (${u.teamZimmetId ? t('jobs.material.fromZimmet') : t('jobs.material.fromStock')})`;
   }
 
-  const handleApprove = (jobId: string) => {
+  const handleApprove = async (jobId: string) => {
     setActionError('');
     setSuccessMessage(null);
-    const result = updateJob(user ?? undefined, companyId, jobId, { status: 'approved', approvedBy: user!.id });
+    const result = await updateJob(user ?? undefined, companyId, jobId, { status: 'approved', approvedBy: user!.id });
     if (result.ok) {
       setSuccessMessage('approved');
     } else {
       setActionError(t(result.error));
     }
   };
-  const handleReject = (jobId: string) => {
+  const handleReject = async (jobId: string) => {
     setActionError('');
     setSuccessMessage(null);
-    const result = updateJob(user ?? undefined, companyId, jobId, { status: 'rejected', rejectedBy: user!.id });
+    const result = await updateJob(user ?? undefined, companyId, jobId, { status: 'rejected', rejectedBy: user!.id });
     if (result.ok) {
       setSuccessMessage('rejected');
     } else {

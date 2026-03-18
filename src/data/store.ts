@@ -798,6 +798,21 @@ export const store = {
     save(STORAGE_KEYS.jobs, jobs);
     return jobs[i];
   },
+  deleteJob(jobId: string): boolean {
+    const jobs = load<JobRecord[]>(STORAGE_KEYS.jobs, []);
+    const next = jobs.filter((j) => j.id !== jobId);
+    if (next.length === jobs.length) return false;
+    save(STORAGE_KEYS.jobs, next);
+    return true;
+  },
+  /** Zimmet onay geri alma: silinen veya değişen satırı eski haline getir. */
+  replaceTeamMaterialAllocation(a: TeamMaterialAllocation): void {
+    const list = load<TeamMaterialAllocation[]>(STORAGE_KEYS.teamMaterialAllocations, []);
+    const i = list.findIndex((x) => x.id === a.id);
+    if (i >= 0) list[i] = { ...a };
+    else list.push({ ...a });
+    save(STORAGE_KEYS.teamMaterialAllocations, list);
+  },
 
   getPayrollPeriodSettings(companyId: string): PayrollPeriodSettings | undefined {
     const list = load<PayrollPeriodSettings[]>(STORAGE_KEYS.payrollPeriodSettings, []);

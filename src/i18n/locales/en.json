@@ -618,6 +618,7 @@
     "jobNumber": "Job {n}",
     "saveAllJobs": "Save All",
     "saveAllSuccess": "{count} job(s) saved as draft.",
+    "cloudSaveFailed": "Could not save to server. Check your connection and permissions. If this continues, contact support.",
     "saveAllRowCampaignProject": "Job {n}: Select campaign and project.",
     "saveAllRowTeamWork": "Job {n}: Select team and work item.",
     "saveAllRowQuantity": "Job {n}: Enter a valid quantity (at least 0.01).",
