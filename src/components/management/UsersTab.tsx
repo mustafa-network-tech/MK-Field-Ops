@@ -58,8 +58,12 @@ export function UsersTab() {
   const [approveRole, setApproveRole] = useState<Role>('teamLeader');
   const [approvingReqId, setApprovingReqId] = useState<string | null>(null);
   const [joinReqRole, setJoinReqRole] = useState<Role>('teamLeader');
+  const [removeUserError, setRemoveUserError] = useState('');
+  const [removeConfirmId, setRemoveConfirmId] = useState<string | null>(null);
 
   const isCompanyManager = currentUser?.role === 'companyManager';
+  const canRemoveFromCompany =
+    currentUser?.role === 'companyManager' || currentUser?.role === 'projectManager';
   /** Only company manager can grant/revoke price visibility (price limit) for team leaders. */
   const canGrantPriceVisibility = currentUser?.role === 'companyManager';
 
@@ -112,6 +116,23 @@ export function UsersTab() {
   const handleRejectJoinRequest = async (reqId: string) => {
     const ok = await authService.rejectJoinRequest(reqId);
     if (ok) loadJoinRequests();
+  };
+
+  const handleRemoveFromCompany = async (targetUserId: string) => {
+    if (!currentUser?.companyId) return;
+    setRemoveUserError('');
+    const r = await authService.removeUserFromCompany(targetUserId, {
+      id: currentUser.id,
+      companyId: currentUser.companyId,
+      role: currentUser.role,
+    });
+    setRemoveConfirmId(null);
+    if (!r.ok) {
+      setRemoveUserError(r.error.startsWith('users.') ? t(r.error) : r.error);
+      return;
+    }
+    setUsersRefreshKey((k) => k + 1);
+    await authService.fetchCompanyProfilesIntoStore(companyId);
   };
 
   return (
@@ -231,6 +252,10 @@ export function UsersTab() {
         </Card>
       )}
       <Card key={usersRefreshKey} title={t('nav.users')}>
+        {removeUserError && <p className={styles.errorText}>{removeUserError}</p>}
+        <p className={styles.muted} style={{ marginBottom: '0.75rem', fontSize: '0.875rem' }}>
+          {t('users.removeFromCompanyHint')}
+        </p>
         <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -240,6 +265,7 @@ export function UsersTab() {
               <th>{t('auth.role')}</th>
               <th>{t('jobs.status')}</th>
               {canGrantPriceVisibility && <th>{t('users.priceVisibility')}</th>}
+              {canRemoveFromCompany && <th>{t('common.actions')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -260,6 +286,28 @@ export function UsersTab() {
                         <button type="button" className={styles.smallBtnDanger} onClick={() => handleRevokePriceVisibility(u)}>{t('users.revokePriceVisibility')}</button>
                       ) : (
                         <button type="button" className={styles.smallBtnOk} onClick={() => handleGrantPriceVisibility(u)}>{t('users.grantPriceVisibility')}</button>
+                      )
+                    ) : (
+                      '–'
+                    )}
+                  </td>
+                )}
+                {canRemoveFromCompany && (
+                  <td>
+                    {u.id !== currentUser?.id && u.roleApprovalStatus === 'approved' ? (
+                      removeConfirmId === u.id ? (
+                        <>
+                          <button type="button" className={styles.smallBtnDanger} onClick={() => handleRemoveFromCompany(u.id)}>
+                            {t('users.removeFromCompanyConfirm')}
+                          </button>
+                          <button type="button" className={styles.secondaryBtn} style={{ marginLeft: 6 }} onClick={() => setRemoveConfirmId(null)}>
+                            {t('common.cancel')}
+                          </button>
+                        </>
+                      ) : (
+                        <button type="button" className={styles.smallBtnDanger} onClick={() => setRemoveConfirmId(u.id)}>
+                          {t('users.removeFromCompany')}
+                        </button>
                       )
                     ) : (
                       '–'

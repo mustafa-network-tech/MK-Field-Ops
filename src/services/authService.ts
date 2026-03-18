@@ -281,6 +281,67 @@ export const authService = {
     return updated != null;
   },
 
+  /**
+   * Kullanıcıyı şirketten çıkar: hesap silinmez; tekrar katılım kodu ile başvurabilir.
+   * CM/PM. Son şirket yöneticisi çıkarılamaz. Kendi kendini çıkarmaya izin verilmez.
+   */
+  async removeUserFromCompany(
+    targetUserId: string,
+    actingUser: { id: string; companyId: string; role?: string }
+  ): Promise<{ ok: true } | { ok: false; error: string }> {
+    if (!actingUser.companyId) return { ok: false, error: 'users.removeFromCompanyForbidden' };
+    if (actingUser.role !== 'companyManager' && actingUser.role !== 'projectManager') {
+      return { ok: false, error: 'users.removeFromCompanyForbidden' };
+    }
+    if (targetUserId === actingUser.id) {
+      return { ok: false, error: 'users.cannotRemoveSelf' };
+    }
+    const inCompany = store.getUsers(actingUser.companyId).find((u) => u.id === targetUserId);
+    if (!inCompany) return { ok: false, error: 'users.userNotInCompany' };
+
+    if (inCompany.role === 'companyManager' && inCompany.roleApprovalStatus === 'approved') {
+      const cms = store.getUsers(actingUser.companyId).filter(
+        (u) => u.role === 'companyManager' && u.roleApprovalStatus === 'approved'
+      );
+      if (cms.length <= 1) {
+        return { ok: false, error: 'users.cannotRemoveLastCompanyManager' };
+      }
+    }
+
+    if (supabase) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          company_id: null,
+          role: null,
+          role_approval_status: 'rejected',
+        })
+        .eq('id', targetUserId)
+        .eq('company_id', actingUser.companyId);
+      if (error) {
+        console.warn('[removeUserFromCompany]', error);
+        return { ok: false, error: error.message };
+      }
+    }
+
+    const { upsertTeam } = await import('./supabaseSyncService');
+    for (const t of store.getTeams(actingUser.companyId)) {
+      if (t.wipedAt) continue;
+      const patch: Partial<import('../types').Team> = {};
+      if (t.leaderId === targetUserId) patch.leaderId = undefined;
+      if (t.memberIds?.includes(targetUserId)) {
+        patch.memberIds = t.memberIds.filter((id) => id !== targetUserId);
+      }
+      if (Object.keys(patch).length) {
+        const updated = store.updateTeam(t.id, patch);
+        if (updated) void upsertTeam(updated).catch(() => {});
+      }
+    }
+
+    store.detachUserFromCompany(targetUserId, actingUser.companyId);
+    return { ok: true };
+  },
+
   /** Fetch pending join requests for current company (CM/PM). */
   async fetchJoinRequests(companyId: string): Promise<{ id: string; user_id: string; company_id: string; status: string; created_at: string }[]> {
     if (!supabase) return [];

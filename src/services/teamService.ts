@@ -1,6 +1,7 @@
 import { store } from '../data/store';
 import { logEvent, actorFromUser } from './auditLogService';
 import { addActivityNotification } from './activityNotificationService';
+import { materialStockService } from './materialStockService';
 import { canPlanAddTeam } from './planGating';
 import { getEffectivePlan } from './subscriptionService';
 import type { User } from '../types';
@@ -54,7 +55,7 @@ function validateLeader(
   }
 
   if (singleTeamLeadership) {
-    const teams = store.getTeams(companyId);
+    const teams = store.getTeams(companyId).filter((t) => !t.wipedAt);
     const otherWithSameLeader = teams.find(
       (t) => t.leaderId === leaderId && t.id !== excludeTeamId
     );
@@ -89,15 +90,17 @@ export function addTeam(
     return { ok: false, error: 'teams.validation.codeMustBeThree', statusCode: 400 };
   }
   const existingTeams = store.getTeams(companyId);
+  const activeCount = existingTeams.filter((t) => !t.wipedAt).length;
   const codeExists = existingTeams.some(
-    (t) => t.code.trim().toLowerCase() === codeTrimmed.toLowerCase()
+    (t) =>
+      !t.wipedAt && t.code.trim().toLowerCase() === codeTrimmed.toLowerCase()
   );
   if (codeExists) {
     return { ok: false, error: 'teams.validation.codeAlreadyExists', statusCode: 400 };
   }
 
   const company = store.getCompany(companyId, companyId);
-  if (!canPlanAddTeam(getEffectivePlan(company) ?? null, existingTeams.length)) {
+  if (!canPlanAddTeam(getEffectivePlan(company) ?? null, activeCount)) {
     return { ok: false, error: 'teams.validation.planTeamLimitReached', statusCode: 403 };
   }
 
@@ -164,6 +167,9 @@ export function updateTeam(
   if (!existing || existing.companyId !== currentUser.companyId) {
     return { ok: false, error: 'teams.validation.teamNotFound', statusCode: 404 };
   }
+  if (existing.wipedAt) {
+    return { ok: false, error: 'teams.validation.teamWiped', statusCode: 400 };
+  }
 
   const leaderId = patch.leaderId !== undefined ? patch.leaderId : existing.leaderId;
   const leaderCheck = validateLeader(
@@ -181,7 +187,10 @@ export function updateTeam(
     }
     const existingTeams = store.getTeams(existing.companyId);
     const codeExists = existingTeams.some(
-      (t) => t.id !== teamId && t.code.trim().toLowerCase() === codeTrimmed.toLowerCase()
+      (t) =>
+        !t.wipedAt &&
+        t.id !== teamId &&
+        t.code.trim().toLowerCase() === codeTrimmed.toLowerCase()
     );
     if (codeExists) {
       return { ok: false, error: 'teams.validation.codeAlreadyExists', statusCode: 400 };
@@ -205,4 +214,68 @@ export function updateTeam(
     return { ok: true, team: updated };
   }
   return { ok: false, error: 'teams.validation.updateFailed', statusCode: 500 };
+}
+
+export type WipeTeamResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Archive/wipe team: zimmet depoya iade, lider/araç/üyeler temizlenir, aynı takım kodu yeniden kullanılabilir.
+ * CM / PM only.
+ */
+export function wipeTeam(currentUser: User | undefined, teamId: string): WipeTeamResult {
+  if (!currentUser?.companyId) {
+    return { ok: false, error: 'teams.validation.unauthorized' };
+  }
+  if (currentUser.role !== 'companyManager' && currentUser.role !== 'projectManager') {
+    return { ok: false, error: 'teams.validation.unauthorized' };
+  }
+  const team = store.getTeam(teamId);
+  if (!team || team.companyId !== currentUser.companyId) {
+    return { ok: false, error: 'teams.validation.teamNotFound' };
+  }
+  if (team.wipedAt) {
+    return { ok: false, error: 'teams.alreadyWiped' };
+  }
+
+  const companyId = currentUser.companyId;
+  for (;;) {
+    const allocs = store.getTeamMaterialAllocations(companyId, teamId);
+    if (allocs.length === 0) break;
+    const a = allocs[0];
+    const maxM = a.quantityMeters ?? 0;
+    const maxP = a.quantityPcs ?? 0;
+    if (maxM > 0) {
+      const r = materialStockService.returnToStock(companyId, a.id, { quantityMeters: maxM }, currentUser);
+      if (!r.ok) return { ok: false, error: r.error };
+    } else if (maxP > 0) {
+      const r = materialStockService.returnToStock(companyId, a.id, { quantityPcs: maxP }, currentUser);
+      if (!r.ok) return { ok: false, error: r.error };
+    } else {
+      store.deleteTeamMaterialAllocation(a.id);
+    }
+  }
+
+  const now = new Date().toISOString();
+  const updated = store.updateTeam(teamId, {
+    wipedAt: now,
+    leaderId: undefined,
+    memberIds: [],
+    membersManual: [],
+    vehicleId: undefined,
+  });
+  if (!updated) return { ok: false, error: 'teams.validation.updateFailed' };
+
+  void import('./supabaseSyncService').then(({ upsertTeam }) => upsertTeam(updated).catch(() => {}));
+  const actor = actorFromUser(currentUser);
+  if (actor) {
+    logEvent(actor, {
+      action: 'TEAM_WIPED',
+      entity_type: 'team',
+      entity_id: teamId,
+      team_code: team.code,
+      company_id: companyId,
+      meta: {},
+    });
+  }
+  return { ok: true };
 }

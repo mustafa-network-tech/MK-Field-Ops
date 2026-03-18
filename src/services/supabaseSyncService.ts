@@ -174,6 +174,7 @@ function mapTeam(row: Record<string, unknown>): Team {
       : [],
     vehicleId: row.vehicle_id as string | undefined,
     createdAt: (row.created_at as string) ?? new Date().toISOString(),
+    wipedAt: (row.wiped_at as string) ?? null,
   };
 }
 
@@ -339,6 +340,7 @@ export async function upsertTeam(t: Team): Promise<void> {
       members_manual: t.membersManual ?? [],
       vehicle_id: t.vehicleId || null,
       created_at: t.createdAt,
+      wiped_at: t.wipedAt ?? null,
     },
     { onConflict: 'id' }
   );
@@ -557,6 +559,7 @@ export async function pushCompanyDataToSupabase(companyId: string): Promise<{ ok
       members_manual: t.membersManual ?? [],
       vehicle_id: t.vehicleId ? (vehicleIdMap[t.vehicleId] ?? t.vehicleId) : null,
       created_at: t.createdAt,
+      wiped_at: t.wipedAt ?? null,
     }));
     const projectRows = projects.map((p) => ({
       id: projectIdMap[p.id] ?? p.id,

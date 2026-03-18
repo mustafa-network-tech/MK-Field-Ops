@@ -9,9 +9,13 @@ import type { Team } from '../types';
  * - Team Leader: only teams where team.leaderId === user.id
  * - Project Manager / Company Manager: all teams in company
  */
+function activeTeams(companyId: string) {
+  return store.getTeams(companyId).filter((t) => !t.wipedAt);
+}
+
 export function getTeamIdsForUser(companyId: string, user: User | undefined): string[] {
   if (!companyId || !user) return [];
-  const allTeams = store.getTeams(companyId);
+  const allTeams = activeTeams(companyId);
   if (user.role === 'teamLeader') {
     return allTeams.filter((t) => t.leaderId === user.id).map((t) => t.id);
   }
@@ -25,7 +29,7 @@ export function getTeamIdsForUser(companyId: string, user: User | undefined): st
  */
 export function getTeamsForJobEntry(companyId: string, user: User | undefined) {
   if (!companyId || !user) return [];
-  const allTeams = store.getTeams(companyId).filter((t) => t.approvalStatus === 'approved');
+  const allTeams = store.getTeams(companyId).filter((t) => !t.wipedAt && t.approvalStatus === 'approved');
   if (user.role === 'teamLeader') {
     return allTeams.filter((t) => t.leaderId === user.id);
   }
@@ -39,7 +43,7 @@ export function getTeamsForJobEntry(companyId: string, user: User | undefined) {
  */
 export function getTeamsForUser(companyId: string, user: User | undefined): Team[] {
   if (!companyId || !user) return [];
-  const all = store.getTeams(companyId);
+  const all = activeTeams(companyId);
   if (user.role === 'teamLeader') {
     return all.filter((t) => t.leaderId === user.id);
   }
@@ -57,6 +61,7 @@ export function getTeamForUser(
   if (!user || !teamId) return { ok: false, statusCode: 404 };
   const team = store.getTeam(teamId);
   if (!team) return { ok: false, statusCode: 404 };
+  if (team.wipedAt) return { ok: false, statusCode: 404 };
   if (team.companyId !== user.companyId) return { ok: false, statusCode: 403 };
   if (user.role === 'teamLeader' && team.leaderId !== user.id) return { ok: false, statusCode: 403 };
   return { ok: true, team };

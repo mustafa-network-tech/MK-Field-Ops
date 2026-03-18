@@ -172,6 +172,12 @@ export const store = {
     save(STORAGE_KEYS.users, users);
     return users[i];
   },
+  /** Şirketten çıkarıldı: yerel listeden kaldır (Supabase’de profil ayrı güncellenir). */
+  detachUserFromCompany(userId: string, companyId: string): void {
+    const users = this.getUsers();
+    const next = users.filter((u) => !(u.id === userId && u.companyId === companyId));
+    save(STORAGE_KEYS.users, next);
+  },
   getUserByEmail(email: string, companyId?: string): User | undefined {
     const list = companyId ? this.getUsers(companyId) : this.getUsers();
     return list.find((u) => u.email.toLowerCase() === email.toLowerCase());

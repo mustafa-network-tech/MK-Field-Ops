@@ -526,6 +526,12 @@
     "noEligibleLeaders": "Bu şirkette aktif Takım Lideri yok.",
     "noLeaderNoTeam": "Takım Lideri olmadan takım oluşturulamaz. Önce Takım Lideri veya Proje Yöneticisi rolüne sahip bir kullanıcı ekleyip onaylayın.",
     "planTeamLimitReached": "Başlangıç planı en fazla 3 takıma, Profesyonel plan 6 takıma izin verir. Daha fazlası için planı yükseltin.",
+    "wipeTeam": "Takımı temizle",
+    "wipeConfirm": "Onayla",
+    "wipedTeamsTitle": "Temizlenmiş takımlar",
+    "wipedTeamsHint": "Bu takımlar listede görünmez; aynı takım kodu ile yeni takım açılabilir. Zimmet depoya iade edilir.",
+    "wipedAt": "Temizlenme tarihi",
+    "alreadyWiped": "Bu takım zaten temizlenmiş.",
     "validation": {
       "unauthorized": "Yetkiniz yok.",
       "leaderRequired": "Takım oluşturmak için Takım Lideri seçilmelidir.",
@@ -540,7 +546,8 @@
       "leaderAlreadyAssigned": "Bu kullanıcı zaten başka bir takımın lideri.",
       "leaderMustBeSelf": "Takım lideri olarak yalnızca kendinizi seçebilirsiniz.",
       "teamNotFound": "Takım bulunamadı.",
-      "updateFailed": "Güncelleme başarısız."
+      "updateFailed": "Güncelleme başarısız.",
+      "teamWiped": "Bu takım temizlenmiş; düzenlenemez."
     }
   },
   "catalog": {
@@ -658,7 +665,14 @@
     "roleToBeAssigned": "Rol atanacak",
     "priceVisibility": "Fiyat görünürlüğü",
     "grantPriceVisibility": "Aç",
-    "revokePriceVisibility": "Kapat"
+    "revokePriceVisibility": "Kapat",
+    "removeFromCompanyHint": "Kullanıcı silinmez; şirketten çıkarılır. Tekrar katılım kodu ile başvurabilir.",
+    "removeFromCompany": "Şirketten çıkar",
+    "removeFromCompanyConfirm": "Evet, çıkar",
+    "cannotRemoveSelf": "Kendi hesabınızı buradan çıkaramazsınız.",
+    "cannotRemoveLastCompanyManager": "Son şirket yöneticisi çıkarılamaz.",
+    "removeFromCompanyForbidden": "Bu işlem için yetkiniz yok.",
+    "userNotInCompany": "Kullanıcı bu şirkette bulunamadı."
   },
   "materials": {
     "limitReached": "Bu malzeme türü için maksimum kayıt sayısına ulaşıldı.",

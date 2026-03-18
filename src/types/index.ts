@@ -114,6 +114,8 @@ export interface Team {
   membersManual: TeamManualMember[];
   vehicleId?: string;
   createdAt: string;
+  /** Set when team is wiped/archived; hidden from active lists; same code can be reused. */
+  wipedAt?: string | null;
 }
 
 /**

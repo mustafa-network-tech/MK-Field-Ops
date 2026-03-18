@@ -4,7 +4,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { upsertTeam } from '../../services/supabaseSyncService';
-import { addTeam, updateTeam, getEligibleTeamLeaders } from '../../services/teamService';
+import { addTeam, updateTeam, getEligibleTeamLeaders, wipeTeam } from '../../services/teamService';
 import { getTeamsForUser } from '../../services/teamScopeService';
 import { canPlanAddTeam } from '../../services/planGating';
 import { getEffectivePlan } from '../../services/subscriptionService';
@@ -32,18 +32,22 @@ export function TeamsTab() {
   const companyId = user?.companyId ?? '';
   const teams = getTeamsForUser(companyId, user);
   const allTeamsForCompany = store.getTeams(companyId);
+  const activeTeamCount = allTeamsForCompany.filter((t) => !t.wipedAt).length;
+  const wipedTeamsList = allTeamsForCompany.filter((t) => Boolean(t.wipedAt));
   const users = store.getUsers(companyId);
   const eligibleLeaders = getEligibleTeamLeaders(companyId);
   const visibleLeaders = user?.role === 'teamLeader'
     ? eligibleLeaders.filter((u) => u.id === user.id)
     : eligibleLeaders;
   const vehicles = store.getVehicles(companyId);
-  const canAddTeam = canPlanAddTeam(getEffectivePlan(company) ?? null, allTeamsForCompany.length);
+  const canAddTeam = canPlanAddTeam(getEffectivePlan(company) ?? null, activeTeamCount);
   const hasNoLeaders = visibleLeaders.length === 0;
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Team | null>(null);
   const [form, setForm] = useState(defaultForm);
   const [saveError, setSaveError] = useState('');
+  const [wipeError, setWipeError] = useState('');
+  const [wipeConfirmId, setWipeConfirmId] = useState<string | null>(null);
 
   const canApproveTeam = user?.role === 'companyManager' || user?.role === 'projectManager';
   const needsApproval = user?.role === 'teamLeader';
@@ -130,6 +134,13 @@ export function TeamsTab() {
         meta: { actorName: user.fullName ?? '–', teamCode: team.code },
       });
     }
+  };
+
+  const handleWipeTeam = (teamId: string) => {
+    setWipeError('');
+    const r = wipeTeam(user ?? undefined, teamId);
+    setWipeConfirmId(null);
+    if (!r.ok) setWipeError(t(r.error));
   };
 
   const handleReject = (teamId: string) => {
@@ -359,6 +370,18 @@ export function TeamsTab() {
                 {canApproveTeam && team.approvalStatus !== 'pending' && (
                   <td onClick={(e) => e.stopPropagation()}>
                     <button type="button" className={styles.smallBtnEdit} onClick={(e) => { e.stopPropagation(); openEdit(team); }}>{t('common.edit')}</button>
+                    {team.approvalStatus === 'approved' && (
+                      <>
+                        {wipeConfirmId === team.id ? (
+                          <>
+                            <button type="button" className={styles.smallBtnDanger} onClick={(e) => { e.stopPropagation(); handleWipeTeam(team.id); }}>{t('teams.wipeConfirm')}</button>
+                            <button type="button" className={styles.secondaryBtn} style={{ marginLeft: 6 }} onClick={(e) => { e.stopPropagation(); setWipeConfirmId(null); }}>{t('common.cancel')}</button>
+                          </>
+                        ) : (
+                          <button type="button" className={styles.smallBtnDanger} style={{ marginLeft: 6 }} onClick={(e) => { e.stopPropagation(); setWipeConfirmId(team.id); }}>{t('teams.wipeTeam')}</button>
+                        )}
+                      </>
+                    )}
                   </td>
                 )}
               </tr>
@@ -366,8 +389,33 @@ export function TeamsTab() {
           </tbody>
         </table>
         </div>
+        {wipeError && <p className={styles.saveError}>{t(wipeError)}</p>}
         {teams.length === 0 && !showForm && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
+
+      {canApproveTeam && wipedTeamsList.length > 0 && (
+        <Card title={t('teams.wipedTeamsTitle')}>
+          <p className={styles.muted} style={{ marginBottom: '0.75rem', fontSize: '0.875rem' }}>{t('teams.wipedTeamsHint')}</p>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{t('teams.teamCode')}</th>
+                  <th>{t('teams.wipedAt')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {wipedTeamsList.map((team) => (
+                  <tr key={team.id}>
+                    <td>{team.code}</td>
+                    <td>{team.wipedAt ? new Date(team.wipedAt).toLocaleString() : '–'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
     </>
   );
 }

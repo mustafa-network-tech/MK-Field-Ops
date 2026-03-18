@@ -526,6 +526,12 @@
     "noEligibleLeaders": "No active Team Leaders in this company.",
     "noLeaderNoTeam": "A team cannot be created without a Team Leader. Add and approve a user with the Team Leader or Project Manager role first.",
     "planTeamLimitReached": "Starter plan allows up to 3 teams; Professional allows 6. Upgrade to add more.",
+    "wipeTeam": "Wipe team",
+    "wipeConfirm": "Confirm wipe",
+    "wipedTeamsTitle": "Wiped teams",
+    "wipedTeamsHint": "These teams no longer appear in the active list; you can create a new team with the same code. Zimmet is returned to central stock.",
+    "wipedAt": "Wiped at",
+    "alreadyWiped": "This team is already wiped.",
     "validation": {
       "unauthorized": "Not authorized.",
       "leaderRequired": "Team Leader is required to create a team.",
@@ -540,7 +546,8 @@
       "leaderAlreadyAssigned": "This user is already leader of another team.",
       "leaderMustBeSelf": "As a team leader, you can only select yourself.",
       "teamNotFound": "Team not found.",
-      "updateFailed": "Update failed."
+      "updateFailed": "Update failed.",
+      "teamWiped": "This team has been wiped and cannot be edited."
     }
   },
   "catalog": {
@@ -658,7 +665,14 @@
     "roleToBeAssigned": "Role to be assigned",
     "priceVisibility": "Price visibility",
     "grantPriceVisibility": "Grant",
-    "revokePriceVisibility": "Revoke"
+    "revokePriceVisibility": "Revoke",
+    "removeFromCompanyHint": "The account is not deleted—only removed from this company. The user can apply again with the join code.",
+    "removeFromCompany": "Remove from company",
+    "removeFromCompanyConfirm": "Yes, remove",
+    "cannotRemoveSelf": "You cannot remove your own account here.",
+    "cannotRemoveLastCompanyManager": "The last company manager cannot be removed.",
+    "removeFromCompanyForbidden": "You are not allowed to do this.",
+    "userNotInCompany": "User is not in this company."
   },
   "materials": {
     "limitReached": "Maximum number of items reached for this material type.",
