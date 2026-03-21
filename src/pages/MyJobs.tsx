@@ -8,12 +8,10 @@ import { getTeamsForUser } from '../services/teamScopeService';
 import { updateJob } from '../services/jobService';
 import { formatPriceForUser, formatUnitPriceForUser } from '../utils/priceRules';
 import { getProjectDisplayKey } from '../utils/projectKey';
-import { listPeriods, isDateInPeriod, type PayrollPeriod } from '../utils/periodUtils';
+import { getActivePeriod, isDateInPeriod } from '../utils/periodUtils';
 import { Card } from '../components/ui/Card';
 import type { JobRecord, JobMaterialUsage, MaterialMainType } from '../types';
 import styles from './MyJobs.module.css';
-
-const PAST_PERIODS_COUNT = 36;
 
 function formatPeriodLabelLocale(startStr: string, endStr: string, locale: string): string {
   const s = new Date(startStr + 'T00:00:00');
@@ -63,32 +61,54 @@ export function MyJobs() {
   }, [companyId, user, listRefreshKey]);
 
   const startDayOfMonth = store.getPayrollPeriodSettings(companyId)?.startDayOfMonth ?? 1;
-  const periods = useMemo(
-    () => listPeriods(startDayOfMonth, new Date(), PAST_PERIODS_COUNT),
-    [companyId, startDayOfMonth]
-  );
-  const activePeriod = periods[0];
-  /** `null` = aktif (güncel) dönem */
-  const [selectedPeriodStart, setSelectedPeriodStart] = useState<string | null>(null);
+  const activePeriod = useMemo(() => getActivePeriod(new Date(), startDayOfMonth), [startDayOfMonth]);
+
+  /** Arama ile uygulanan özel aralık; null = yalnızca güncel hakediş dönemi */
+  const [appliedCustomRange, setAppliedCustomRange] = useState<{ start: string; end: string } | null>(null);
+  const [dateFromDraft, setDateFromDraft] = useState(activePeriod.start);
+  const [dateToDraft, setDateToDraft] = useState(activePeriod.end);
+  const [rangeError, setRangeError] = useState('');
 
   useEffect(() => {
-    setSelectedPeriodStart(null);
-  }, [companyId]);
-
-  const selectedPeriod: PayrollPeriod | undefined = useMemo(() => {
-    if (!periods.length) return undefined;
-    if (selectedPeriodStart == null) return periods[0];
-    return periods.find((p) => p.start === selectedPeriodStart) ?? periods[0];
-  }, [periods, selectedPeriodStart]);
-
-  const isViewingActivePeriod = Boolean(activePeriod && selectedPeriod && selectedPeriod.start === activePeriod.start);
+    setAppliedCustomRange(null);
+    setRangeError('');
+    setDateFromDraft(activePeriod.start);
+    setDateToDraft(activePeriod.end);
+  }, [companyId, activePeriod.start, activePeriod.end]);
 
   const jobs = useMemo(() => {
-    if (!selectedPeriod) return myJobsAll;
-    return myJobsAll.filter((j) => isDateInPeriod(j.date, selectedPeriod));
-  }, [myJobsAll, selectedPeriod]);
+    if (appliedCustomRange) {
+      const { start, end } = appliedCustomRange;
+      return myJobsAll.filter((j) => j.date >= start && j.date <= end);
+    }
+    return myJobsAll.filter((j) => isDateInPeriod(j.date, activePeriod));
+  }, [myJobsAll, appliedCustomRange, activePeriod]);
 
-  const pastPeriods = periods.length > 1 ? periods.slice(1) : [];
+  const handleSearchRange = () => {
+    setRangeError('');
+    const a = dateFromDraft.trim();
+    const b = dateToDraft.trim();
+    if (!a || !b) {
+      setRangeError(t('jobs.myJobsRangeRequired'));
+      return;
+    }
+    if (a > b) {
+      setRangeError(t('jobs.myJobsRangeOrder'));
+      return;
+    }
+    if (a === activePeriod.start && b === activePeriod.end) {
+      setAppliedCustomRange(null);
+      return;
+    }
+    setAppliedCustomRange({ start: a, end: b });
+  };
+
+  const handleShowActivePeriod = () => {
+    setAppliedCustomRange(null);
+    setRangeError('');
+    setDateFromDraft(activePeriod.start);
+    setDateToDraft(activePeriod.end);
+  };
   const teams = getTeamsForUser(companyId, user);
   const workItems = store.getWorkItems(companyId);
   const stockItems = store.getMaterialStock(companyId);
@@ -139,39 +159,65 @@ export function MyJobs() {
     }
   };
 
-  const periodLabel = selectedPeriod
-    ? formatPeriodLabelLocale(selectedPeriod.start, selectedPeriod.end, locale)
-    : '';
+  const activeLabel = formatPeriodLabelLocale(activePeriod.start, activePeriod.end, locale);
+  const shownLabel = appliedCustomRange
+    ? formatPeriodLabelLocale(appliedCustomRange.start, appliedCustomRange.end, locale)
+    : activeLabel;
 
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('nav.myJobs')}</h1>
-      {selectedPeriod && (
-        <div className={styles.periodBanner}>
-          <p className={styles.periodBannerLabel}>
-            {isViewingActivePeriod ? (
-              <>
-                <span className={styles.periodBadge}>{t('jobs.myJobsListCurrentPeriod')}</span>
-                <span className={styles.periodBannerRange}>{periodLabel}</span>
-              </>
-            ) : (
-              <>
-                <span className={styles.periodBannerText}>{t('jobs.myJobsListShowingPeriod')}</span>
-                <span className={styles.periodBannerRange}>{periodLabel}</span>
-              </>
-            )}
-          </p>
-          {!isViewingActivePeriod && activePeriod && (
-            <button
-              type="button"
-              className={styles.backToCurrentBtn}
-              onClick={() => setSelectedPeriodStart(null)}
-            >
-              {t('jobs.myJobsListBackToCurrent')}
-            </button>
+      <div className={styles.periodBanner}>
+        <p className={styles.periodBannerLabel}>
+          {!appliedCustomRange ? (
+            <>
+              <span className={styles.periodBadge}>{t('jobs.myJobsListCurrentPeriod')}</span>
+              <span className={styles.periodBannerRange}>{activeLabel}</span>
+            </>
+          ) : (
+            <>
+              <span className={styles.periodBannerText}>{t('jobs.myJobsListShowingRange')}</span>
+              <span className={styles.periodBannerRange}>{shownLabel}</span>
+            </>
           )}
+        </p>
+        {appliedCustomRange && (
+          <button type="button" className={styles.backToCurrentBtn} onClick={handleShowActivePeriod}>
+            {t('jobs.myJobsShowActivePeriod')}
+          </button>
+        )}
+      </div>
+
+      <div className={styles.dateFilterCard}>
+        <p className={styles.dateFilterTitle}>{t('jobs.myJobsDateFilterTitle')}</p>
+        <div className={styles.dateFilterRow}>
+          <div className={styles.dateField}>
+            <label htmlFor="myjobs-date-from">{t('jobs.myJobsDateFrom')}</label>
+            <input
+              id="myjobs-date-from"
+              type="date"
+              className={styles.dateInput}
+              value={dateFromDraft}
+              onChange={(e) => setDateFromDraft(e.target.value)}
+            />
+          </div>
+          <div className={styles.dateField}>
+            <label htmlFor="myjobs-date-to">{t('jobs.myJobsDateTo')}</label>
+            <input
+              id="myjobs-date-to"
+              type="date"
+              className={styles.dateInput}
+              value={dateToDraft}
+              onChange={(e) => setDateToDraft(e.target.value)}
+            />
+          </div>
+          <button type="button" className={styles.searchRangeBtn} onClick={handleSearchRange}>
+            {t('jobs.myJobsSearchRange')}
+          </button>
         </div>
-      )}
+        {rangeError && <p className={styles.rangeError}>{rangeError}</p>}
+      </div>
+
       {actionError && <p className={styles.error}>{actionError}</p>}
       <Card key={listRefreshKey}>
         <div className={styles.tableWrap}>
@@ -263,33 +309,6 @@ export function MyJobs() {
         </div>
         {jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
-
-      {pastPeriods.length > 0 && (
-        <section className={styles.pastPeriodsSection} aria-labelledby="myjobs-past-periods-title">
-          <h2 id="myjobs-past-periods-title" className={styles.pastPeriodsTitle}>
-            {t('jobs.myJobsListPastPeriods')}
-          </h2>
-          <p className={styles.pastPeriodsHint}>{t('jobs.myJobsListPastPeriodsHint')}</p>
-          <ul className={styles.periodChips}>
-            {pastPeriods.map((p) => {
-              const label = formatPeriodLabelLocale(p.start, p.end, locale);
-              const isSelected = selectedPeriod?.start === p.start;
-              return (
-                <li key={p.start}>
-                  <button
-                    type="button"
-                    className={styles.periodChip}
-                    data-active={isSelected}
-                    onClick={() => setSelectedPeriodStart(p.start)}
-                  >
-                    {label}
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      )}
 
       {modalJobId && (() => {
         const modalJob = myJobsAll.find((j) => j.id === modalJobId);
