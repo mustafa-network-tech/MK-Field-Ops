@@ -3,7 +3,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { getProjectDisplayKey } from '../../utils/projectKey';
-import { upsertCampaign, upsertProject } from '../../services/supabaseSyncService';
+import { upsertProject } from '../../services/supabaseSyncService';
 import { Card } from '../ui/Card';
 import type { MaterialMainType, Project, ProjectStatus } from '../../types';
 import styles from './ManagementTabs.module.css';
@@ -57,8 +57,6 @@ export function ProjectsTab() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState<Project | null>(null);
   const [form, setForm] = useState(defaultForm);
-  const [newCampaignName, setNewCampaignName] = useState('');
-  const [showNewCampaign, setShowNewCampaign] = useState(false);
   const [error, setError] = useState('');
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [confirmCompleteOpen, setConfirmCompleteOpen] = useState(false);
@@ -138,25 +136,6 @@ export function ProjectsTab() {
       else if (msg === 'PROJECT_EXTERNAL_ID_EMPTY') setError('projects.projectExternalIdEmpty');
       else setError('messages.error');
     }
-  };
-
-  const handleAddCampaign = () => {
-    const name = newCampaignName.trim();
-    if (!name) return;
-    const c = store.addCampaign({ companyId, name });
-    upsertCampaign(c).catch(() => {});
-    setForm((f) => ({ ...f, campaignId: c.id }));
-    setNewCampaignName('');
-    setShowNewCampaign(false);
-  };
-
-  const handleAddCampaignFromList = () => {
-    const name = newCampaignName.trim();
-    if (!name) return;
-    const c = store.addCampaign({ companyId, name });
-    upsertCampaign(c).catch(() => {});
-    setNewCampaignName('');
-    setShowNewCampaign(false);
   };
 
   const handleArchive = (p: Project) => {
@@ -641,31 +620,7 @@ export function ProjectsTab() {
       <Card>
         <div className={styles.toolbar}>
           <h3 className={styles.sectionTitle}>{t('campaigns.title')}</h3>
-          {!showNewCampaign ? (
-            <button type="button" className={styles.primaryBtn} onClick={() => setShowNewCampaign(true)}>
-              {campaigns.length === 0 ? t('campaigns.createFirstCampaign') : t('campaigns.createCampaign')}
-            </button>
-          ) : null}
         </div>
-        {showNewCampaign && (
-          <div className={styles.form}>
-            <div className={styles.inputRow}>
-              <input
-                value={newCampaignName}
-                onChange={(e) => setNewCampaignName(e.target.value)}
-                className={styles.input}
-                placeholder={t('campaigns.campaignName')}
-                autoFocus
-              />
-              <button type="button" className={styles.primaryBtn} onClick={handleAddCampaignFromList}>
-                {t('common.add')}
-              </button>
-              <button type="button" className={styles.secondaryBtn} onClick={() => { setShowNewCampaign(false); setNewCampaignName(''); }}>
-                {t('common.cancel')}
-              </button>
-            </div>
-          </div>
-        )}
         <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
@@ -675,7 +630,7 @@ export function ProjectsTab() {
             </tr>
           </thead>
           <tbody>
-            {campaigns.length === 0 && !showNewCampaign && (
+            {campaigns.length === 0 && (
               <tr>
                 <td colSpan={2} className={styles.muted}>{t('common.noData')}</td>
               </tr>
@@ -760,40 +715,18 @@ export function ProjectsTab() {
         <form onSubmit={handleSave} className={styles.form}>
           <label className={styles.label}>
             {t('campaigns.campaign')}
-            <div className={styles.inputRow}>
-              <select
-                value={form.campaignId}
-                onChange={(e) => setForm((f) => ({ ...f, campaignId: e.target.value }))}
-                className={styles.input}
-                required
-              >
-                <option value="">-- {t('campaigns.selectCampaign')} --</option>
-                {campaigns.map((c) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-              {!showNewCampaign ? (
-                <button type="button" className={styles.secondaryBtn} onClick={() => setShowNewCampaign(true)}>
-                  {t('campaigns.createCampaign')}
-                </button>
-              ) : (
-                <div className={styles.inputRow}>
-                  <input
-                    value={newCampaignName}
-                    onChange={(e) => setNewCampaignName(e.target.value)}
-                    className={styles.input}
-                    placeholder={t('campaigns.campaignName')}
-                  />
-                  <button type="button" className={styles.primaryBtn} onClick={handleAddCampaign}>
-                    {t('common.add')}
-                  </button>
-                  <button type="button" className={styles.secondaryBtn} onClick={() => { setShowNewCampaign(false); setNewCampaignName(''); }}>
-                    {t('common.cancel')}
-                  </button>
-                </div>
-              )}
-            </div>
-            {campaigns.length === 0 && !showNewCampaign && <p className={styles.hint}>{t('campaigns.noCampaigns')}</p>}
+            <select
+              value={form.campaignId}
+              onChange={(e) => setForm((f) => ({ ...f, campaignId: e.target.value }))}
+              className={styles.input}
+              required
+            >
+              <option value="">-- {t('campaigns.selectCampaign')} --</option>
+              {campaigns.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+            {campaigns.length === 0 && <p className={styles.hint}>{t('campaigns.noCampaigns')}</p>}
           </label>
           <label className={styles.label}>
             {t('projects.projectYear')}
