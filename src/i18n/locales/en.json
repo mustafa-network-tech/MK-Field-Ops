@@ -20,13 +20,6 @@
     "no": "No",
     "saving": "Saving…"
   },
-  "siteAccess": {
-    "title": "MKfieldOPS access",
-    "description": "Enter the access code to open sign in or registration.",
-    "passwordLabel": "Access code",
-    "submit": "Continue",
-    "wrongPassword": "Wrong access code. Please contact the administrator:"
-  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

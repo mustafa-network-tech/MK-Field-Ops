@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
-import { isSiteAccessUnlocked } from '../services/siteAccessGate';
-import { SiteAccessModal } from '../components/SiteAccessModal';
 import styles from './Auth.module.css';
 
 const VALID_PLANS = ['starter', 'professional', 'enterprise'];
@@ -10,7 +8,6 @@ const VALID_PLANS = ['starter', 'professional', 'enterprise'];
 export function Register() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [searchParams] = useSearchParams();
   const planFromUrl = searchParams.get('plan');
   const initialPlan = planFromUrl && VALID_PLANS.includes(planFromUrl) ? planFromUrl : null;
@@ -39,12 +36,6 @@ export function Register() {
     });
     setLoading(false);
   };
-
-  if (!entryOk) {
-    return (
-      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
-    );
-  }
 
   return (
     <div className={styles.wrap}>

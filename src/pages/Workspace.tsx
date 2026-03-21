@@ -8,8 +8,6 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { store } from '../data/store';
-import { isSiteAccessUnlocked } from '../services/siteAccessGate';
-import { SiteAccessModal } from '../components/SiteAccessModal';
 import styles from './Workspace.module.css';
 
 type WorkspaceMode = 'choose' | 'new' | 'existing';
@@ -23,7 +21,6 @@ export function Workspace() {
   const state = location.state as { email?: string; password?: string; fullName?: string; plan?: string } | null;
   const initialPlan: PlanKey | null = state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
 
-  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -38,16 +35,10 @@ export function Workspace() {
   const hasRegistrationState = Boolean(state?.email && state?.password && state?.fullName);
 
   useEffect(() => {
-    if (entryOk && !hasRegistrationState) {
+    if (!hasRegistrationState) {
       navigate('/register', { replace: true });
     }
-  }, [entryOk, hasRegistrationState, navigate]);
-
-  if (!entryOk) {
-    return (
-      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
-    );
-  }
+  }, [hasRegistrationState, navigate]);
 
   if (!hasRegistrationState) {
     return null;

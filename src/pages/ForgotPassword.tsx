@@ -2,13 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { authService } from '../services/authService';
-import { isSiteAccessUnlocked } from '../services/siteAccessGate';
-import { SiteAccessModal } from '../components/SiteAccessModal';
 import styles from './Auth.module.css';
 
 export function ForgotPassword() {
   const { t } = useI18n();
-  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -34,12 +31,6 @@ export function ForgotPassword() {
       setLoading(false);
     }
   };
-
-  if (!entryOk) {
-    return (
-      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
-    );
-  }
 
   return (
     <div className={styles.wrap}>

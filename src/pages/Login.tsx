@@ -4,15 +4,12 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { store } from '../data/store';
-import { isSiteAccessUnlocked } from '../services/siteAccessGate';
-import { SiteAccessModal } from '../components/SiteAccessModal';
 import styles from './Auth.module.css';
 
 export function Login() {
   const { t } = useI18n();
   const { setUser } = useApp();
   const navigate = useNavigate();
-  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,12 +32,6 @@ export function Login() {
       setLoading(false);
     }
   };
-
-  if (!entryOk) {
-    return (
-      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
-    );
-  }
 
   return (
     <div className={styles.wrap}>

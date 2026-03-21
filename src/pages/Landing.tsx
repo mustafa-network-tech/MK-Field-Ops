@@ -2,7 +2,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
-import { useSiteAccessAuthLinks } from '../hooks/useSiteAccessAuthLinks';
 import styles from './Landing.module.css';
 
 const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
@@ -59,7 +58,6 @@ const HOW_IT_WORKS_ICONS = [
 export function Landing() {
   const { t, locale, setLocale } = useI18n();
   const location = useLocation();
-  const { onAuthLinkClick, SiteAccessAuthModal } = useSiteAccessAuthLinks();
   const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
   const [langMenuPos, setLangMenuPos] = useState<CSSProperties>({});
@@ -145,8 +143,8 @@ export function Landing() {
             <a href="#support">{t('landing.navSupport')}</a>
           </nav>
           <div className={styles.navActions}>
-            <Link to="/login" className={styles.navBtnSecondary} onClick={(e) => onAuthLinkClick(e, '/login')}>{t('landing.navLogin')}</Link>
-            <Link to="/register" className={styles.navBtnPrimary} onClick={(e) => onAuthLinkClick(e, '/register')}>{t('landing.navStartFree')}</Link>
+            <Link to="/login" className={styles.navBtnSecondary}>{t('landing.navLogin')}</Link>
+            <Link to="/register" className={styles.navBtnPrimary}>{t('landing.navStartFree')}</Link>
             <div className={styles.langDropdown} ref={langRef}>
               <button
                 type="button"
@@ -205,8 +203,8 @@ export function Landing() {
           {t('landing.heroSubtitle') && <p className={styles.heroSubtitle}>{t('landing.heroSubtitle')}</p>}
           <p className={styles.heroDescription}>{t('landing.heroDescription')}</p>
           <div className={styles.heroActions}>
-            <Link to="/register" className={styles.heroBtnPrimary} onClick={(e) => onAuthLinkClick(e, '/register')}>{t('landing.heroStartFree')}</Link>
-            <Link to="/login" className={styles.heroBtnSecondary} onClick={(e) => onAuthLinkClick(e, '/login')}>{t('landing.heroLogin')}</Link>
+            <Link to="/register" className={styles.heroBtnPrimary}>{t('landing.heroStartFree')}</Link>
+            <Link to="/login" className={styles.heroBtnSecondary}>{t('landing.heroLogin')}</Link>
             <Link to="/kullanim-kilavuzu" className={styles.heroBtnGuide}>{t('landing.heroGuide')}</Link>
           </div>
         </div>
@@ -436,7 +434,7 @@ export function Landing() {
                   </ul>
                 </div>
               </div>
-              <Link to="/register?plan=professional" className={styles.pricingButtonPrimary} onClick={(e) => onAuthLinkClick(e, '/register?plan=professional')}>
+              <Link to="/register?plan=professional" className={styles.pricingButtonPrimary}>
                 {t('landing.navStartFree')}
               </Link>
             </div>
@@ -512,7 +510,7 @@ export function Landing() {
                   </ul>
                 </div>
               </div>
-              <Link to="/register?plan=enterprise" className={styles.pricingButton} onClick={(e) => onAuthLinkClick(e, '/register?plan=enterprise')}>
+              <Link to="/register?plan=enterprise" className={styles.pricingButton}>
                 {t('landing.navStartFree')}
               </Link>
             </div>
@@ -524,7 +522,7 @@ export function Landing() {
       <section id="support" className={styles.cta}>
         <div className={styles.ctaInner}>
           <h2 className={styles.ctaTitle}>{t('landing.ctaTitle')}</h2>
-          <Link to="/register" className={styles.ctaButton} onClick={(e) => onAuthLinkClick(e, '/register')}>{t('landing.ctaButton')}</Link>
+          <Link to="/register" className={styles.ctaButton}>{t('landing.ctaButton')}</Link>
         </div>
       </section>
 
@@ -548,7 +546,6 @@ export function Landing() {
           </div>
         </div>
       </footer>
-      {SiteAccessAuthModal}
     </div>
   );
 }
