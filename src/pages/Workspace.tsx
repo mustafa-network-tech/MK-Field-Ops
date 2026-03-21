@@ -23,7 +23,7 @@ export function Workspace() {
   const state = location.state as { email?: string; password?: string; fullName?: string; plan?: string } | null;
   const initialPlan: PlanKey | null = state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
 
-  const [entryUnlocked, setEntryUnlocked] = useState(() => isSiteAccessUnlocked());
+  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -38,18 +38,14 @@ export function Workspace() {
   const hasRegistrationState = Boolean(state?.email && state?.password && state?.fullName);
 
   useEffect(() => {
-    if (entryUnlocked && !hasRegistrationState) {
+    if (entryOk && !hasRegistrationState) {
       navigate('/register', { replace: true });
     }
-  }, [entryUnlocked, hasRegistrationState, navigate]);
+  }, [entryOk, hasRegistrationState, navigate]);
 
-  if (!entryUnlocked) {
+  if (!entryOk) {
     return (
-      <SiteAccessModal
-        open
-        variant="blocking"
-        onVerified={() => setEntryUnlocked(true)}
-      />
+      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
     );
   }
 

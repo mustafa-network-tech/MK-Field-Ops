@@ -10,7 +10,7 @@ const VALID_PLANS = ['starter', 'professional', 'enterprise'];
 export function Register() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const [entryUnlocked, setEntryUnlocked] = useState(() => isSiteAccessUnlocked());
+  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [searchParams] = useSearchParams();
   const planFromUrl = searchParams.get('plan');
   const initialPlan = planFromUrl && VALID_PLANS.includes(planFromUrl) ? planFromUrl : null;
@@ -40,13 +40,9 @@ export function Register() {
     setLoading(false);
   };
 
-  if (!entryUnlocked) {
+  if (!entryOk) {
     return (
-      <SiteAccessModal
-        open
-        variant="blocking"
-        onVerified={() => setEntryUnlocked(true)}
-      />
+      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
     );
   }
 

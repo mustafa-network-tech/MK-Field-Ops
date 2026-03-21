@@ -22,10 +22,10 @@
   },
   "siteAccess": {
     "title": "Acceso a MKfieldOPS",
-    "description": "Introduzca la contraseña de acceso para iniciar sesión o registrarse.",
-    "passwordLabel": "Contraseña de acceso",
+    "description": "Introduzca el código de acceso para iniciar sesión o registrarse.",
+    "passwordLabel": "Código de acceso",
     "submit": "Continuar",
-    "wrongPassword": "Contraseña incorrecta. Contacte al administrador:"
+    "wrongPassword": "Código de acceso incorrecto. Contacte al administrador:"
   },
   "auth": {
     "login": "Iniciar sesión",

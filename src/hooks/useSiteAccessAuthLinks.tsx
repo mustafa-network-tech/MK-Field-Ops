@@ -4,8 +4,8 @@ import { SiteAccessModal } from '../components/SiteAccessModal';
 import { isSiteAccessUnlocked } from '../services/siteAccessGate';
 
 /**
- * Intercepts login/register Link clicks when the session gate is locked.
- * Renders SiteAccessAuthModal next to your page root.
+ * Landing: Login / Register links open an access-code modal unless this tab already verified.
+ * On success, navigates to the intended path (e.g. /login, /register?plan=starter).
  */
 export function useSiteAccessAuthLinks() {
   const navigate = useNavigate();

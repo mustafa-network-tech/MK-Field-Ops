@@ -68,13 +68,15 @@ export function SiteAccessModal({ open, variant, onVerified, onClose }: Props) {
         </h2>
         <p className={styles.desc}>{t('siteAccess.description')}</p>
         <form onSubmit={handleSubmit}>
-          <label className={styles.label} htmlFor="site-access-password">
+          <label className={styles.label} htmlFor="site-access-code">
             {t('siteAccess.passwordLabel')}
           </label>
           <input
-            id="site-access-password"
-            type="password"
-            autoComplete="off"
+            id="site-access-code"
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            spellCheck={false}
             className={styles.input}
             value={value}
             onChange={(e) => {

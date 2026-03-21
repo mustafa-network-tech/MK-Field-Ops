@@ -370,7 +370,7 @@ export function Landing() {
                   </ul>
                 </div>
               </div>
-              <Link to="/register?plan=starter" className={styles.pricingButton} onClick={(e) => onAuthLinkClick(e, '/register?plan=starter')}>
+              <Link to="/register?plan=starter" className={styles.pricingButton}>
                 {t('landing.navStartFree')}
               </Link>
             </div>

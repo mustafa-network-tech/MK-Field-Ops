@@ -22,10 +22,10 @@
   },
   "siteAccess": {
     "title": "MKfieldOPS erişimi",
-    "description": "Giriş veya kayıt için site erişim şifresini girin.",
-    "passwordLabel": "Erişim şifresi",
+    "description": "Giriş veya kayıt için erişim kodunu girin.",
+    "passwordLabel": "Erişim kodu",
     "submit": "Devam",
-    "wrongPassword": "Yanlış şifre. Lütfen yönetici ile iletişime geçin:"
+    "wrongPassword": "Hatalı erişim kodu. Lütfen yönetici ile iletişime geçin:"
   },
   "auth": {
     "login": "Giriş",

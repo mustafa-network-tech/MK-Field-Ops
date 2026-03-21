@@ -12,7 +12,7 @@ export function Login() {
   const { t } = useI18n();
   const { setUser } = useApp();
   const navigate = useNavigate();
-  const [entryUnlocked, setEntryUnlocked] = useState(() => isSiteAccessUnlocked());
+  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -36,13 +36,9 @@ export function Login() {
     }
   };
 
-  if (!entryUnlocked) {
+  if (!entryOk) {
     return (
-      <SiteAccessModal
-        open
-        variant="blocking"
-        onVerified={() => setEntryUnlocked(true)}
-      />
+      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
     );
   }
 

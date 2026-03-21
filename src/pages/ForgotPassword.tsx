@@ -8,7 +8,7 @@ import styles from './Auth.module.css';
 
 export function ForgotPassword() {
   const { t } = useI18n();
-  const [entryUnlocked, setEntryUnlocked] = useState(() => isSiteAccessUnlocked());
+  const [entryOk, setEntryOk] = useState(() => isSiteAccessUnlocked());
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -35,13 +35,9 @@ export function ForgotPassword() {
     }
   };
 
-  if (!entryUnlocked) {
+  if (!entryOk) {
     return (
-      <SiteAccessModal
-        open
-        variant="blocking"
-        onVerified={() => setEntryUnlocked(true)}
-      />
+      <SiteAccessModal open variant="blocking" onVerified={() => setEntryOk(true)} />
     );
   }
 

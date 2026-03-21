@@ -22,10 +22,10 @@
   },
   "siteAccess": {
     "title": "MKfieldOPS access",
-    "description": "Enter the site access password to continue to sign in or create an account.",
-    "passwordLabel": "Access password",
+    "description": "Enter the access code to open sign in or registration.",
+    "passwordLabel": "Access code",
     "submit": "Continue",
-    "wrongPassword": "Wrong password. Please contact the administrator:"
+    "wrongPassword": "Wrong access code. Please contact the administrator:"
   },
   "auth": {
     "login": "Login",

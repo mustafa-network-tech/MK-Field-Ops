@@ -1,6 +1,6 @@
 /**
- * Client-side entry gate for login/register (not cryptographic security; deters casual access).
- * Override with VITE_SITE_ACCESS_PASSWORD in env; default matches product owner setting.
+ * In-app access code for reaching auth pages (not cryptographic security).
+ * Override with VITE_SITE_ACCESS_PASSWORD at build time; default 334480. Spaces ignored when typing.
  */
 const STORAGE_KEY = 'mkfieldops_entry_unlocked';
 
@@ -26,6 +26,15 @@ export function isSiteAccessUnlocked(): boolean {
 export function setSiteAccessUnlocked(): void {
   try {
     sessionStorage.setItem(STORAGE_KEY, '1');
+  } catch {
+    /* private mode */
+  }
+}
+
+/** Optional: clear so the access code is asked again (e.g. after logout). Not used by authService. */
+export function clearSiteAccessLock(): void {
+  try {
+    sessionStorage.removeItem(STORAGE_KEY);
   } catch {
     /* private mode */
   }
