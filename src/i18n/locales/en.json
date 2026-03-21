@@ -17,7 +17,8 @@
     "close": "Close",
     "copied": "Copied",
     "yes": "Yes",
-    "no": "No"
+    "no": "No",
+    "saving": "Saving…"
   },
   "auth": {
     "login": "Login",
@@ -883,6 +884,8 @@
     "payrollPeriod": "Payroll Period (Hakediş Dönemi)",
     "startDayOfMonth": "Start day of month",
     "startDayOfMonthHint": "Period starts on this day and ends the day before the same day next month. Example: 20 → Feb 20 – Mar 19.",
+    "payrollSyncHint": "This value is saved to the cloud for your company. It stays the same on every device and after you sign in again (not only on this browser).",
+    "payrollSyncError": "Could not save payroll settings to the cloud. Check your connection and try again. Local copy was not updated.",
     "save": "Save settings",
     "saved": "Settings saved.",
     "validation": {

@@ -17,7 +17,8 @@
     "close": "Cerrar",
     "copied": "Copiado",
     "yes": "Sí",
-    "no": "No"
+    "no": "No",
+    "saving": "Guardando…"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -862,6 +863,8 @@
     "payrollPeriod": "Período de liquidación",
     "startDayOfMonth": "Día de inicio del mes",
     "startDayOfMonthHint": "El período comienza este día y termina el día anterior al mismo día del mes siguiente. Ej.: 20 → 20 feb – 19 mar.",
+    "payrollSyncHint": "Este valor se guarda en la nube para su empresa y es el mismo en todos los dispositivos.",
+    "payrollSyncError": "No se pudo guardar el día de nómina en la nube. La copia local no se actualizó.",
     "save": "Guardar ajustes",
     "saved": "Ajustes guardados.",
     "validation": {

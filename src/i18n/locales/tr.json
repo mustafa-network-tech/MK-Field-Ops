@@ -17,7 +17,8 @@
     "close": "Kapat",
     "copied": "Kopyalandı",
     "yes": "Evet",
-    "no": "Hayır"
+    "no": "Hayır",
+    "saving": "Kaydediliyor…"
   },
   "auth": {
     "login": "Giriş",
@@ -888,6 +889,8 @@
     "payrollPeriod": "Hakediş Dönemi",
     "startDayOfMonth": "Dönem başlangıç günü",
     "startDayOfMonthHint": "Dönem bu gün başlar ve ertesi ayın aynı gününden bir önceki gün biter. Örnek: 20 → 20 Şub – 19 Mar.",
+    "payrollSyncHint": "Bu değer şirketiniz için buluta kaydedilir; tüm cihazlarda ve tekrar giriş yaptığınızda aynı kalır (yalnızca bu tarayıcıda saklanmaz).",
+    "payrollSyncError": "Hakediş ayarı buluta kaydedilemedi. Bağlantıyı kontrol edip tekrar deneyin. Yerel kopya güncellenmedi.",
     "save": "Kaydet",
     "saved": "Ayarlar kaydedildi.",
     "validation": {

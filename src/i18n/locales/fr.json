@@ -17,7 +17,8 @@
     "close": "Fermer",
     "copied": "Copié",
     "yes": "Oui",
-    "no": "Non"
+    "no": "Non",
+    "saving": "Enregistrement…"
   },
   "auth": {
     "login": "Connexion",
@@ -862,6 +863,8 @@
     "payrollPeriod": "Période de paiement",
     "startDayOfMonth": "Jour de début du mois",
     "startDayOfMonthHint": "La période commence ce jour et se termine la veille du même jour le mois suivant. Ex. : 20 → 20 fév – 19 mars.",
+    "payrollSyncHint": "Cette valeur est enregistrée dans le cloud pour votre entreprise et reste identique sur tous les appareils.",
+    "payrollSyncError": "Impossible d’enregistrer le jour de paie dans le cloud. La copie locale n’a pas été mise à jour.",
     "save": "Enregistrer les paramètres",
     "saved": "Paramètres enregistrés.",
     "validation": {

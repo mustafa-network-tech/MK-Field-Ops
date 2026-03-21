@@ -10,6 +10,56 @@ import { supabase } from './supabaseClient';
 
 const VALID_LANGUAGE_CODES: CompanyLanguageCode[] = ['en', 'tr', 'es', 'fr', 'de'];
 
+/** Ayarlar ekranı ile aynı: 1–28 (DB’de 31’e kadar izin var; senkron sonrası UI ile uyum için sıkıştırılır). */
+const PAYROLL_START_DAY_MIN = 1;
+const PAYROLL_START_DAY_MAX = 28;
+
+function normalizePayrollStartDayFromDb(raw: unknown): number {
+  let n: number;
+  if (typeof raw === 'number' && !Number.isNaN(raw)) n = raw;
+  else if (raw != null && raw !== '') n = parseInt(String(raw), 10);
+  else n = 20;
+  if (Number.isNaN(n)) n = 20;
+  return Math.min(PAYROLL_START_DAY_MAX, Math.max(PAYROLL_START_DAY_MIN, n));
+}
+
+/** Yerel store + companies.payroll_start_day + payroll_period_settings (varsa). */
+export async function updatePayrollStartDayInSupabase(
+  companyId: string,
+  startDayOfMonth: number,
+  updatedByProfileId: string
+): Promise<{ ok: boolean; error?: string }> {
+  if (startDayOfMonth < PAYROLL_START_DAY_MIN || startDayOfMonth > PAYROLL_START_DAY_MAX) {
+    return { ok: false, error: 'Invalid payroll start day' };
+  }
+  if (!supabase) {
+    return { ok: true };
+  }
+  const updatedAt = new Date().toISOString();
+  const { error: companyErr } = await supabase
+    .from('companies')
+    .update({ payroll_start_day: startDayOfMonth })
+    .eq('id', companyId);
+  if (companyErr) {
+    console.warn('updatePayrollStartDayInSupabase companies', companyErr);
+    return { ok: false, error: companyErr.message };
+  }
+  const { error: settingsErr } = await supabase.from('payroll_period_settings').upsert(
+    {
+      company_id: companyId,
+      start_day_of_month: startDayOfMonth,
+      updated_by: updatedByProfileId,
+      updated_at: updatedAt,
+    },
+    { onConflict: 'company_id' }
+  );
+  if (settingsErr) {
+    console.warn('updatePayrollStartDayInSupabase payroll_period_settings', settingsErr);
+    return { ok: false, error: settingsErr.message };
+  }
+  return { ok: true };
+}
+
 function normalizeLanguageCode(value: string | null | undefined): CompanyLanguageCode {
   if (value && VALID_LANGUAGE_CODES.includes(value as CompanyLanguageCode)) {
     return value as CompanyLanguageCode;
@@ -35,7 +85,9 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   await applyPendingPlanIfDue(companyId);
   const { data, error } = await supabase
     .from('companies')
-    .select('language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle')
+    .select(
+      'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day'
+    )
     .eq('id', companyId)
     .maybeSingle();
   if (error) {
@@ -60,6 +112,13 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
     ...(pending_plan !== undefined && { pending_plan: pending_plan ?? null }),
     ...(data.pending_plan_billing_cycle !== undefined && { pending_plan_billing_cycle: data.pending_plan_billing_cycle ?? null }),
   }, companyId);
+
+  /** Hakediş günü: tek kaynak Supabase (companies.payroll_start_day); null → 20. */
+  const startDay = normalizePayrollStartDayFromDb(data.payroll_start_day);
+  store.setPayrollPeriodSettings(companyId, {
+    startDayOfMonth: startDay,
+    updatedBy: 'supabase',
+  });
 }
 
 /**

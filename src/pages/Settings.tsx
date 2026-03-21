@@ -8,6 +8,7 @@ import {
   fetchCompanyJoinCodeFromSupabase,
   updateCompanyJoinCodeInSupabase,
   updateCompanyBrandingInSupabase,
+  updatePayrollStartDayInSupabase,
 } from '../services/companyService';
 import { logEvent, actorFromUser } from '../services/auditLogService';
 import styles from './Settings.module.css';
@@ -17,7 +18,7 @@ const START_DAY_MAX = 28;
 
 export function Settings() {
   const { t } = useI18n();
-  const { user } = useApp();
+  const { user, company: appCompany } = useApp();
   const companyId = user?.companyId ?? '';
   const canAccess = user?.role === 'companyManager' || user?.role === 'projectManager';
   const canEditCompany = user?.role === 'companyManager';
@@ -29,6 +30,7 @@ export function Settings() {
   );
   const [message, setMessage] = useState<'saved' | 'error' | null>(null);
   const [validationError, setValidationError] = useState('');
+  const [payrollSaving, setPayrollSaving] = useState(false);
 
   const [companyName, setCompanyName] = useState(company?.name ?? '');
   const [logoUrl, setLogoUrl] = useState<string | null>(company?.logo_url ?? null);
@@ -54,6 +56,13 @@ export function Settings() {
     fetchCompanyJoinCodeFromSupabase(companyId).then((code) => setJoinCode(code ?? ''));
   }, [canEditCompany, companyId]);
 
+  /** Girişte Supabase’ten gelen hakediş günü store’a yazılınca formu güncelle */
+  useEffect(() => {
+    if (!companyId) return;
+    const ex = store.getPayrollPeriodSettings(companyId);
+    setStartDay(ex ? String(ex.startDayOfMonth) : '20');
+  }, [companyId, appCompany]);
+
   useEffect(() => {
     if (!pendingFile) {
       if (pendingPreviewUrl) URL.revokeObjectURL(pendingPreviewUrl);
@@ -76,7 +85,7 @@ export function Settings() {
     );
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setValidationError('');
     setMessage(null);
     const num = parseInt(startDay, 10);
@@ -90,20 +99,31 @@ export function Settings() {
     }
     if (!user?.id) return;
     const prev = store.getPayrollPeriodSettings(companyId);
-    store.setPayrollPeriodSettings(companyId, {
-      startDayOfMonth: num,
-      updatedBy: user.id,
-    });
-    const actor = actorFromUser(user);
-    if (actor) {
-      logEvent(actor, {
-        action: 'PAYROLL_SETTINGS_CHANGED',
-        entity_type: 'payroll_period',
-        company_id: companyId,
-        meta: { startDayOfMonth: num, previousStartDay: prev?.startDayOfMonth },
+    setPayrollSaving(true);
+    try {
+      const remote = await updatePayrollStartDayInSupabase(companyId, num, user.id);
+      if (!remote.ok) {
+        setMessage('error');
+        setValidationError(remote.error ?? t('settings.payrollSyncError'));
+        return;
+      }
+      store.setPayrollPeriodSettings(companyId, {
+        startDayOfMonth: num,
+        updatedBy: user.id,
       });
+      const actor = actorFromUser(user);
+      if (actor) {
+        logEvent(actor, {
+          action: 'PAYROLL_SETTINGS_CHANGED',
+          entity_type: 'payroll_period',
+          company_id: companyId,
+          meta: { startDayOfMonth: num, previousStartDay: prev?.startDayOfMonth },
+        });
+      }
+      setMessage('saved');
+    } finally {
+      setPayrollSaving(false);
     }
-    setMessage('saved');
   };
 
   const onCompanyFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -274,6 +294,7 @@ export function Settings() {
 
       <Card title={t('settings.payrollPeriod')}>
         <p className={styles.hint}>{t('settings.startDayOfMonthHint')}</p>
+        <p className={styles.hint}>{t('settings.payrollSyncHint')}</p>
         <div className={styles.field}>
           <label htmlFor="startDay">{t('settings.startDayOfMonth')}</label>
           <input
@@ -284,12 +305,19 @@ export function Settings() {
             value={startDay}
             onChange={(e) => setStartDay(e.target.value)}
             className={styles.input}
+            disabled={payrollSaving}
           />
         </div>
         {validationError && <p className={styles.error}>{validationError}</p>}
         {message === 'saved' && <p className={styles.success}>{t('settings.saved')}</p>}
-        <button type="button" className={styles.btnPrimary} onClick={handleSave}>
-          {t('settings.save')}
+        {message === 'error' && !validationError && <p className={styles.error}>{t('settings.payrollSyncError')}</p>}
+        <button
+          type="button"
+          className={styles.btnPrimary}
+          onClick={() => void handleSave()}
+          disabled={payrollSaving}
+        >
+          {payrollSaving ? t('common.saving') : t('settings.save')}
         </button>
       </Card>
     </div>

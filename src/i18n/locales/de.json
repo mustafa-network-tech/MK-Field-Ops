@@ -17,7 +17,8 @@
     "close": "Schließen",
     "copied": "Kopiert",
     "yes": "Ja",
-    "no": "Nein"
+    "no": "Nein",
+    "saving": "Wird gespeichert…"
   },
   "auth": {
     "login": "Anmelden",
@@ -862,6 +863,8 @@
     "payrollPeriod": "Abrechnungszeitraum",
     "startDayOfMonth": "Starttag des Monats",
     "startDayOfMonthHint": "Der Zeitraum beginnt an diesem Tag und endet am Vortag des gleichen Tages im Folgemonat. Beispiel: 20 → 20. Feb – 19. März.",
+    "payrollSyncHint": "Dieser Wert wird in der Cloud für Ihr Unternehmen gespeichert und ist auf allen Geräten gleich.",
+    "payrollSyncError": "Abrechnungstag konnte nicht in der Cloud gespeichert werden. Lokale Kopie wurde nicht geändert.",
     "save": "Einstellungen speichern",
     "saved": "Einstellungen gespeichert.",
     "validation": {
