@@ -492,7 +492,8 @@
     "scopeAllTime": "Todo el historial",
     "scopeToggleAria": "Alcance de totales del panel",
     "scopeHintPayroll": "Totales, resumen por equipo, semana y esta tarjeta solo incluyen el periodo de nómina activo (se renueva al cambiar de periodo; el historial permanece en la base de datos).",
-    "scopeHintAllTime": "Totales y equipos incluyen todos los trabajos aprobados. Semana/mes usan la semana y el mes calendario actuales sobre todo el historial."
+    "scopeHintAllTime": "Totales y equipos incluyen todos los trabajos aprobados. Semana/mes usan la semana y el mes calendario actuales sobre todo el historial.",
+    "payrollPeriodDefaultNote": "Aún no hay día de inicio de nómina en Ajustes: «Periodo nómina» usa el mes calendario. Guarde el día en Ajustes para su ciclo real."
   },
   "teams": {
     "title": "Equipos",

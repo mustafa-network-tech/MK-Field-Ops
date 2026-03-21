@@ -36,7 +36,6 @@ export function Dashboard() {
   }
 
   const isAdmin = summary.role === 'companyManager' || summary.role === 'projectManager';
-  const showScopeToggle = Boolean(summary.activePayrollPeriod);
 
   const setScope = (next: DashboardSummaryScope) => {
     setViewScope(next);
@@ -44,7 +43,7 @@ export function Dashboard() {
   };
 
   const monthlyCardTitle =
-    summary.viewScope === 'payrollPeriod' && summary.activePayrollPeriod
+    summary.viewScope === 'payrollPeriod'
       ? t('dashboard.payrollPeriodTotal')
       : t('dashboard.monthlyTotal');
 
@@ -52,43 +51,40 @@ export function Dashboard() {
     <div className={styles.page}>
       <div className={styles.pageHeader}>
         <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
-        {showScopeToggle && (
-          <div
-            className={styles.scopeToggle}
-            role="group"
-            aria-label={t('dashboard.scopeToggleAria')}
+        <div
+          className={styles.scopeToggle}
+          role="group"
+          aria-label={t('dashboard.scopeToggleAria')}
+        >
+          <button
+            type="button"
+            className={styles.scopeBtn}
+            data-active={summary.viewScope === 'payrollPeriod'}
+            onClick={() => setScope('payrollPeriod')}
           >
-            <button
-              type="button"
-              className={styles.scopeBtn}
-              data-active={summary.viewScope === 'payrollPeriod'}
-              onClick={() => setScope('payrollPeriod')}
-            >
-              {t('dashboard.scopePayrollPeriod')}
-            </button>
-            <button
-              type="button"
-              className={styles.scopeBtn}
-              data-active={summary.viewScope === 'allTime'}
-              onClick={() => setScope('allTime')}
-            >
-              {t('dashboard.scopeAllTime')}
-            </button>
-          </div>
-        )}
+            {t('dashboard.scopePayrollPeriod')}
+          </button>
+          <button
+            type="button"
+            className={styles.scopeBtn}
+            data-active={summary.viewScope === 'allTime'}
+            onClick={() => setScope('allTime')}
+          >
+            {t('dashboard.scopeAllTime')}
+          </button>
+        </div>
       </div>
-      {summary.activePayrollPeriod?.label && (
-        <p className={styles.meta} style={{ marginBottom: '0.35rem' }}>
-          {t('settings.activePeriodLabel')}: {summary.activePayrollPeriod.label}
-        </p>
+      <p className={styles.meta} style={{ marginBottom: '0.35rem' }}>
+        {t('settings.activePeriodLabel')}: {summary.activePayrollPeriod.label}
+      </p>
+      {!summary.payrollPeriodUsesSettings && (
+        <p className={styles.scopeDefaultNote}>{t('dashboard.payrollPeriodDefaultNote')}</p>
       )}
-      {showScopeToggle && (
-        <p className={styles.scopeHint}>
-          {summary.viewScope === 'payrollPeriod'
-            ? t('dashboard.scopeHintPayroll')
-            : t('dashboard.scopeHintAllTime')}
-        </p>
-      )}
+      <p className={styles.scopeHint}>
+        {summary.viewScope === 'payrollPeriod'
+          ? t('dashboard.scopeHintPayroll')
+          : t('dashboard.scopeHintAllTime')}
+      </p>
 
       {/* Top cards: admin/pm = 3 (Gross / Team / Company), TL = 1 (Team only) */}
       <div className={styles.grid}>

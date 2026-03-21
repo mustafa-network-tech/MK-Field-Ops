@@ -492,7 +492,8 @@
     "scopeAllTime": "Tout l’historique",
     "scopeToggleAria": "Périmètre des totaux du tableau de bord",
     "scopeHintPayroll": "Totaux, synthèse équipes, semaine et cette carte concernent uniquement la période de paie active (réinitialisés au nouveau cycle ; l’historique reste en base).",
-    "scopeHintAllTime": "Totaux et équipes incluent tous les travaux approuvés. Semaine / mois : semaine et mois civils en cours sur tout l’historique."
+    "scopeHintAllTime": "Totaux et équipes incluent tous les travaux approuvés. Semaine / mois : semaine et mois civils en cours sur tout l’historique.",
+    "payrollPeriodDefaultNote": "Aucun jour de début enregistré dans Paramètres — la « période de paie » utilise le mois civil. Enregistrez le jour pour votre cycle réel."
   },
   "teams": {
     "title": "Équipes",

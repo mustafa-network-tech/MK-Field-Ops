@@ -502,7 +502,8 @@
     "scopeAllTime": "Genel dönem",
     "scopeToggleAria": "Panel toplamları hangi döneme göre",
     "scopeHintPayroll": "Üstteki toplamlar, ekip özeti, haftalık ve bu kart yalnızca aktif hakediş dönemindeki onaylı işlere göredir. Dönem sonunda (ör. ayın 19’u 23:59) göstergeler yeni döneme sıfırlanır; eski kayıtlar veritabanında kalır.",
-    "scopeHintAllTime": "Toplamlar ve ekip özeti tüm onaylı işleri kapsar. Haftalık / aylık kartlar bu takvim haftası ve ayı için genel geçmişe göredir."
+    "scopeHintAllTime": "Toplamlar ve ekip özeti tüm onaylı işleri kapsar. Haftalık / aylık kartlar bu takvim haftası ve ayı için genel geçmişe göredir.",
+    "payrollPeriodDefaultNote": "Ayarlar’da henüz hakediş başlangıç günü kaydı yok — “Hakediş dönemi” şu an takvim ayına göredir (ayın 1’i–son günü). Gerçek hakediş döngünüz için Ayarlar’dan günü kaydedin."
   },
   "teams": {
     "title": "Takımlar",

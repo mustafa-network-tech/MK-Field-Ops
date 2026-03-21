@@ -492,7 +492,8 @@
     "scopeAllTime": "Gesamt",
     "scopeToggleAria": "Zeitraum für Dashboard-Summen",
     "scopeHintPayroll": "Summen, Teamübersicht, Woche und diese Karte gelten nur für den aktiven Abrechnungszeitraum (wechselt mit Periodenbeginn; Verlauf bleibt in der Datenbank).",
-    "scopeHintAllTime": "Summen und Teamübersicht umfassen alle freigegebenen Arbeiten. Woche/Monat beziehen sich auf Kalenderwoche und -monat über die gesamte Historie."
+    "scopeHintAllTime": "Summen und Teamübersicht umfassen alle freigegebenen Arbeiten. Woche/Monat beziehen sich auf Kalenderwoche und -monat über die gesamte Historie.",
+    "payrollPeriodDefaultNote": "Noch kein Abrechnungs-Starttag in den Einstellungen — „Abrechnungszeitraum“ nutzt vorerst den Kalendermonat. Bitte Starttag dort speichern."
   },
   "teams": {
     "title": "Teams",

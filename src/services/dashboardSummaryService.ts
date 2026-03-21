@@ -27,8 +27,10 @@ export type DashboardSummaryAdmin = {
   pendingCount: number;
   approvedCount: number;
   teamSummary: TeamSummaryRowAdmin[];
-  /** When payroll period is configured, main totals and teamSummary are for this period. */
-  activePayrollPeriod?: { start: string; end: string; label?: string };
+  /** Aktif dönem aralığı (her zaman hesaplanır; ayar yoksa ayın 1’i = takvim ayı). */
+  activePayrollPeriod: { start: string; end: string; label?: string };
+  /** Ayarlar’da kayıtlı hakediş günü kullanılıyor mu (false ise takvim ayı varsayılanı). */
+  payrollPeriodUsesSettings: boolean;
   /** Hangi filtreye göre üst kartlar ve ekip özeti hesaplandı. */
   viewScope: DashboardSummaryScope;
 };
@@ -42,7 +44,8 @@ export type DashboardSummaryTL = {
   pendingCount: number;
   approvedCount: number;
   teamSummary: TeamSummaryRowTL[];
-  activePayrollPeriod?: { start: string; end: string; label?: string };
+  activePayrollPeriod: { start: string; end: string; label?: string };
+  payrollPeriodUsesSettings: boolean;
   viewScope: DashboardSummaryScope;
 };
 
@@ -107,17 +110,17 @@ export function getDashboardSummary(
 
   const payrollSettings = store.getPayrollPeriodSettings(companyId);
   const now = new Date();
-  const activePayrollPeriod = payrollSettings
-    ? getActivePeriod(now, payrollSettings.startDayOfMonth)
-    : undefined;
+  /** Ayar yoksa gün 1 = takvim ayı; böylece panelde dönem seçici her zaman anlamlı olur. */
+  const startDayOfMonth = payrollSettings?.startDayOfMonth ?? 1;
+  const activePayrollPeriod = getActivePeriod(now, startDayOfMonth);
+  const payrollPeriodUsesSettings = Boolean(payrollSettings);
 
-  const usePayrollScope =
-    Boolean(activePayrollPeriod) && options?.scope !== 'allTime';
+  const usePayrollScope = options?.scope !== 'allTime';
 
   const viewScope: DashboardSummaryScope = usePayrollScope ? 'payrollPeriod' : 'allTime';
 
   let approvedWithDetails = allApprovedWithDetails;
-  if (usePayrollScope && activePayrollPeriod) {
+  if (usePayrollScope) {
     approvedWithDetails = allApprovedWithDetails.filter((j) => isDateInPeriod(j.date, activePayrollPeriod));
   }
 
@@ -164,6 +167,7 @@ export function getDashboardSummary(
       approvedCount,
       teamSummary,
       activePayrollPeriod,
+      payrollPeriodUsesSettings,
       viewScope,
     };
   }
@@ -201,6 +205,7 @@ export function getDashboardSummary(
     approvedCount,
     teamSummary: teamSummaryAdmin,
     activePayrollPeriod,
+    payrollPeriodUsesSettings,
     viewScope,
   };
 }

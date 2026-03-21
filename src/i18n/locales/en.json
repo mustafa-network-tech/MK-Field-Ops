@@ -502,7 +502,8 @@
     "scopeAllTime": "All time",
     "scopeToggleAria": "Dashboard totals scope",
     "scopeHintPayroll": "Totals, team breakdown, weekly slice, and this card reflect only the active payroll period (resets when the new period starts; history stays in the database).",
-    "scopeHintAllTime": "Totals and team breakdown include all approved jobs. Weekly / monthly cards use this calendar week and month across your full history."
+    "scopeHintAllTime": "Totals and team breakdown include all approved jobs. Weekly / monthly cards use this calendar week and month across your full history.",
+    "payrollPeriodDefaultNote": "No payroll start day saved in Settings yet — “Payroll period” uses the calendar month (1st–last day). Save your company’s start day in Settings to match your real hakediş cycle."
   },
   "teams": {
     "title": "Teams",
