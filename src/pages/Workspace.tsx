@@ -129,9 +129,15 @@ export function Workspace() {
 
         {mode === 'choose' && (
           <div className={styles.choose}>
-            <button type="button" className={styles.optionBtn} onClick={() => setMode('new')}>
+            <button
+              type="button"
+              className={styles.optionBtn}
+              disabled
+              title={t('onboarding.createNewCompanyHint')}
+            >
               {t('onboarding.createNewCompany')}
             </button>
+            <p className={styles.chooseHint}>{t('onboarding.createNewCompanyHint')}</p>
             <button type="button" className={styles.optionBtn} onClick={() => setMode('existing')}>
               {t('onboarding.joinExistingCompany')}
             </button>

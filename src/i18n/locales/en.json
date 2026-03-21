@@ -68,6 +68,7 @@
     "createAccount": "Create Account",
     "workspaceTitle": "Company / Workspace",
     "createNewCompany": "Create New Company",
+    "createNewCompanyHint": "Starting a new company from this page is not available. Use “Join Existing Company” with your company name and join code.",
     "joinExistingCompany": "Join Existing Company",
     "companySlug": "Company ID (slug)",
     "companyName": "Company Name",

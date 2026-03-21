@@ -68,6 +68,7 @@
     "createAccount": "Crear cuenta",
     "workspaceTitle": "Empresa / Espacio de trabajo",
     "createNewCompany": "Crear nueva empresa",
+    "createNewCompanyHint": "No puede crear una empresa nueva desde esta página. Use «Unirse a empresa existente» con el nombre y el código de acceso.",
     "joinExistingCompany": "Unirse a empresa existente",
     "companySlug": "ID de empresa (slug)",
     "companyName": "Nombre de la empresa",

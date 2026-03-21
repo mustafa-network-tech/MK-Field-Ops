@@ -56,6 +56,26 @@
   border-color: #cbd5e1;
 }
 
+.optionBtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  background: #f8fafc;
+  color: #64748b;
+}
+
+.optionBtn:disabled:hover {
+  background: #f8fafc;
+  border-color: #e2e8f0;
+}
+
+.chooseHint {
+  margin: -0.35rem 0 0;
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.4;
+  text-align: center;
+}
+
 .backLink {
   margin-top: 1rem;
   text-align: center;

@@ -68,6 +68,7 @@
     "createAccount": "Hesap Oluştur",
     "workspaceTitle": "Şirket / Çalışma Alanı",
     "createNewCompany": "Yeni Şirket Oluştur",
+    "createNewCompanyHint": "Bu sayfadan yeni şirket başlatma kapalıdır. Şirket adı ve katılım kodunuzla “Mevcut Şirkete Katıl”ı kullanın.",
     "joinExistingCompany": "Mevcut Şirkete Katıl",
     "companySlug": "Şirket ID (slug)",
     "companyName": "Şirket Adı",

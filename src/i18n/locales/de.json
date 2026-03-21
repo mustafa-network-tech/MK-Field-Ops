@@ -68,6 +68,7 @@
     "createAccount": "Konto erstellen",
     "workspaceTitle": "Unternehmen / Arbeitsbereich",
     "createNewCompany": "Neues Unternehmen erstellen",
+    "createNewCompanyHint": "Ein neues Unternehmen von dieser Seite aus ist nicht möglich. Nutzen Sie „Bestehendem Unternehmen beitreten“ mit Name und Beitrittscode.",
     "joinExistingCompany": "Bestehendem Unternehmen beitreten",
     "companySlug": "Unternehmens-ID (Slug)",
     "companyName": "Unternehmensname",
