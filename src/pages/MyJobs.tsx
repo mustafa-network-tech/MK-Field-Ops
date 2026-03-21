@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
@@ -8,9 +8,19 @@ import { getTeamsForUser } from '../services/teamScopeService';
 import { updateJob } from '../services/jobService';
 import { formatPriceForUser, formatUnitPriceForUser } from '../utils/priceRules';
 import { getProjectDisplayKey } from '../utils/projectKey';
+import { listPeriods, isDateInPeriod, type PayrollPeriod } from '../utils/periodUtils';
 import { Card } from '../components/ui/Card';
 import type { JobRecord, JobMaterialUsage, MaterialMainType } from '../types';
 import styles from './MyJobs.module.css';
+
+const PAST_PERIODS_COUNT = 36;
+
+function formatPeriodLabelLocale(startStr: string, endStr: string, locale: string): string {
+  const s = new Date(startStr + 'T00:00:00');
+  const e = new Date(endStr + 'T00:00:00');
+  const opts: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'short', year: 'numeric' };
+  return `${s.toLocaleDateString(locale, opts)} – ${e.toLocaleDateString(locale, opts)}`;
+}
 
 const TYPE_DISPLAY_KEYS: Record<MaterialMainType, string> = {
   direk: 'materials.typeDisplayDirek',
@@ -39,10 +49,46 @@ export function MyJobs() {
   const { t, locale } = useI18n();
   const { user } = useApp();
   const companyId = user?.companyId ?? '';
-  const scopedJobs = getJobsForUser(companyId, user);
-  const jobs = scopedJobs
-    .filter((j) => j.createdBy === user?.id)
-    .sort((a, b) => (b.createdAt ?? b.date ?? '').localeCompare(a.createdAt ?? a.date ?? '', undefined, { numeric: true }));
+  const [actionError, setActionError] = useState('');
+  const [listRefreshKey, setListRefreshKey] = useState(0);
+  const [modalJobId, setModalJobId] = useState<string | null>(null);
+
+  const myJobsAll = useMemo(() => {
+    const scoped = getJobsForUser(companyId, user);
+    return scoped
+      .filter((j) => j.createdBy === user?.id)
+      .sort((a, b) =>
+        (b.createdAt ?? b.date ?? '').localeCompare(a.createdAt ?? a.date ?? '', undefined, { numeric: true })
+      );
+  }, [companyId, user, listRefreshKey]);
+
+  const startDayOfMonth = store.getPayrollPeriodSettings(companyId)?.startDayOfMonth ?? 1;
+  const periods = useMemo(
+    () => listPeriods(startDayOfMonth, new Date(), PAST_PERIODS_COUNT),
+    [companyId, startDayOfMonth]
+  );
+  const activePeriod = periods[0];
+  /** `null` = aktif (güncel) dönem */
+  const [selectedPeriodStart, setSelectedPeriodStart] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSelectedPeriodStart(null);
+  }, [companyId]);
+
+  const selectedPeriod: PayrollPeriod | undefined = useMemo(() => {
+    if (!periods.length) return undefined;
+    if (selectedPeriodStart == null) return periods[0];
+    return periods.find((p) => p.start === selectedPeriodStart) ?? periods[0];
+  }, [periods, selectedPeriodStart]);
+
+  const isViewingActivePeriod = Boolean(activePeriod && selectedPeriod && selectedPeriod.start === activePeriod.start);
+
+  const jobs = useMemo(() => {
+    if (!selectedPeriod) return myJobsAll;
+    return myJobsAll.filter((j) => isDateInPeriod(j.date, selectedPeriod));
+  }, [myJobsAll, selectedPeriod]);
+
+  const pastPeriods = periods.length > 1 ? periods.slice(1) : [];
   const teams = getTeamsForUser(companyId, user);
   const workItems = store.getWorkItems(companyId);
   const stockItems = store.getMaterialStock(companyId);
@@ -55,9 +101,6 @@ export function MyJobs() {
     const p = store.getProject(projectId, companyId);
     return p ? getProjectDisplayKey(p) : '–';
   };
-  const [actionError, setActionError] = useState('');
-  const [listRefreshKey, setListRefreshKey] = useState(0);
-  const [modalJobId, setModalJobId] = useState<string | null>(null);
 
   const handleOpenJobDetailModal = (jobId: string) => {
     setModalJobId(jobId);
@@ -96,9 +139,39 @@ export function MyJobs() {
     }
   };
 
+  const periodLabel = selectedPeriod
+    ? formatPeriodLabelLocale(selectedPeriod.start, selectedPeriod.end, locale)
+    : '';
+
   return (
     <div className={styles.page}>
       <h1 className={styles.pageTitle}>{t('nav.myJobs')}</h1>
+      {selectedPeriod && (
+        <div className={styles.periodBanner}>
+          <p className={styles.periodBannerLabel}>
+            {isViewingActivePeriod ? (
+              <>
+                <span className={styles.periodBadge}>{t('jobs.myJobsListCurrentPeriod')}</span>
+                <span className={styles.periodBannerRange}>{periodLabel}</span>
+              </>
+            ) : (
+              <>
+                <span className={styles.periodBannerText}>{t('jobs.myJobsListShowingPeriod')}</span>
+                <span className={styles.periodBannerRange}>{periodLabel}</span>
+              </>
+            )}
+          </p>
+          {!isViewingActivePeriod && activePeriod && (
+            <button
+              type="button"
+              className={styles.backToCurrentBtn}
+              onClick={() => setSelectedPeriodStart(null)}
+            >
+              {t('jobs.myJobsListBackToCurrent')}
+            </button>
+          )}
+        </div>
+      )}
       {actionError && <p className={styles.error}>{actionError}</p>}
       <Card key={listRefreshKey}>
         <div className={styles.tableWrap}>
@@ -191,8 +264,35 @@ export function MyJobs() {
         {jobs.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
       </Card>
 
+      {pastPeriods.length > 0 && (
+        <section className={styles.pastPeriodsSection} aria-labelledby="myjobs-past-periods-title">
+          <h2 id="myjobs-past-periods-title" className={styles.pastPeriodsTitle}>
+            {t('jobs.myJobsListPastPeriods')}
+          </h2>
+          <p className={styles.pastPeriodsHint}>{t('jobs.myJobsListPastPeriodsHint')}</p>
+          <ul className={styles.periodChips}>
+            {pastPeriods.map((p) => {
+              const label = formatPeriodLabelLocale(p.start, p.end, locale);
+              const isSelected = selectedPeriod?.start === p.start;
+              return (
+                <li key={p.start}>
+                  <button
+                    type="button"
+                    className={styles.periodChip}
+                    data-active={isSelected}
+                    onClick={() => setSelectedPeriodStart(p.start)}
+                  >
+                    {label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {modalJobId && (() => {
-        const modalJob = jobs.find((j) => j.id === modalJobId);
+        const modalJob = myJobsAll.find((j) => j.id === modalJobId);
         return (
           <div className={styles.modalOverlay} onClick={() => setModalJobId(null)} role="dialog" aria-modal="true" aria-labelledby="job-detail-modal-title">
             <div className={styles.modalBox} onClick={(e) => e.stopPropagation()}>

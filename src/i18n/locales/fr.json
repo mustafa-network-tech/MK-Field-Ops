@@ -626,6 +626,11 @@
     "insufficientZimmet": "Matériel assigné (zimmet) insuffisant.",
     "approvalFailedInsufficientZimmet": "Approbation refusée : matériel assigné (zimmet) insuffisant.",
     "payrollPeriodClosed": "Cette période de paiement est fermée. Choisissez une date dans la période active.",
+    "myJobsListCurrentPeriod": "Période de paie en cours",
+    "myJobsListShowingPeriod": "Vos travaux pour :",
+    "myJobsListPastPeriods": "Périodes passées",
+    "myJobsListPastPeriodsHint": "Choisissez une période pour voir vos travaux sur cette fenêtre de paie.",
+    "myJobsListBackToCurrent": "Retour à la période en cours",
     "zimmetRemaining": "Assigné restant",
     "materialUsage": "Utilisation de matériel",
     "material": {

@@ -645,6 +645,11 @@
     "insufficientZimmet": "Zimmetli malzeme yetersiz.",
     "approvalFailedInsufficientZimmet": "Onay başarısız: zimmetli malzeme yetersiz.",
     "payrollPeriodClosed": "Bu hakediş dönemi kapatıldı. Lütfen aktif dönemde bir tarih seçin.",
+    "myJobsListCurrentPeriod": "Güncel hakediş dönemi",
+    "myJobsListShowingPeriod": "İşleriniz (seçilen dönem):",
+    "myJobsListPastPeriods": "Geçmiş dönemler",
+    "myJobsListPastPeriodsHint": "Bir döneme tıklayarak o hakediş aralığındaki kendi işlerinizi görün.",
+    "myJobsListBackToCurrent": "Güncel döneme dön",
     "zimmetRemaining": "Zimmet Kalan",
     "materialUsage": "Malzeme kullanımı",
     "material": {

@@ -264,3 +264,122 @@
 .materialUsageList li:last-child {
   border-bottom: none;
 }
+
+.periodBanner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.periodBannerLabel {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.95rem;
+  color: #334155;
+}
+
+.periodBadge {
+  display: inline-block;
+  padding: 0.2rem 0.5rem;
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.periodBannerText {
+  font-weight: 500;
+  color: #475569;
+}
+
+.periodBannerRange {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.backToCurrentBtn {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #2563eb;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.backToCurrentBtn:hover {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.pastPeriodsSection {
+  margin-top: 1.5rem;
+  padding: 1rem 0 0;
+  border-top: 1px solid #e2e8f0;
+}
+
+.pastPeriodsTitle {
+  margin: 0 0 0.35rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.pastPeriodsHint {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.45;
+}
+
+.periodChips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.periodChips li {
+  margin: 0;
+}
+
+.periodChip {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  color: #475569;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  max-width: 100%;
+}
+
+.periodChip:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.periodChip[data-active='true'] {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-weight: 600;
+}

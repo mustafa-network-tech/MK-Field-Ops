@@ -645,6 +645,11 @@
     "insufficientZimmet": "Insufficient assigned material (zimmet).",
     "approvalFailedInsufficientZimmet": "Approval failed: insufficient assigned material (zimmet).",
     "payrollPeriodClosed": "This payroll period is closed. Please select a date in the active period.",
+    "myJobsListCurrentPeriod": "Current payroll period",
+    "myJobsListShowingPeriod": "Showing your jobs for:",
+    "myJobsListPastPeriods": "Past periods",
+    "myJobsListPastPeriodsHint": "Select a period to see your own jobs from that hakediş window.",
+    "myJobsListBackToCurrent": "Back to current period",
     "zimmetRemaining": "Assigned Remaining",
     "materialUsage": "Material usage",
     "material": {

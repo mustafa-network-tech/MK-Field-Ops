@@ -626,6 +626,11 @@
     "insufficientZimmet": "Unzureichendes zugewiesenes Material (Zimmet).",
     "approvalFailedInsufficientZimmet": "Freigabe fehlgeschlagen: unzureichendes zugewiesenes Material (Zimmet).",
     "payrollPeriodClosed": "Dieser Abrechnungszeitraum ist geschlossen. Bitte ein Datum im aktiven Zeitraum wählen.",
+    "myJobsListCurrentPeriod": "Aktueller Abrechnungszeitraum",
+    "myJobsListShowingPeriod": "Ihre Arbeiten für:",
+    "myJobsListPastPeriods": "Vergangene Zeiträume",
+    "myJobsListPastPeriodsHint": "Zeitraum wählen, um Ihre Arbeiten aus diesem Fenster zu sehen.",
+    "myJobsListBackToCurrent": "Zum aktuellen Zeitraum",
     "zimmetRemaining": "Zugewiesen verbleibend",
     "materialUsage": "Materialverbrauch",
     "material": {
