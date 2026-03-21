@@ -82,6 +82,7 @@
     "planEnterprise": "Unternehmen",
     "billingCycle": "Abrechnungszeitraum",
     "billingMonthly": "Monatlich",
+     "billingMohly": "Monich",
     "billingYearly": "Jährlich"
   },
   "pendingJoin": {
