@@ -2,11 +2,66 @@
   max-width: 1000px;
 }
 
+.pageHeader {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
 .pageTitle {
   font-size: 1.5rem;
   font-weight: 700;
   color: #1e293b;
-  margin: 0 0 1.5rem;
+  margin: 0;
+  flex: 1;
+  min-width: 12rem;
+}
+
+.scopeToggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  background: #f8fafc;
+}
+
+.scopeBtn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.scopeBtn:hover {
+  color: #334155;
+  background: #f1f5f9;
+}
+
+.scopeBtn[data-active='true'] {
+  background: #1e293b;
+  color: #f8fafc;
+}
+
+.scopeBtn[data-active='true']:hover {
+  background: #334155;
+  color: #fff;
+}
+
+.scopeHint {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0 0 1rem;
+  line-height: 1.45;
+  max-width: 42rem;
 }
 
 .grid {

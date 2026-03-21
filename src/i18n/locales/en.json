@@ -491,12 +491,18 @@
     "title": "Dashboard",
     "dailyTotal": "Daily Total",
     "weeklyTotal": "Weekly Total",
-    "monthlyTotal": "Monthly Total",
+    "monthlyTotal": "Monthly Total (calendar)",
+    "payrollPeriodTotal": "Payroll period total",
     "pendingApprovals": "Pending Approvals",
     "approvedJobs": "Approved Jobs",
     "teamEarningsSummary": "Team Earnings Summary",
     "companyEarningsSummary": "Company Earnings Summary",
-    "recentActivity": "Recent Activity"
+    "recentActivity": "Recent Activity",
+    "scopePayrollPeriod": "Payroll period",
+    "scopeAllTime": "All time",
+    "scopeToggleAria": "Dashboard totals scope",
+    "scopeHintPayroll": "Totals, team breakdown, weekly slice, and this card reflect only the active payroll period (resets when the new period starts; history stays in the database).",
+    "scopeHintAllTime": "Totals and team breakdown include all approved jobs. Weekly / monthly cards use this calendar week and month across your full history."
   },
   "teams": {
     "title": "Teams",

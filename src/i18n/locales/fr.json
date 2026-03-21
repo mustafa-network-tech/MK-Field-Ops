@@ -481,12 +481,18 @@
     "title": "Tableau de bord",
     "dailyTotal": "Total journalier",
     "weeklyTotal": "Total hebdo",
-    "monthlyTotal": "Total mensuel",
+    "monthlyTotal": "Total mois calendaire",
+    "payrollPeriodTotal": "Total période de paie",
     "pendingApprovals": "Approbations en attente",
     "approvedJobs": "Travaux approuvés",
     "teamEarningsSummary": "Revenus par équipe",
     "companyEarningsSummary": "Revenus entreprise",
-    "recentActivity": "Activité récente"
+    "recentActivity": "Activité récente",
+    "scopePayrollPeriod": "Période de paie",
+    "scopeAllTime": "Tout l’historique",
+    "scopeToggleAria": "Périmètre des totaux du tableau de bord",
+    "scopeHintPayroll": "Totaux, synthèse équipes, semaine et cette carte concernent uniquement la période de paie active (réinitialisés au nouveau cycle ; l’historique reste en base).",
+    "scopeHintAllTime": "Totaux et équipes incluent tous les travaux approuvés. Semaine / mois : semaine et mois civils en cours sur tout l’historique."
   },
   "teams": {
     "title": "Équipes",

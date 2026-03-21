@@ -481,12 +481,18 @@
     "title": "Dashboard",
     "dailyTotal": "Tagesgesamt",
     "weeklyTotal": "Wochengesamt",
-    "monthlyTotal": "Monatsgesamt",
+    "monthlyTotal": "Kalendermonat (gesamt)",
+    "payrollPeriodTotal": "Abrechnungszeitraum gesamt",
     "pendingApprovals": "Ausstehende Freigaben",
     "approvedJobs": "Freigegebene Arbeiten",
     "teamEarningsSummary": "Team-Einnahmenübersicht",
     "companyEarningsSummary": "Unternehmens-Einnahmenübersicht",
-    "recentActivity": "Letzte Aktivität"
+    "recentActivity": "Letzte Aktivität",
+    "scopePayrollPeriod": "Abrechnungszeitraum",
+    "scopeAllTime": "Gesamt",
+    "scopeToggleAria": "Zeitraum für Dashboard-Summen",
+    "scopeHintPayroll": "Summen, Teamübersicht, Woche und diese Karte gelten nur für den aktiven Abrechnungszeitraum (wechselt mit Periodenbeginn; Verlauf bleibt in der Datenbank).",
+    "scopeHintAllTime": "Summen und Teamübersicht umfassen alle freigegebenen Arbeiten. Woche/Monat beziehen sich auf Kalenderwoche und -monat über die gesamte Historie."
   },
   "teams": {
     "title": "Teams",

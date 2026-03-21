@@ -481,12 +481,18 @@
     "title": "Panel",
     "dailyTotal": "Total diario",
     "weeklyTotal": "Total semanal",
-    "monthlyTotal": "Total mensual",
+    "monthlyTotal": "Total mes calendario",
+    "payrollPeriodTotal": "Total periodo nómina",
     "pendingApprovals": "Aprobaciones pendientes",
     "approvedJobs": "Trabajos aprobados",
     "teamEarningsSummary": "Resumen ingresos por equipo",
     "companyEarningsSummary": "Resumen ingresos empresa",
-    "recentActivity": "Actividad reciente"
+    "recentActivity": "Actividad reciente",
+    "scopePayrollPeriod": "Periodo nómina",
+    "scopeAllTime": "Todo el historial",
+    "scopeToggleAria": "Alcance de totales del panel",
+    "scopeHintPayroll": "Totales, resumen por equipo, semana y esta tarjeta solo incluyen el periodo de nómina activo (se renueva al cambiar de periodo; el historial permanece en la base de datos).",
+    "scopeHintAllTime": "Totales y equipos incluyen todos los trabajos aprobados. Semana/mes usan la semana y el mes calendario actuales sobre todo el historial."
   },
   "teams": {
     "title": "Equipos",

@@ -447,7 +447,7 @@ const sectionsData: Array<{ id: string; content: React.ReactNode }> = [
         <p>Bir bordro dönemi kilitli ise yeni iş eklenemez ve mevcut iş güncellenemez. Kullanıcıya "Bu bordro dönemi kapatılmıştır." mesajı gösterilir. Sistemde aynı anda yalnızca bir aktif dönem bulunur.</p>
 
         <h3 className={styles.h3}>Dashboard Özeti</h3>
-        <p>Dashboard sayfasında günlük, haftalık ve aylık toplam gösterilir. Hakediş dönemi ayarı varsa aylık toplam hakediş dönemine göre hesaplanır.</p>
+        <p>Dashboard&apos;da haftalık ve aylık (veya hakediş dönemi) özet kartları, bekleyen onaylar ve ekip kazanç özeti gösterilir. Ayarlarda hakediş başlangıç günü tanımlıysa, üstte <strong>Hakediş dönemi</strong> ve <strong>Genel dönem</strong> seçimi bulunur: Hakediş döneminde tüm bu göstergeler yalnızca aktif dönemdeki onaylı işlere göredir; dönem bittiğinde (ör. ayın 19&apos;u sonunda) panel otomatik olarak yeni döneme göre sıfırlanmış gibi görünür — eski işler veritabanında kalır. Genel dönemde üst toplamlar ve ekip özeti tüm onaylı işleri kapsar; haftalık/aylık kartlar ise içinde bulunulan takvim haftası ve ayına göre tüm geçmişten hesaplanır.</p>
         <p>CM ve PM toplam iş değeri, ekip toplamı ve şirket payını görür; TL sadece kendi ekiplerinin kazancını görür. Ekip bazlı özette CM/PM tüm ekiplerin toplam değerlerini, TL sadece kendi ekiplerini görür.</p>
 
         <h3 className={styles.h3}>Raporlar ve Bordro Sayfası</h3>

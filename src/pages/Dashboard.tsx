@@ -1,17 +1,30 @@
+import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
-import { getDashboardSummary } from '../services/dashboardSummaryService';
+import {
+  getDashboardSummary,
+  type DashboardSummaryScope,
+} from '../services/dashboardSummaryService';
 import { getTeamPercentageForUser } from '../services/teamScopeService';
 import { formatPriceForUser } from '../utils/priceRules';
 import { formatCurrency } from '../utils/formatLocale';
 import { Card } from '../components/ui/Card';
+import { readDashboardScope, writeDashboardScope } from './dashboardScopeStorage';
 import styles from './Dashboard.module.css';
 
 export function Dashboard() {
   const { t, locale } = useI18n();
   const { user } = useApp();
   const companyId = user?.companyId ?? '';
-  const summary = getDashboardSummary(companyId, user);
+  const [viewScope, setViewScope] = useState<DashboardSummaryScope>(() =>
+    readDashboardScope(companyId)
+  );
+
+  useEffect(() => {
+    setViewScope(readDashboardScope(companyId));
+  }, [companyId]);
+
+  const summary = getDashboardSummary(companyId, user, { scope: viewScope });
 
   if (!summary) {
     return (
@@ -23,13 +36,57 @@ export function Dashboard() {
   }
 
   const isAdmin = summary.role === 'companyManager' || summary.role === 'projectManager';
+  const showScopeToggle = Boolean(summary.activePayrollPeriod);
+
+  const setScope = (next: DashboardSummaryScope) => {
+    setViewScope(next);
+    writeDashboardScope(companyId, next);
+  };
+
+  const monthlyCardTitle =
+    summary.viewScope === 'payrollPeriod' && summary.activePayrollPeriod
+      ? t('dashboard.payrollPeriodTotal')
+      : t('dashboard.monthlyTotal');
 
   return (
     <div className={styles.page}>
-      <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+        {showScopeToggle && (
+          <div
+            className={styles.scopeToggle}
+            role="group"
+            aria-label={t('dashboard.scopeToggleAria')}
+          >
+            <button
+              type="button"
+              className={styles.scopeBtn}
+              data-active={summary.viewScope === 'payrollPeriod'}
+              onClick={() => setScope('payrollPeriod')}
+            >
+              {t('dashboard.scopePayrollPeriod')}
+            </button>
+            <button
+              type="button"
+              className={styles.scopeBtn}
+              data-active={summary.viewScope === 'allTime'}
+              onClick={() => setScope('allTime')}
+            >
+              {t('dashboard.scopeAllTime')}
+            </button>
+          </div>
+        )}
+      </div>
       {summary.activePayrollPeriod?.label && (
-        <p className={styles.meta} style={{ marginBottom: '1rem' }}>
+        <p className={styles.meta} style={{ marginBottom: '0.35rem' }}>
           {t('settings.activePeriodLabel')}: {summary.activePayrollPeriod.label}
+        </p>
+      )}
+      {showScopeToggle && (
+        <p className={styles.scopeHint}>
+          {summary.viewScope === 'payrollPeriod'
+            ? t('dashboard.scopeHintPayroll')
+            : t('dashboard.scopeHintAllTime')}
         </p>
       )}
 
@@ -78,7 +135,7 @@ export function Dashboard() {
             <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(summary.weekly.company_total, locale)}</p>
             <p className={styles.meta}>{summary.weekly.count} jobs</p>
           </Card>
-          <Card title={t('dashboard.monthlyTotal')}>
+          <Card title={monthlyCardTitle}>
             <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(summary.monthly.gross_total, locale)}</p>
             <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(summary.monthly.team_total, locale)}</p>
             <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(summary.monthly.company_total, locale)}</p>
@@ -91,7 +148,7 @@ export function Dashboard() {
             <p className={styles.bigNumber}>{formatPriceForUser(summary.weekly.team_total, user, 'teamOnly', locale)}</p>
             <p className={styles.meta}>{summary.weekly.count} jobs</p>
           </Card>
-          <Card title={t('dashboard.monthlyTotal')}>
+          <Card title={monthlyCardTitle}>
             <p className={styles.bigNumber}>{formatPriceForUser(summary.monthly.team_total, user, 'teamOnly', locale)}</p>
             <p className={styles.meta}>{summary.monthly.count} jobs</p>
           </Card>

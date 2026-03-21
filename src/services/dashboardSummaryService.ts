@@ -29,6 +29,8 @@ export type DashboardSummaryAdmin = {
   teamSummary: TeamSummaryRowAdmin[];
   /** When payroll period is configured, main totals and teamSummary are for this period. */
   activePayrollPeriod?: { start: string; end: string; label?: string };
+  /** Hangi filtreye göre üst kartlar ve ekip özeti hesaplandı. */
+  viewScope: DashboardSummaryScope;
 };
 
 export type DashboardSummaryTL = {
@@ -41,9 +43,13 @@ export type DashboardSummaryTL = {
   approvedCount: number;
   teamSummary: TeamSummaryRowTL[];
   activePayrollPeriod?: { start: string; end: string; label?: string };
+  viewScope: DashboardSummaryScope;
 };
 
 export type DashboardSummary = DashboardSummaryAdmin | DashboardSummaryTL;
+
+/** payrollPeriod = aktif hakediş aralığındaki onaylı işler; allTime = tüm onaylı işler (veri silinmez, sadece filtre). */
+export type DashboardSummaryScope = 'payrollPeriod' | 'allTime';
 
 /** Yerel zaman dilimine göre filtreler (İsveç/Türkiye vb. cihaz saatine göre). */
 function dayFilter(now: Date) {
@@ -87,7 +93,11 @@ function reducePeriod(jobs: JobWithDetails[], filter: (d: string) => boolean): P
  * - admin/pm: gross_total, team_total, company_total in every period and team row; companyTotal.
  * - teamLeader: only team_total; no gross/company in response at all.
  */
-export function getDashboardSummary(companyId: string, user: User | undefined): DashboardSummary | null {
+export function getDashboardSummary(
+  companyId: string,
+  user: User | undefined,
+  options?: { scope?: DashboardSummaryScope }
+): DashboardSummary | null {
   if (!companyId || !user || !user.role) return null;
 
   const jobs = getJobsForUser(companyId, user);
@@ -97,15 +107,26 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
 
   const payrollSettings = store.getPayrollPeriodSettings(companyId);
   const now = new Date();
+  const activePayrollPeriod = payrollSettings
+    ? getActivePeriod(now, payrollSettings.startDayOfMonth)
+    : undefined;
+
+  const usePayrollScope =
+    Boolean(activePayrollPeriod) && options?.scope !== 'allTime';
+
+  const viewScope: DashboardSummaryScope = usePayrollScope ? 'payrollPeriod' : 'allTime';
+
   let approvedWithDetails = allApprovedWithDetails;
-  let activePayrollPeriod: { start: string; end: string; label?: string } | undefined;
-  if (payrollSettings) {
-    activePayrollPeriod = getActivePeriod(now, payrollSettings.startDayOfMonth);
-    approvedWithDetails = allApprovedWithDetails.filter((j) =>
-      isDateInPeriod(j.date, activePayrollPeriod!)
-    );
+  if (usePayrollScope && activePayrollPeriod) {
+    approvedWithDetails = allApprovedWithDetails.filter((j) => isDateInPeriod(j.date, activePayrollPeriod));
   }
+
   const approvedCount = approvedWithDetails.length;
+
+  /** Aylık kart: hakediş modunda tüm dönem; genel modda takvim ayı. */
+  const monthlyRangeFilter = usePayrollScope
+    ? periodOrMonthFilter(now, activePayrollPeriod)
+    : calendarMonthFilter(now);
 
   if (user.role === 'teamLeader') {
     const teamTotal = approvedWithDetails.reduce((s, j) => s + j.teamEarnings, 0);
@@ -117,10 +138,9 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
       team_total: approvedWithDetails.filter((j) => weekFilter(now)(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
       count: approvedWithDetails.filter((j) => weekFilter(now)(j.date)).length,
     };
-    const monthlyFilter = periodOrMonthFilter(now, activePayrollPeriod);
     const monthly = {
-      team_total: approvedWithDetails.filter((j) => monthlyFilter(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
-      count: approvedWithDetails.filter((j) => monthlyFilter(j.date)).length,
+      team_total: approvedWithDetails.filter((j) => monthlyRangeFilter(j.date)).reduce((s, j) => s + j.teamEarnings, 0),
+      count: approvedWithDetails.filter((j) => monthlyRangeFilter(j.date)).length,
     };
     const teamSummary: TeamSummaryRowTL[] = [];
     const acc: Record<string, { team: number; count: number }> = {};
@@ -144,12 +164,13 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
       approvedCount,
       teamSummary,
       activePayrollPeriod,
+      viewScope,
     };
   }
 
   const daily = reducePeriod(approvedWithDetails, dayFilter(now));
   const weekly = reducePeriod(approvedWithDetails, weekFilter(now));
-  const monthly = reducePeriod(approvedWithDetails, periodOrMonthFilter(now, activePayrollPeriod));
+  const monthly = reducePeriod(approvedWithDetails, monthlyRangeFilter);
   const grossTotal = approvedWithDetails.reduce((s, j) => s + j.totalWorkValue, 0);
   const teamTotal = approvedWithDetails.reduce((s, j) => s + j.teamEarnings, 0);
   const companyTotal = approvedWithDetails.reduce((s, j) => s + j.companyShare, 0);
@@ -180,5 +201,6 @@ export function getDashboardSummary(companyId: string, user: User | undefined): 
     approvedCount,
     teamSummary: teamSummaryAdmin,
     activePayrollPeriod,
+    viewScope,
   };
 }
