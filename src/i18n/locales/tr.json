@@ -20,6 +20,13 @@
     "no": "Hayır",
     "saving": "Kaydediliyor…"
   },
+  "siteAccess": {
+    "title": "MKfieldOPS erişimi",
+    "description": "Giriş veya kayıt için site erişim şifresini girin.",
+    "passwordLabel": "Erişim şifresi",
+    "submit": "Devam",
+    "wrongPassword": "Yanlış şifre. Lütfen yönetici ile iletişime geçin:"
+  },
   "auth": {
     "login": "Giriş",
     "logout": "Çıkış",

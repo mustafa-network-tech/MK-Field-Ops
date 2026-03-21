@@ -20,6 +20,13 @@
     "no": "No",
     "saving": "Saving…"
   },
+  "siteAccess": {
+    "title": "MKfieldOPS access",
+    "description": "Enter the site access password to continue to sign in or create an account.",
+    "passwordLabel": "Access password",
+    "submit": "Continue",
+    "wrongPassword": "Wrong password. Please contact the administrator:"
+  },
   "auth": {
     "login": "Login",
     "logout": "Logout",

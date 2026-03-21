@@ -20,6 +20,13 @@
     "no": "Nein",
     "saving": "Wird gespeichert…"
   },
+  "siteAccess": {
+    "title": "MKfieldOPS-Zugang",
+    "description": "Geben Sie das Zugangspasswort ein, um sich anzumelden oder zu registrieren.",
+    "passwordLabel": "Zugangspasswort",
+    "submit": "Weiter",
+    "wrongPassword": "Falsches Passwort. Bitte wenden Sie sich an den Administrator:"
+  },
   "auth": {
     "login": "Anmelden",
     "logout": "Abmelden",

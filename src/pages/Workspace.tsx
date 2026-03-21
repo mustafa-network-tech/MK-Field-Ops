@@ -2,12 +2,14 @@
  * Workspace step after register: choose Create New Company or Join Existing.
  * Uses Company Name + 4-digit Join Code (no Company ID). New company requires Plan.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { store } from '../data/store';
+import { isSiteAccessUnlocked } from '../services/siteAccessGate';
+import { SiteAccessModal } from '../components/SiteAccessModal';
 import styles from './Workspace.module.css';
 
 type WorkspaceMode = 'choose' | 'new' | 'existing';
@@ -21,6 +23,7 @@ export function Workspace() {
   const state = location.state as { email?: string; password?: string; fullName?: string; plan?: string } | null;
   const initialPlan: PlanKey | null = state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
 
+  const [entryUnlocked, setEntryUnlocked] = useState(() => isSiteAccessUnlocked());
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -32,12 +35,34 @@ export function Workspace() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (!state?.email || !state?.password || !state?.fullName) {
-    navigate('/register', { replace: true });
+  const hasRegistrationState = Boolean(state?.email && state?.password && state?.fullName);
+
+  useEffect(() => {
+    if (entryUnlocked && !hasRegistrationState) {
+      navigate('/register', { replace: true });
+    }
+  }, [entryUnlocked, hasRegistrationState, navigate]);
+
+  if (!entryUnlocked) {
+    return (
+      <SiteAccessModal
+        open
+        variant="blocking"
+        onVerified={() => setEntryUnlocked(true)}
+      />
+    );
+  }
+
+  if (!hasRegistrationState) {
     return null;
   }
 
-  const { email, password, fullName } = state;
+  const { email, password, fullName } = state as {
+    email: string;
+    password: string;
+    fullName: string;
+    plan?: string;
+  };
 
   const handleCreateNew = async (e: React.FormEvent) => {
     e.preventDefault();

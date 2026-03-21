@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
+import { useSiteAccessAuthLinks } from '../hooks/useSiteAccessAuthLinks';
 import { store } from '../data/store';
 import { getEffectivePlan, isPlanUpgrade } from '../services/subscriptionService';
 import { changeCompanyPlanInSupabase, renewCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase } from '../services/companyService';
@@ -52,6 +53,7 @@ function planLabel(plan: CompanyPlan, t: (k: string) => string): string {
 export function PlanChange() {
   const { t, locale } = useI18n();
   const { user, company, refreshCompany } = useApp();
+  const { onAuthLinkClick, SiteAccessAuthModal } = useSiteAccessAuthLinks();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const planFromUrl = searchParams.get('plan') as CompanyPlan | null;
@@ -117,8 +119,8 @@ export function PlanChange() {
               <p className={styles.planName}>{planLabel(validPlanFromUrl, t)}</p>
               <p className={styles.muted}>{t('planChangePage.signInToContinue')}</p>
               <div className={styles.actions}>
-                <Link to="/login" className={styles.linkBtn}>{t('planChangePage.signIn')}</Link>
-                <Link to="/register" className={styles.linkBtn}>{t('planChangePage.register')}</Link>
+                <Link to="/login" className={styles.linkBtn} onClick={(e) => onAuthLinkClick(e, '/login')}>{t('planChangePage.signIn')}</Link>
+                <Link to="/register" className={styles.linkBtn} onClick={(e) => onAuthLinkClick(e, '/register')}>{t('planChangePage.register')}</Link>
               </div>
             </>
           ) : (
@@ -126,6 +128,7 @@ export function PlanChange() {
           )}
           <Link to="/" className={styles.backLink}>← {t('planChangePage.backToHome')}</Link>
         </div>
+        {SiteAccessAuthModal}
       </div>
     );
   }

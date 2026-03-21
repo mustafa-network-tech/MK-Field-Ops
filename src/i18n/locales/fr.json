@@ -20,6 +20,13 @@
     "no": "Non",
     "saving": "Enregistrement…"
   },
+  "siteAccess": {
+    "title": "Accès MKfieldOPS",
+    "description": "Saisissez le mot de passe d’accès pour vous connecter ou créer un compte.",
+    "passwordLabel": "Mot de passe d’accès",
+    "submit": "Continuer",
+    "wrongPassword": "Mot de passe incorrect. Veuillez contacter l’administrateur :"
+  },
   "auth": {
     "login": "Connexion",
     "logout": "Déconnexion",
