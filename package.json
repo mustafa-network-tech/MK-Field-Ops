@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "supabase:login": "supabase login",
+    "supabase:link": "supabase link",
+    "deploy:functions": "supabase functions deploy create-pending-signup --no-verify-jwt && supabase functions deploy mock-payment-success --no-verify-jwt"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
@@ -21,6 +24,7 @@
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",
+    "supabase": "^2.84.0",
     "typescript": "^5.3.3",
     "vite": "^5.1.0"
   }

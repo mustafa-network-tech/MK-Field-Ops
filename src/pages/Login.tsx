@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
@@ -10,6 +10,8 @@ export function Login() {
   const { t } = useI18n();
   const { setUser } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const afterPaidRegistration = Boolean((location.state as { afterPaidRegistration?: boolean } | null)?.afterPaidRegistration);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -38,6 +40,7 @@ export function Login() {
       <div className={styles.card}>
         <h1 className={styles.title}>{t('app.title')}</h1>
         <h2 className={styles.subtitle}>{t('auth.login')}</h2>
+        {afterPaidRegistration && <p className={styles.message}>{t('auth.afterPaidRegistrationHint')}</p>}
         <form onSubmit={handleSubmit} className={styles.form}>
           <label className={styles.label}>
             {t('auth.email')}

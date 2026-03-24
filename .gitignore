@@ -30,3 +30,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.sublime-*
+
+# Supabase CLI (yerel sürüm önbelleği)
+supabase/.temp/

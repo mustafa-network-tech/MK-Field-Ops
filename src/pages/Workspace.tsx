@@ -1,33 +1,36 @@
 /**
  * Workspace step after register: choose Create New Company or Join Existing.
- * Uses Company Name + 4-digit Join Code (no Company ID). New company requires Plan.
+ * Uses company name + 4-digit join code. Plan/billing use defaults (or ?plan= from register URL).
  */
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
-import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
-import { store } from '../data/store';
+import { supabase } from '../services/supabaseClient';
+import { createPendingSignupApi } from '../services/paidSignupApi';
+import { setPaidSignupSession, clearPaidSignupSession } from '../services/paidSignupSession';
+import { setPendingNewCompanySignup } from '../services/pendingNewCompanySignup';
 import styles from './Workspace.module.css';
 
 type WorkspaceMode = 'choose' | 'new' | 'existing';
 type PlanKey = 'starter' | 'professional' | 'enterprise';
 
+const DEFAULT_NEW_COMPANY_PLAN: PlanKey = 'professional';
+
 export function Workspace() {
   const { t } = useI18n();
-  const { setUser } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as { email?: string; password?: string; fullName?: string; plan?: string } | null;
-  const initialPlan: PlanKey | null = state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
+  const planFromRegister: PlanKey | null =
+    state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
+  const resolvedPlan = planFromRegister ?? DEFAULT_NEW_COMPANY_PLAN;
 
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [existingCompanyName, setExistingCompanyName] = useState('');
   const [existingJoinCode, setExistingJoinCode] = useState('');
-  const [plan, setPlan] = useState<PlanKey>(initialPlan ?? 'professional');
-  const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -67,21 +70,40 @@ export function Workspace() {
     }
     setLoading(true);
     try {
-      const result = await authService.registerNewCompany({
-        email,
-        password,
-        fullName,
-        companyName: name,
-        joinCode: code,
-        plan,
-        billingCycle,
-      });
-      if (!result.ok) {
-        setError(t(result.error ?? 'auth.loginError'));
-        return;
+      if (supabase) {
+        clearPaidSignupSession();
+        const { pending_signup_id, signup_token } = await createPendingSignupApi({
+          full_name: fullName,
+          email,
+          password,
+          campaign_name: name,
+          campaign_code: code,
+        });
+        setPaidSignupSession({
+          pending_signup_id,
+          signup_token,
+          email,
+          password,
+          full_name: fullName,
+        });
+        const q = new URLSearchParams({
+          plan: resolvedPlan,
+          from: 'registration',
+          pending_signup_id: pending_signup_id,
+        });
+        navigate(`/plan-and-payment?${q.toString()}`, { replace: true });
+      } else {
+        setPendingNewCompanySignup({
+          email,
+          password,
+          fullName,
+          companyName: name,
+          joinCode: code,
+        });
+        navigate(`/plan-and-payment?plan=${resolvedPlan}&from=registration`, { replace: true });
       }
-      setUser(store.getCurrentUser());
-      navigate(`/plan-and-payment?plan=${plan}&from=registration`, { replace: true });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t('planChangePage.errorGeneric'));
     } finally {
       setLoading(false);
     }
@@ -129,15 +151,9 @@ export function Workspace() {
 
         {mode === 'choose' && (
           <div className={styles.choose}>
-            <button
-              type="button"
-              className={styles.optionBtn}
-              disabled
-              title={t('onboarding.createNewCompanyHint')}
-            >
+            <button type="button" className={styles.optionBtn} onClick={() => setMode('new')}>
               {t('onboarding.createNewCompany')}
             </button>
-            <p className={styles.chooseHint}>{t('onboarding.createNewCompanyHint')}</p>
             <button type="button" className={styles.optionBtn} onClick={() => setMode('existing')}>
               {t('onboarding.joinExistingCompany')}
             </button>
@@ -170,30 +186,6 @@ export function Workspace() {
                 inputMode="numeric"
                 required
               />
-            </label>
-            <label className={styles.label}>
-              {t('onboarding.plan')}
-              <select
-                value={plan}
-                onChange={(e) => setPlan(e.target.value as PlanKey)}
-                className={styles.input}
-                required
-              >
-                <option value="starter">{t('onboarding.planStarter')}</option>
-                <option value="professional">{t('onboarding.planProfessional')}</option>
-                <option value="enterprise">{t('onboarding.planEnterprise')}</option>
-              </select>
-            </label>
-            <label className={styles.label}>
-              {t('onboarding.billingCycle')}
-              <select
-                value={billingCycle}
-                onChange={(e) => setBillingCycle(e.target.value as 'monthly' | 'yearly')}
-                className={styles.input}
-              >
-                <option value="monthly">{t('onboarding.billingMonthly')}</option>
-                <option value="yearly">{t('onboarding.billingYearly')}</option>
-              </select>
             </label>
             {error && <p className={styles.error}>{error}</p>}
             {message && <p className={styles.message}>{message}</p>}

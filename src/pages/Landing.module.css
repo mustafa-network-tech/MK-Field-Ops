@@ -783,6 +783,13 @@
   margin: 0 0 1.1rem;
 }
 
+.pricingValidUntil {
+  font-weight: 500;
+  font-size: 0.88em;
+  color: #64748b;
+  white-space: normal;
+}
+
 .pricingBadge {
   display: inline-flex;
   align-items: center;

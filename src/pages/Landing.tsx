@@ -203,7 +203,9 @@ export function Landing() {
           {t('landing.heroSubtitle') && <p className={styles.heroSubtitle}>{t('landing.heroSubtitle')}</p>}
           <p className={styles.heroDescription}>{t('landing.heroDescription')}</p>
           <div className={styles.heroActions}>
-            <Link to="/register" className={styles.heroBtnPrimary}>{t('landing.heroStartFree')}</Link>
+            <Link to="/register" className={styles.heroBtnPrimary}>
+              {t('landing.navStartFree')}
+            </Link>
             <Link to="/login" className={styles.heroBtnSecondary}>{t('landing.heroLogin')}</Link>
             <Link to="/kullanim-kilavuzu" className={styles.heroBtnGuide}>{t('landing.heroGuide')}</Link>
           </div>
@@ -317,7 +319,8 @@ export function Landing() {
               <p className={styles.pricingPrice}>
                 {billingPeriod === 'monthly'
                   ? t('landing.pricingPriceStarterMonthly')
-                  : t('landing.pricingPriceStarterYearly')}
+                  : t('landing.pricingPriceStarterYearly')}{' '}
+                <span className={styles.pricingValidUntil}>{t('landing.pricingValidUntil')}</span>
               </p>
               <div className={styles.pricingDivider} />
               <div className={styles.pricingLists}>
@@ -383,7 +386,8 @@ export function Landing() {
               <p className={styles.pricingPrice}>
                 {billingPeriod === 'monthly'
                   ? t('landing.pricingPriceProMonthly')
-                  : t('landing.pricingPriceProYearly')}
+                  : t('landing.pricingPriceProYearly')}{' '}
+                <span className={styles.pricingValidUntil}>{t('landing.pricingValidUntil')}</span>
               </p>
               <div className={styles.pricingDivider} />
               <div className={styles.pricingLists}>
@@ -443,7 +447,8 @@ export function Landing() {
               <p className={styles.pricingPrice}>
                 {billingPeriod === 'monthly'
                   ? t('landing.pricingPriceEnterpriseMonthly')
-                  : t('landing.pricingPriceEnterpriseYearly')}
+                  : t('landing.pricingPriceEnterpriseYearly')}{' '}
+                <span className={styles.pricingValidUntil}>{t('landing.pricingValidUntil')}</span>
               </p>
               <div className={styles.pricingDivider} />
               <div className={styles.pricingLists}>
