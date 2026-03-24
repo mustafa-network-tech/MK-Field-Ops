@@ -82,7 +82,8 @@
     "planEnterprise": "Entreprise",
     "billingCycle": "Cycle de facturation",
     "billingMonthly": "Mensuel",
-    "billingYearly": "Annuel"
+    "billingYearly": "Annuel",
+    "edgeFunctionUnreachable": "Impossible de joindre le serveur. En production : définissez VITE_SUPABASE_URL et VITE_SUPABASE_ANON_KEY sur l’hébergeur et redéployez. Dans Supabase : déployez la fonction create-pending-signup et appliquez la migration pending_signups."
   },
   "pendingJoin": {
     "title": "Demande d'adhésion en attente",

@@ -82,7 +82,8 @@
     "planEnterprise": "Empresarial",
     "billingCycle": "Ciclo de facturación",
     "billingMonthly": "Mensual",
-    "billingYearly": "Anual"
+    "billingYearly": "Anual",
+    "edgeFunctionUnreachable": "No se pudo contactar al servidor. En producción: configure VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY en el hosting y vuelva a desplegar. En Supabase: despliegue la Edge Function create-pending-signup y aplique la migración pending_signups."
   },
   "pendingJoin": {
     "title": "Solicitud de unión pendiente",

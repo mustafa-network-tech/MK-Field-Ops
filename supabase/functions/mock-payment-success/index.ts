@@ -3,6 +3,7 @@ import { activatePaidSignup, type PlanKey } from '../_shared/activatePaidSignup.
 
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-mock-payment-secret',
 };
 

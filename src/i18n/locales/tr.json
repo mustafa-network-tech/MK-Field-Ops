@@ -82,7 +82,8 @@
     "planEnterprise": "Kurumsal",
     "billingCycle": "Fatura dönemi",
     "billingMonthly": "Aylık",
-    "billingYearly": "Yıllık"
+    "billingYearly": "Yıllık",
+    "edgeFunctionUnreachable": "Sunucuya ulaşılamadı. Canlı sitede VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY değişkenlerinin tanımlı olduğundan ve bu değişkenler eklendikten sonra sitenin yeniden derlenip yayınlandığından emin olun. Supabase Dashboard’da Edge Function create-pending-signup ve veritabanında pending_signups migration’ının uygulandığını kontrol edin."
   },
   "pendingJoin": {
     "title": "Katılım talebi bekleniyor",

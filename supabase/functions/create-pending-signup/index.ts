@@ -3,6 +3,7 @@ import { hashSync } from 'https://esm.sh/bcryptjs@2.4.3';
 
 const corsHeaders: Record<string, string> = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-mock-payment-secret',
 };
 

@@ -21,7 +21,7 @@ export function Layout() {
   const location = useLocation();
   const [showPlanUpdateSuccess, setShowPlanUpdateSuccess] = useState(() => !!(location.state as { planChangeSuccess?: boolean } | null)?.planChangeSuccess);
   const sub = getSubscriptionState(company);
-  const isPlanPage = location.pathname === '/plan';
+  const isPlanPage = location.pathname === '/plan' || location.pathname === '/plan-and-payment';
 
   useEffect(() => {
     const state = location.state as { planChangeSuccess?: boolean } | null;
@@ -150,7 +150,7 @@ export function Layout() {
               </NavLink>
             )}
             {canAccessAuditLogs && (
-              <NavLink to="/plan" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
+              <NavLink to="/plan-and-payment" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
                 {t('planPage.title')}
               </NavLink>
             )}
@@ -197,13 +197,13 @@ export function Layout() {
           {sub.isClosed && !isPlanPage && (
             <div className={styles.subscriptionBannerClosed} role="alert">
               <p>{t('planPage.bannerClosedMessage')}</p>
-              <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+              <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
             </div>
           )}
           {isOnline && sub.isGracePeriod && !sub.isClosed && !isPlanPage && (
             <div className={styles.subscriptionBannerGrace} role="alert">
               <p>{t('planPage.bannerExpired')}</p>
-              <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+              <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
             </div>
           )}
           {sub.isClosed && !isPlanPage ? null : (
@@ -213,7 +213,7 @@ export function Layout() {
                 <div className={styles.subscriptionOverlay} aria-hidden>
                   <div className={styles.subscriptionOverlayContent}>
                     <p>{t('planPage.bannerExpired')}</p>
-                    <NavLink to="/plan" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+                    <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
                   </div>
                 </div>
               )}

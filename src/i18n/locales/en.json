@@ -82,7 +82,8 @@
     "planEnterprise": "Enterprise",
     "billingCycle": "Billing cycle",
     "billingMonthly": "Monthly",
-    "billingYearly": "Yearly"
+    "billingYearly": "Yearly",
+    "edgeFunctionUnreachable": "Could not reach the server. On production, ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your host and redeploy after adding them. In Supabase: deploy Edge Function create-pending-signup and apply the pending_signups migration."
   },
   "pendingJoin": {
     "title": "Join request pending",

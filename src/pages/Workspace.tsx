@@ -7,7 +7,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { authService } from '../services/authService';
 import { supabase } from '../services/supabaseClient';
-import { createPendingSignupApi } from '../services/paidSignupApi';
+import { createPendingSignupApi, PAID_SIGNUP_NETWORK_ERROR } from '../services/paidSignupApi';
 import { setPaidSignupSession, clearPaidSignupSession } from '../services/paidSignupSession';
 import { setPendingNewCompanySignup } from '../services/pendingNewCompanySignup';
 import styles from './Workspace.module.css';
@@ -103,7 +103,11 @@ export function Workspace() {
         navigate(`/plan-and-payment?plan=${resolvedPlan}&from=registration`, { replace: true });
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : t('planChangePage.errorGeneric'));
+      if (err instanceof Error && err.message === PAID_SIGNUP_NETWORK_ERROR) {
+        setError(t('onboarding.edgeFunctionUnreachable'));
+      } else {
+        setError(err instanceof Error ? err.message : t('planChangePage.errorGeneric'));
+      }
     } finally {
       setLoading(false);
     }

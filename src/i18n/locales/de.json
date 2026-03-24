@@ -82,7 +82,8 @@
     "planEnterprise": "Unternehmen",
     "billingCycle": "Abrechnungszeitraum",
     "billingMonthly": "Monatlich",
-    "billingYearly": "Jährlich"
+    "billingYearly": "Jährlich",
+    "edgeFunctionUnreachable": "Server nicht erreichbar. In Produktion: VITE_SUPABASE_URL und VITE_SUPABASE_ANON_KEY beim Host setzen und nach Änderung neu deployen. In Supabase: Edge Function create-pending-signup deployen und pending_signups-Migration anwenden."
   },
   "pendingJoin": {
     "title": "Beitrittsanfrage ausstehend",

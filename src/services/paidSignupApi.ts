@@ -5,6 +5,9 @@
 
 const MOCK_SECRET = (import.meta.env.VITE_MOCK_PAYMENT_SECRET as string | undefined)?.trim();
 
+/** Workspace/i18n: ağ veya CORS; tarayıcı genelde "Failed to fetch" döner */
+export const PAID_SIGNUP_NETWORK_ERROR = 'PAID_SIGNUP_NETWORK';
+
 function functionsBaseUrl(): string | null {
   const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
   if (!url) return null;
@@ -24,11 +27,16 @@ async function postFunction(name: string, body: Record<string, unknown>): Promis
   };
   if (MOCK_SECRET) headers['x-mock-payment-secret'] = MOCK_SECRET;
 
-  const res = await fetch(`${base}/${name}`, {
-    method: 'POST',
-    headers,
-    body: JSON.stringify(body),
-  });
+  let res: Response;
+  try {
+    res = await fetch(`${base}/${name}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
   const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
   if (!res.ok) {
     const err = typeof data.error === 'string' ? data.error : res.statusText;

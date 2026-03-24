@@ -46,6 +46,13 @@ Fonksiyon URL’leri: `https://<project-ref>.supabase.co/functions/v1/<function-
 
 İstek gövdeleri için kaynak: `src/services/paidSignupApi.ts` ve ilgili `index.ts` dosyaları.
 
+## Sorun giderme: tarayıcıda « Failed to fetch »
+
+- **CORS:** Tarayıcı önce `OPTIONS` isteği atar; yanıtta `Access-Control-Allow-Methods` ve uygun header’lar olmalı (bu repodaki fonksiyonlar buna göre güncellendi). Değişiklikten sonra fonksiyonları yeniden deploy edin.
+- **Ortam değişkenleri (Vite):** Canlı build sırasında `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY` yoksa veya yanlış projeyi gösteriyorsa istek hiç tamamlanmaz. Değişkenleri ekledikten sonra **mutlaka yeniden build + deploy** yapın (Vite değerleri derleme anında gömülür).
+- **Veritabanı:** `pending_signups` tablosu yoksa Edge 500 döner (bu durumda genelde JSON hata mesajı görünür). SQL migration’ı uygulayın.
+- **Aynı Supabase projesi:** Edge’i deploy ettiğiniz `project-ref`, frontend URL anahtarlarının ait olduğu proje ile aynı olmalı.
+
 ## 5. Diğer fonksiyon
 
 `payroll-rollover` için ayrı talimat: `payroll-rollover/README.md`.
