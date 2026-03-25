@@ -1,0 +1,92 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.logoutBtn {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #334155;
+  background: #0f172a;
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.9rem 1rem;
+}
+
+.cardLabel {
+  display: block;
+  color: #64748b;
+  font-size: 0.85rem;
+  margin-bottom: 0.2rem;
+}
+
+.cardValue {
+  font-size: 1.45rem;
+  color: #0f172a;
+}
+
+.section {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  padding: 0.9rem;
+}
+
+.sectionTitle {
+  margin: 0 0 0.6rem;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.tableWrap {
+  overflow: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.55rem;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+}
+
+.muted {
+  color: #64748b;
+}
+
+.error {
+  color: #b91c1c;
+}
+

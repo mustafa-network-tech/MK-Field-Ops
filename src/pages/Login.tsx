@@ -29,7 +29,11 @@ export function Login() {
       }
       const loggedUser = store.getCurrentUser();
       setUser(loggedUser);
-      navigate(loggedUser?.companyId ? '/' : '/pending-join', { replace: true });
+      if (loggedUser?.role === 'superAdmin') {
+        navigate('/super-admin', { replace: true });
+      } else {
+        navigate(loggedUser?.companyId ? '/' : '/pending-join', { replace: true });
+      }
     } finally {
       setLoading(false);
     }

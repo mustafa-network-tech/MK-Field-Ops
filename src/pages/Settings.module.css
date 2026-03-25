@@ -133,3 +133,43 @@
 .btnPrimary:hover {
   background: #1d4ed8;
 }
+
+.btnDangerDark {
+  padding: 0.5rem 1rem;
+  background: #0f172a;
+  color: #fff;
+  border: 1px solid #0f172a;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btnDangerDark:hover {
+  background: #020617;
+}
+
+.btnDangerDark:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.closureBox {
+  margin-top: 0.75rem;
+  padding: 0.8rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.closureActions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.warningText {
+  color: #b45309;
+  margin: 0;
+  font-size: 0.92rem;
+}

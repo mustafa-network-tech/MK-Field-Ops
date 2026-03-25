@@ -1,4 +1,4 @@
-export type Role = 'companyManager' | 'projectManager' | 'teamLeader';
+export type Role = 'companyManager' | 'projectManager' | 'teamLeader' | 'superAdmin';
 
 export type JobStatus = 'draft' | 'submitted' | 'approved' | 'rejected';
 
@@ -35,6 +35,12 @@ export interface Company {
   pending_plan_billing_cycle?: 'monthly' | 'yearly' | null;
   /** active = normal; suspended = expired, grace period; closed = suspended + 15 days, access blocked. */
   subscription_status?: 'active' | 'suspended' | 'closed' | null;
+  /** Company closure requested at; access is blocked immediately when set with closed status. */
+  closure_requested_at?: string | null;
+  /** Permanent deletion schedule. When reached by purge job, company and related data are hard-deleted. */
+  purge_after?: string | null;
+  /** Profile id of CM who requested closure. */
+  closed_by_user_id?: string | null;
   createdAt: string;
 }
 

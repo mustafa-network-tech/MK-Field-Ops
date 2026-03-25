@@ -86,7 +86,7 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   const { data, error } = await supabase
     .from('companies')
     .select(
-      'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day'
+      'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day, subscription_status, closure_requested_at, purge_after, closed_by_user_id'
     )
     .eq('id', companyId)
     .maybeSingle();
@@ -111,6 +111,10 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
     ...(data.plan_end_date !== undefined && { plan_end_date: data.plan_end_date ?? null }),
     ...(pending_plan !== undefined && { pending_plan: pending_plan ?? null }),
     ...(data.pending_plan_billing_cycle !== undefined && { pending_plan_billing_cycle: data.pending_plan_billing_cycle ?? null }),
+    ...(data.subscription_status !== undefined && { subscription_status: data.subscription_status ?? null }),
+    ...(data.closure_requested_at !== undefined && { closure_requested_at: data.closure_requested_at ?? null }),
+    ...(data.purge_after !== undefined && { purge_after: data.purge_after ?? null }),
+    ...(data.closed_by_user_id !== undefined && { closed_by_user_id: data.closed_by_user_id ?? null }),
   }, companyId);
 
   /** Hakediş günü: tek kaynak Supabase (companies.payroll_start_day); null → 20. */
@@ -291,5 +295,30 @@ export async function updateCompanyJoinCodeInSupabase(
     .update({ join_code: trimmed })
     .eq('id', companyId);
   if (error) return { ok: false, error: error.message };
+  return { ok: true };
+}
+
+/**
+ * Company manager requests company closure.
+ * Access is blocked immediately and data is retained for 30 days.
+ */
+export async function requestCompanyClosureInSupabase(companyId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: false, error: 'Not connected' };
+  const { data, error } = await supabase.rpc('request_company_closure', { p_company_id: companyId });
+  if (error) return { ok: false, error: error.message };
+  if (data !== true) return { ok: false, error: 'closure_not_allowed' };
+  await fetchCompanyLanguageFromSupabase(companyId);
+  return { ok: true };
+}
+
+/**
+ * Reopen a closed company within retention when there is remaining paid period.
+ */
+export async function reopenCompanyWithinRetentionInSupabase(companyId: string): Promise<{ ok: boolean; error?: string }> {
+  if (!supabase) return { ok: false, error: 'Not connected' };
+  const { data, error } = await supabase.rpc('reopen_company_within_retention', { p_company_id: companyId });
+  if (error) return { ok: false, error: error.message };
+  if (data !== true) return { ok: false, error: 'reopen_not_allowed' };
+  await fetchCompanyLanguageFromSupabase(companyId);
   return { ok: true };
 }

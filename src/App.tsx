@@ -26,6 +26,7 @@ const UserGuide = lazy(() => import('./pages/UserGuide').then((m) => ({ default:
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })));
 const RefundPolicy = lazy(() => import('./pages/RefundPolicy').then((m) => ({ default: m.RefundPolicy })));
 const TermsOfUse = lazy(() => import('./pages/TermsOfUse').then((m) => ({ default: m.TermsOfUse })));
+const SuperAdmin = lazy(() => import('./pages/SuperAdmin').then((m) => ({ default: m.SuperAdmin })));
 
 function PageFallback() {
   return (
@@ -38,13 +39,22 @@ function PageFallback() {
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'superAdmin') return <Navigate to="/super-admin" replace />;
   if (!user.companyId) return <Navigate to="/pending-join" replace />;
+  return <>{children}</>;
+}
+
+function SuperAdminRoute({ children }: { children: React.ReactNode }) {
+  const { user } = useApp();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role !== 'superAdmin') return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function PendingJoinRoute() {
   const { user } = useApp();
   if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'superAdmin') return <Navigate to="/super-admin" replace />;
   if (user.companyId) return <Navigate to="/" replace />;
   return <PendingJoin />;
 }
@@ -70,6 +80,7 @@ function AppRoutes() {
       <Route path="/pricing" element={<Landing />} />
       <Route path="/plan-and-payment" element={<PlanChange />} />
       <Route path="/pending-join" element={<PendingJoinRoute />} />
+      <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />
       <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />

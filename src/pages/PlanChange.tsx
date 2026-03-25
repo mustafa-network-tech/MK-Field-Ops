@@ -5,8 +5,8 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
 import { authService } from '../services/authService';
-import { getEffectivePlan, isPlanUpgrade } from '../services/subscriptionService';
-import { changeCompanyPlanInSupabase, renewCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase } from '../services/companyService';
+import { getEffectivePlan, getSubscriptionState, isPlanUpgrade } from '../services/subscriptionService';
+import { changeCompanyPlanInSupabase, renewCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase, reopenCompanyWithinRetentionInSupabase } from '../services/companyService';
 import {
   getPendingNewCompanySignup,
   clearPendingNewCompanySignup,
@@ -312,6 +312,7 @@ export function PlanChange() {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reopenSubmitting, setReopenSubmitting] = useState(false);
 
   useEffect(() => {
     document.title = t('planChangePage.paymentTitle');
@@ -391,6 +392,7 @@ export function PlanChange() {
   const companyId = user?.companyId ?? company?.id ?? '';
   const c = companyId ? store.getCompany(companyId, companyId) ?? company : undefined;
   const currentPlan = getEffectivePlan(c);
+  const sub = getSubscriptionState(c);
   const isCM = user?.role === 'companyManager';
 
   const handlePayment = async () => {
@@ -418,6 +420,21 @@ export function PlanChange() {
       await fetchCompanyLanguageFromSupabase(companyId);
       if (refreshCompany) refreshCompany();
       navigate('/', { state: { planChangeSuccess: true }, replace: true });
+    } else {
+      setError(result.error ?? t('planChangePage.errorGeneric'));
+    }
+  };
+
+  const handleReopen = async () => {
+    if (!companyId || !isCM) return;
+    setError(null);
+    setReopenSubmitting(true);
+    const result = await reopenCompanyWithinRetentionInSupabase(companyId);
+    setReopenSubmitting(false);
+    if (result.ok) {
+      await fetchCompanyLanguageFromSupabase(companyId);
+      if (refreshCompany) refreshCompany();
+      navigate('/', { replace: true });
     } else {
       setError(result.error ?? t('planChangePage.errorGeneric'));
     }
@@ -504,6 +521,16 @@ export function PlanChange() {
     <div className={styles.page}>
       <h1 className={styles.title}>{t('planChangePage.paymentTitle')}</h1>
       <h2 className={styles.subtitle}>{t('planChangePage.completePaymentHeading')}</h2>
+      {sub.isClosed && (
+        <div className={styles.card} style={{ marginBottom: '1rem' }}>
+          <p className={styles.muted}>
+            Sirket kapanis modunda. Eger planinizda kalan sure varsa sirketi yeniden acabilirsiniz.
+          </p>
+          <button type="button" className={styles.confirmBtn} onClick={handleReopen} disabled={reopenSubmitting}>
+            {reopenSubmitting ? 'Aciliyor...' : 'Sirketi Yeniden Ac'}
+          </button>
+        </div>
+      )}
 
       <div className={styles.billingRow}>
         <span className={styles.billingLabel}>{t('planChangePage.billingCycle')}</span>

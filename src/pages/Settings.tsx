@@ -9,6 +9,7 @@ import {
   updateCompanyJoinCodeInSupabase,
   updateCompanyBrandingInSupabase,
   updatePayrollStartDayInSupabase,
+  requestCompanyClosureInSupabase,
 } from '../services/companyService';
 import { logEvent, actorFromUser } from '../services/auditLogService';
 import styles from './Settings.module.css';
@@ -43,6 +44,11 @@ export function Settings() {
 
   const [joinCode, setJoinCode] = useState('');
   const [joinCodeMessage, setJoinCodeMessage] = useState<'saved' | 'error' | null>(null);
+  const [closureStep, setClosureStep] = useState<0 | 1 | 2>(0);
+  const [closureCountdown, setClosureCountdown] = useState(10);
+  const [closureSubmitting, setClosureSubmitting] = useState(false);
+  const [closureMessage, setClosureMessage] = useState<'saved' | 'error' | null>(null);
+  const [closureError, setClosureError] = useState('');
 
   useEffect(() => {
     if (company) {
@@ -74,7 +80,40 @@ export function Settings() {
     return () => URL.revokeObjectURL(url);
   }, [pendingFile]);
 
+  useEffect(() => {
+    if (closureStep !== 2) return;
+    if (closureCountdown <= 0) return;
+    const timer = window.setTimeout(() => setClosureCountdown((n) => n - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [closureStep, closureCountdown]);
+
+  useEffect(() => {
+    if (closureStep !== 2 || closureCountdown > 0 || closureSubmitting) return;
+    if (!companyId || !canEditCompany) return;
+    setClosureSubmitting(true);
+    setClosureError('');
+    void requestCompanyClosureInSupabase(companyId)
+      .then((res) => {
+        if (res.ok) {
+          setClosureMessage('saved');
+        } else {
+          setClosureMessage('error');
+          setClosureError(res.error ?? 'Şirket kapatma işlemi başarısız.');
+        }
+      })
+      .catch(() => {
+        setClosureMessage('error');
+        setClosureError('Şirket kapatma işlemi başarısız.');
+      })
+      .finally(() => {
+        setClosureSubmitting(false);
+        setClosureStep(0);
+        setClosureCountdown(10);
+      });
+  }, [closureStep, closureCountdown, closureSubmitting, companyId, canEditCompany]);
+
   const logoPreviewUrl = removeLogo ? null : (pendingFile ? pendingPreviewUrl : logoUrl);
+  const purgeAfterLabel = company?.purge_after ? new Date(company.purge_after).toLocaleString() : null;
 
   if (!canAccess) {
     return (
@@ -320,6 +359,64 @@ export function Settings() {
           {payrollSaving ? t('common.saving') : t('settings.save')}
         </button>
       </Card>
+
+      {canEditCompany && (
+        <Card title="Şirketi Kapat">
+          <p className={styles.hint}>
+            Bu işlem erişimi anında kapatır. Veriler 30 gün bulutta saklanır; 30 gün sonra kalıcı silinir.
+          </p>
+          {company?.subscription_status === 'closed' && purgeAfterLabel && (
+            <p className={styles.warningText}>
+              Şirket kapanış modunda. Kalıcı silinme zamanı: {purgeAfterLabel}
+            </p>
+          )}
+          {closureMessage === 'saved' && (
+            <p className={styles.success}>Şirket kapatma talebi alındı. Erişim kısa süre içinde kapanacaktır.</p>
+          )}
+          {closureMessage === 'error' && (
+            <p className={styles.error}>{closureError || 'İşlem başarısız oldu.'}</p>
+          )}
+          {closureStep === 0 && (
+            <button
+              type="button"
+              className={styles.btnDangerDark}
+              onClick={() => {
+                setClosureMessage(null);
+                setClosureError('');
+                setClosureStep(1);
+              }}
+              disabled={closureSubmitting || company?.subscription_status === 'closed'}
+            >
+              Şirketi Kapat
+            </button>
+          )}
+          {closureStep === 1 && (
+            <div className={styles.closureBox}>
+              <p className={styles.warningText}>Bu işlem tüm kullanıcı erişimini kapatır. Devam etmek istiyor musunuz?</p>
+              <div className={styles.closureActions}>
+                <button type="button" className={styles.btnDangerDark} onClick={() => { setClosureStep(2); setClosureCountdown(10); }}>
+                  Evet, devam et
+                </button>
+                <button type="button" className={styles.btnSecondary} onClick={() => setClosureStep(0)}>
+                  Geri dön
+                </button>
+              </div>
+            </div>
+          )}
+          {closureStep === 2 && (
+            <div className={styles.closureBox}>
+              <p className={styles.warningText}>
+                Son onay: {closureCountdown} saniye sonra şirket kapanacak.
+              </p>
+              <div className={styles.closureActions}>
+                <button type="button" className={styles.btnSecondary} onClick={() => { setClosureStep(0); setClosureCountdown(10); }}>
+                  Geri dön
+                </button>
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 }
