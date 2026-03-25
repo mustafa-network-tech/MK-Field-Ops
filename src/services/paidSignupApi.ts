@@ -28,13 +28,44 @@ function functionsBaseUrl(): string | null {
   return `${url.replace(/\/$/, '')}/functions/v1`;
 }
 
-async function postViaProxy(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
-  const url = `${window.location.origin}/api/supabase-functions?fn=${encodeURIComponent(name)}`;
+/** Hobby: ayrı route — Edge proxy + query string sorunlarını azaltır */
+async function postCreatePendingVercelApi(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const url = `${window.location.origin}/api/create-pending-signup`;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (MOCK_SECRET) headers['x-mock-payment-secret'] = MOCK_SECRET;
   let res: Response;
   try {
     res = await fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
+  const text = await res.text();
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
+  if (!res.ok) {
+    const err = typeof data.error === 'string' ? data.error : res.statusText;
+    throw new Error(err || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+async function postViaProxy(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const url = `${window.location.origin}/api/supabase-functions?fn=${encodeURIComponent(name)}`;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (MOCK_SECRET) headers['x-mock-payment-secret'] = MOCK_SECRET;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers,
       body: JSON.stringify(body),
     });
   } catch {
@@ -112,6 +143,9 @@ async function postViaDirect(name: string, body: Record<string, unknown>): Promi
 async function postFunction(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   if (useEdgeProxy()) {
     try {
+      if (name === 'create-pending-signup') {
+        return await postCreatePendingVercelApi(body);
+      }
       return await postViaProxy(name, body);
     } catch (e) {
       if (e instanceof Error && e.message === PAID_SIGNUP_NETWORK_ERROR) {

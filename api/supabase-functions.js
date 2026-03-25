@@ -1,24 +1,25 @@
 /**
- * Vercel Serverless — tek dosya `api/*.js` her zaman route olarak algılanır.
- * ESM `export default` (package.json type:module ile uyumlu).
+ * Vercel Serverless — mock-payment-success → Supabase Edge proxy.
+ * create-pending-signup: ayrıca /api/create-pending-signup kullanın (paidSignupApi).
  */
-/** Hobby: en fazla 10s; Pro: 60s’e kadar. POST + soğuk Supabase Edge için süre gerekir. */
+import { runCreatePendingSignup, parseJsonBody } from './lib/createPendingSignupServer.js';
+
+/** Hobby: 10; Pro: 60’a kadar. mock-payment Edge proxy için süre. */
 export const config = { maxDuration: 60 };
 
 const ALLOWED = new Set(['create-pending-signup', 'mock-payment-success']);
 
-function parseBody(req) {
-  const b = req.body;
-  if (b == null) return {};
-  if (typeof b === 'string') {
-    try {
-      return JSON.parse(b);
-    } catch {
-      return {};
-    }
+function getFnFromReq(req) {
+  const q = req.query;
+  if (q && typeof q.fn === 'string' && q.fn) return q.fn;
+  try {
+    const raw = typeof req.url === 'string' && req.url ? req.url : '/';
+    const u = new URL(raw, 'http://localhost');
+    const v = u.searchParams.get('fn');
+    return typeof v === 'string' ? v : '';
+  } catch {
+    return '';
   }
-  if (typeof b === 'object') return b;
-  return {};
 }
 
 function sendJson(res, status, obj) {
@@ -37,14 +38,14 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') {
       res.setHeader('Access-Control-Allow-Origin', '*');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-mock-payment-secret');
       return res.status(204).end();
     }
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const fn = typeof req.query?.fn === 'string' ? req.query.fn : '';
+    const fn = getFnFromReq(req);
     if (!ALLOWED.has(fn)) {
       return res.status(400).json({ error: 'Invalid function name' });
     }
@@ -65,7 +66,13 @@ export default async function handler(req, res) {
       });
     }
 
-    const payload = parseBody(req);
+    const payload = parseJsonBody(req);
+
+    const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
+    if (fn === 'create-pending-signup' && serviceRoleKey) {
+      const out = await runCreatePendingSignup(supabaseUrl, serviceRoleKey, req, payload);
+      return sendJson(res, out.status, out.body);
+    }
 
     const mockSecret = String(
       process.env.VITE_MOCK_PAYMENT_SECRET || process.env.MOCK_PAYMENT_SECRET || ''
