@@ -23,6 +23,20 @@ function getSupabaseProjectRef(): string {
   return raw.replace(/^https:\/\//, '').replace(/\.supabase\.co.*/, '');
 }
 
+function buildProfileFromAuthUser(user: SupabaseUser, fallbackEmail: string) {
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  return {
+    id: user.id,
+    company_id: typeof meta.company_id === 'string' ? meta.company_id : '',
+    role: typeof meta.role === 'string' ? meta.role : null,
+    full_name: typeof meta.full_name === 'string' ? meta.full_name : null,
+    role_approval_status:
+      typeof meta.role_approval_status === 'string' ? meta.role_approval_status : 'approved',
+    can_see_prices: null,
+    email: user.email ?? fallbackEmail,
+  };
+}
+
 async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
   if (!supabase) return null;
   const profileSelect = 'id, company_id, role, full_name, role_approval_status, can_see_prices, email';
@@ -80,19 +94,23 @@ export const authService = {
     if (supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) {
-      if (error.message.includes('Invalid login')) {
-        return {
-          ok: false,
-          error: `Gecersiz e-posta veya sifre. Canli Supabase proje ref: ${getSupabaseProjectRef()}`,
-        };
-      }
+        if (error.message.includes('Invalid login')) {
+          return {
+            ok: false,
+            error: `Giris reddedildi (invalid login). Supabase proje ref: ${getSupabaseProjectRef()}`,
+          };
+        }
         return { ok: false, error: error.message };
       }
       const signedUser = data.user;
       const userId = signedUser?.id;
       if (!userId) return { ok: false, error: 'auth.loginError' };
       const profile = await fetchOrRepairProfile(signedUser, normalizedEmail);
-      if (!profile) return { ok: false, error: 'auth.loginError' };
+      if (!profile) {
+        const profileFromMeta = buildProfileFromAuthUser(signedUser, normalizedEmail);
+        store.setUserFromProfile(profileFromMeta, signedUser?.email ?? normalizedEmail);
+        return { ok: true };
+      }
       if (profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
       store.setUserFromProfile(profile, signedUser?.email ?? normalizedEmail);
       const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
