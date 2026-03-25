@@ -9,6 +9,7 @@ import { pushCompanyDataToSupabase } from '../services/supabaseSyncService';
 import { canPlanAccessFeature } from '../services/planGating';
 import { getSubscriptionState, getEffectivePlan } from '../services/subscriptionService';
 import { getPendingApprovalsCountForUser } from '../services/approvalNotificationService';
+import { useManagementNotificationCount } from '../hooks/useManagementNotificationCount';
 import type { CompanyLanguageCode } from '../types';
 import styles from './Layout.module.css';
 
@@ -47,7 +48,7 @@ export function Layout() {
     () => getPendingApprovalsCountForUser(companyId, user ?? undefined),
     [companyId, user, profilesVersion]
   );
-  const showApprovalsPending = pendingApprovalsCount > 0;
+  const managementNotificationCount = useManagementNotificationCount();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' && navigator.onLine);
 
@@ -87,7 +88,7 @@ export function Layout() {
 
   return (
     <div className={styles.layout}>
-      <TopBar pendingApprovalsCount={pendingApprovalsCount} />
+      <TopBar managementNotificationCount={managementNotificationCount} />
       <button
         type="button"
         className={styles.mobileMenuBtn}
@@ -115,8 +116,22 @@ export function Layout() {
             <NavLink to="/my-jobs" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
               {t('nav.myJobs')}
             </NavLink>
-            <NavLink to="/management" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
-              {t('topBar.managementPanel')}
+            <NavLink
+              to="/management"
+              className={({ isActive }) => {
+                const base = isActive ? styles.linkActive : styles.link;
+                const pulse = !isActive && managementNotificationCount > 0 ? ` ${styles.linkNotifyPulse}` : '';
+                return `${base}${pulse}`;
+              }}
+            >
+              <span className={styles.navLinkRow}>
+                <span>{t('topBar.managementPanel')}</span>
+                {managementNotificationCount > 0 ? (
+                  <span className={styles.navBadge} aria-hidden>
+                    {managementNotificationCount}
+                  </span>
+                ) : null}
+              </span>
             </NavLink>
             {canAccessDeliveryNotes && (
               <NavLink to="/delivery-notes" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
@@ -125,11 +140,20 @@ export function Layout() {
             )}
             <NavLink
               to="/approvals"
-              className={({ isActive }) =>
-                isActive ? styles.linkActive : showApprovalsPending ? `${styles.link} ${styles.linkPending}` : styles.link
-              }
+              className={({ isActive }) => {
+                const base = isActive ? styles.linkActive : styles.link;
+                const pulse = !isActive && pendingApprovalsCount > 0 ? ` ${styles.linkNotifyPulse}` : '';
+                return `${base}${pulse}`;
+              }}
             >
-              {t('nav.approvals')}
+              <span className={styles.navLinkRow}>
+                <span>{t('nav.approvals')}</span>
+                {pendingApprovalsCount > 0 ? (
+                  <span className={styles.navBadge} aria-hidden>
+                    {pendingApprovalsCount}
+                  </span>
+                ) : null}
+              </span>
             </NavLink>
             <NavLink to="/reports" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
               {t('nav.reports')}

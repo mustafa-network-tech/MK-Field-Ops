@@ -627,16 +627,16 @@ const sectionsData: Array<{ id: string; content: React.ReactNode }> = [
           <li><strong>Proje Yöneticisi</strong> için: Yalnızca onay bekleyen iş sayısı</li>
           <li><strong>Ekip Lideri</strong> için: Gösterilmez (onay yetkisi olmadığı için sayı 0 kabul edilir)</li>
         </ul>
-        <p>Sayı sıfırdan büyükse Onaylar menü öğesi vurgulanır; tıklanınca Onaylar sayfasına gidilir ve bekleyen işler veya kullanıcılar listelenir.</p>
-        <h4 className={styles.h4}>Aktivite bildirimleri (Şirket Yöneticisi)</h4>
-        <p>Sadece Şirket Yöneticisi için üst barda bir bildirim simgesi (çan) vardır. Burada şu tür bildirimler toplanır:</p>
+        <p>Sayı sıfırdan büyükse sol menüde Onaylar satırında rozet (sayı) görünür ve satır hafifçe mavi tonlarda yanıp sener; üstten açılan yazı veya ses yoktur. Tıklanınca Onaylar sayfasına gidilir ve bekleyen işler veya kullanıcılar listelenir.</p>
+        <h4 className={styles.h4}>Yönetim bildirimleri (Şirket Yöneticisi ve Proje Yöneticisi)</h4>
+        <p>Üst çubukta ve sol menüde <strong>Yönetici paneli</strong> öğesinde, okunmamış bildirim sayısı rozet olarak gösterilir; yeni bildirim varken öğe hafifçe mavi tonlarda yanıp sener (ses ve üstten bildirim çubuğu yoktur). Şirket Yöneticisi için yerel aktivite ve bulut bildirimleri birlikte sayılır; örnek türler:</p>
         <ul className={styles.list}>
           <li>Proje Yöneticisi bir işi onayladığında</li>
           <li>Proje Yöneticisi yeni ekip oluşturduğunda</li>
           <li>Proje Yöneticisi bir ekibi onayladığında</li>
           <li>Onay bekleyen yeni kullanıcı (katılım veya rol ataması bekleyen) olduğunda</li>
         </ul>
-        <p>Bildirimler listesi en yeniden eskiye sıralanır. Okundu işaretlenen bildirimler belli bir süre sonra listeden kaldırılır. Şirket Yöneticisi tümünü "okundu" yapabilir. Proje Yöneticisi ve Ekip Lideri bu bildirim kutusunu görmez; bildirim özelliği yalnızca Şirket Yöneticisi içindir.</p>
+        <p>Proje Yöneticisi için ilgili bulut bildirimleri de bu sayıya dahildir. <strong>Yönetim paneline</strong> (sayfa veya alt sayfalar) ilk girişte bildirimler okunmuş sayılır ve rozet sıfırlanır. Ekip Lideri bu rozeti görmez.</p>
 
         <h3 className={styles.h3}>Özet Tablo</h3>
         <div className={styles.tableWrap}>
@@ -649,8 +649,8 @@ const sectionsData: Array<{ id: string; content: React.ReactNode }> = [
               <tr><td>Denetim kayıtları</td><td>Değiştirilemez, silinemez; sadece yeni kayıt eklenir.</td></tr>
               <tr><td>Malzeme hareketleri</td><td>Yönetim panelinde filtrelenebilir liste; CM/PM erişir.</td></tr>
               <tr><td>Fiyat görünürlüğü</td><td>CM/PM tüm fiyatları görür; TL varsayılan gizli, isteğe bağlı sadece ekip kazancı.</td></tr>
-              <tr><td>Bekleyen onay sayısı</td><td>Menüde CM ve PM için; CM iş + kullanıcı, PM sadece iş.</td></tr>
-              <tr><td>Aktivite bildirimleri</td><td>Sadece CM; PM işlemleri ve bekleyen kullanıcı bildirimi.</td></tr>
+              <tr><td>Bekleyen onay sayısı</td><td>Menüde rozet; CM iş + kullanıcı, PM sadece iş; üst bildirim/ses yok.</td></tr>
+              <tr><td>Yönetim bildirim rozeti</td><td>CM ve PM; üst çubuk ve menüde sayı + hafif nabız, Yönetim paneline girince sıfırlanır.</td></tr>
             </tbody>
           </table>
         </div>
