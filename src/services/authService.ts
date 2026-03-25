@@ -3,6 +3,7 @@ import type { Role } from '../types';
 import { canPlanAddUser } from './planGating';
 import { getEffectivePlan } from './subscriptionService';
 import { supabase } from './supabaseClient';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 function hashPassword(p: string): string {
   return btoa(encodeURIComponent(p));
@@ -14,6 +15,44 @@ function checkPassword(plain: string, hashed: string): boolean {
 
 function normalizeEmailInput(value: string): string {
   return value.trim().toLowerCase();
+}
+
+async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
+  if (!supabase) return null;
+  const profileSelect = 'id, company_id, role, full_name, role_approval_status, can_see_prices, email';
+  const { data: existing, error: existingError } = await supabase
+    .from('profiles')
+    .select(profileSelect)
+    .eq('id', user.id)
+    .maybeSingle();
+  if (!existingError && existing) return existing;
+
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const companyId = typeof meta.company_id === 'string' ? meta.company_id : null;
+  const role = typeof meta.role === 'string' ? meta.role : null;
+  const fullName = typeof meta.full_name === 'string' ? meta.full_name : null;
+  const roleApprovalStatus =
+    typeof meta.role_approval_status === 'string' ? meta.role_approval_status : 'pending';
+
+  await supabase.from('profiles').upsert(
+    {
+      id: user.id,
+      company_id: companyId,
+      role,
+      full_name: fullName,
+      role_approval_status: roleApprovalStatus,
+      email: user.email ?? fallbackEmail,
+    },
+    { onConflict: 'id' }
+  );
+
+  const { data: repaired, error: repairedError } = await supabase
+    .from('profiles')
+    .select(profileSelect)
+    .eq('id', user.id)
+    .maybeSingle();
+  if (repairedError || !repaired) return null;
+  return repaired;
 }
 
 const normalize = (value: string) =>
@@ -38,16 +77,13 @@ export const authService = {
       if (error.message.includes('Invalid login')) return { ok: false, error: 'auth.loginError' };
         return { ok: false, error: error.message };
       }
-      const userId = data.user?.id;
+      const signedUser = data.user;
+      const userId = signedUser?.id;
       if (!userId) return { ok: false, error: 'auth.loginError' };
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, company_id, role, full_name, role_approval_status, can_see_prices')
-        .eq('id', userId)
-        .single();
-      if (profileError || !profile) return { ok: false, error: 'auth.loginError' };
+      const profile = await fetchOrRepairProfile(signedUser, normalizedEmail);
+      if (!profile) return { ok: false, error: 'auth.loginError' };
       if (profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
-      store.setUserFromProfile(profile, data.user?.email ?? normalizedEmail);
+      store.setUserFromProfile(profile, signedUser?.email ?? normalizedEmail);
       const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
       await fetchCompanyDataFromSupabase(profile.company_id ?? '');
       return { ok: true };

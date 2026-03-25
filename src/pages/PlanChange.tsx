@@ -98,30 +98,12 @@ function PendingNewCompanyCheckout({
           selected_plan: selectedPlan,
           billing_cycle: billingCycle,
         });
-        const { data: signData, error: signErr } = await supabase.auth.signInWithPassword({
-          email: paidSession.email,
-          password: paidSession.password,
-        });
-        if (signErr) {
-          setError(signErr.message);
-          return;
-        }
-        const uid = signData.user?.id;
-        if (!uid) {
-          setError(t('planChangePage.errorGeneric'));
-          return;
-        }
-        const { data: profile, error: profErr } = await supabase
-          .from('profiles')
-          .select('id, company_id, role, full_name, role_approval_status, can_see_prices')
-          .eq('id', uid)
-          .single();
-        if (profErr || !profile) {
-          setError(t('planChangePage.errorGeneric'));
+        const loginResult = await authService.login(paidSession.email, paidSession.password);
+        if (!loginResult.ok) {
+          setError(t(loginResult.error ?? 'planChangePage.errorGeneric'));
           return;
         }
         clearPaidSignupSession();
-        store.setUserFromProfile(profile, signData.user?.email ?? paidSession.email);
         const logged = store.getCurrentUser();
         if (logged?.companyId) {
           const { fetchCompanyDataFromSupabase } = await import('../services/supabaseSyncService');
