@@ -54,6 +54,51 @@ function normalizeSessionProfile<T extends { role: string | null; company_id: st
   return profile;
 }
 
+async function repairProfileConsistency(
+  profile: { id: string; company_id: string | null; role: string | null; full_name: string | null; role_approval_status: string; can_see_prices?: boolean | null; email?: string | null },
+  user: SupabaseUser,
+  fallbackEmail: string
+) {
+  if (!supabase) return normalizeSessionProfile(profile);
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const updates: Record<string, unknown> = {};
+  const roleFromMeta = typeof meta.role === 'string' ? meta.role : null;
+  const fullNameFromMeta = typeof meta.full_name === 'string' ? meta.full_name : null;
+
+  if (!profile.full_name && fullNameFromMeta) updates.full_name = fullNameFromMeta;
+  if (!profile.email && (user.email ?? fallbackEmail)) updates.email = user.email ?? fallbackEmail;
+
+  if (profile.role === 'superAdmin') {
+    if (profile.company_id !== null) updates.company_id = null;
+    if (profile.role_approval_status !== 'approved') updates.role_approval_status = 'approved';
+  } else {
+    // If company manager lost company binding after manual auth user cleanup, recover from owner relation.
+    if (!profile.company_id && (profile.role === 'companyManager' || roleFromMeta === 'companyManager')) {
+      const { data: ownedCompany } = await supabase
+        .from('companies')
+        .select('id')
+        .eq('owner_user_id', user.id)
+        .maybeSingle();
+      if (ownedCompany?.id) {
+        updates.company_id = ownedCompany.id;
+        if (!profile.role) updates.role = 'companyManager';
+        if (profile.role_approval_status !== 'approved') updates.role_approval_status = 'approved';
+      }
+    }
+  }
+
+  if (Object.keys(updates).length) {
+    await supabase.from('profiles').update(updates).eq('id', user.id);
+    const { data: refreshed } = await supabase
+      .from('profiles')
+      .select('id, company_id, role, full_name, role_approval_status, can_see_prices, email')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (refreshed) return normalizeSessionProfile(refreshed);
+  }
+  return normalizeSessionProfile(profile);
+}
+
 async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
   if (!supabase) return null;
   const profileSelect = 'id, company_id, role, full_name, role_approval_status, can_see_prices, email';
@@ -132,10 +177,13 @@ export const authService = {
         store.setUserFromProfile(profileFromMeta, signedUser?.email ?? normalizedEmail);
         return { ok: true };
       }
-      if (profile.role !== 'superAdmin' && profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
-      store.setUserFromProfile(profile, signedUser?.email ?? normalizedEmail);
+      const consistentProfile = await repairProfileConsistency(profile, signedUser, normalizedEmail);
+      if (consistentProfile.role !== 'superAdmin' && consistentProfile.role_approval_status !== 'approved') {
+        return { ok: false, error: 'auth.pendingApproval' };
+      }
+      store.setUserFromProfile(consistentProfile, signedUser?.email ?? normalizedEmail);
       const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
-      await fetchCompanyDataFromSupabase(profile.company_id ?? '');
+      await fetchCompanyDataFromSupabase(consistentProfile.company_id ?? '');
       return { ok: true };
     }
     const users = companyId ? store.getUsers(companyId) : store.getUsers();
