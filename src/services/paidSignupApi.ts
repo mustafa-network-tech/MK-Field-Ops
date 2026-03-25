@@ -3,10 +3,24 @@
  * Later Paddle webhook can call the same activatePaidSignup logic on the server.
  */
 
+import { FunctionsFetchError, FunctionsHttpError, FunctionsRelayError } from '@supabase/functions-js';
+import { supabase } from './supabaseClient';
+
 const MOCK_SECRET = (import.meta.env.VITE_MOCK_PAYMENT_SECRET as string | undefined)?.trim();
 
 /** Workspace/i18n: ağ veya CORS; tarayıcı genelde "Failed to fetch" döner */
 export const PAID_SIGNUP_NETWORK_ERROR = 'PAID_SIGNUP_NETWORK';
+
+/** Canlıda (Vercel) aynı kökenden /api proxy kullan; tarayıcı→Supabase doğrudan bazen bloklanır. Kapatmak: VITE_SUPABASE_EDGE_PROXY=0 */
+function useEdgeProxy(): boolean {
+  if (!import.meta.env.PROD) return false;
+  if (typeof window === 'undefined') return false;
+  const h = window.location.hostname;
+  if (h === 'localhost' || h === '127.0.0.1') return false;
+  const flag = import.meta.env.VITE_SUPABASE_EDGE_PROXY;
+  if (flag === '0' || flag === 'false') return false;
+  return true;
+}
 
 function functionsBaseUrl(): string | null {
   const url = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
@@ -15,6 +29,56 @@ function functionsBaseUrl(): string | null {
 }
 
 async function postFunction(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const extraHeaders: Record<string, string> = {};
+  if (MOCK_SECRET) extraHeaders['x-mock-payment-secret'] = MOCK_SECRET;
+
+  if (useEdgeProxy()) {
+    const url = `${window.location.origin}/api/supabase-functions?fn=${encodeURIComponent(name)}`;
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+    } catch {
+      throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+    }
+    const text = await res.text();
+    let data: Record<string, unknown>;
+    try {
+      data = JSON.parse(text) as Record<string, unknown>;
+    } catch {
+      throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+    }
+    if (!res.ok) {
+      const err = typeof data.error === 'string' ? data.error : res.statusText;
+      throw new Error(err || `HTTP ${res.status}`);
+    }
+    return data;
+  }
+
+  if (supabase) {
+    const { data, error } = await supabase.functions.invoke(name, {
+      body,
+      headers: Object.keys(extraHeaders).length ? extraHeaders : undefined,
+    });
+    if (error) {
+      if (error instanceof FunctionsFetchError || error instanceof FunctionsRelayError) {
+        throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+      }
+      if (error instanceof FunctionsHttpError) {
+        const res = error.context as Response;
+        const parsed = (await res.json().catch(() => ({}))) as Record<string, unknown>;
+        const msg = typeof parsed.error === 'string' ? parsed.error : res.statusText;
+        throw new Error(msg || `HTTP ${res.status}`);
+      }
+      throw new Error(error instanceof Error ? error.message : 'Function error');
+    }
+    if (data === null || typeof data !== 'object') throw new Error('Invalid response');
+    return data as Record<string, unknown>;
+  }
+
   const base = functionsBaseUrl();
   if (!base) throw new Error('Supabase URL not configured');
   const anon = (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined)?.trim();

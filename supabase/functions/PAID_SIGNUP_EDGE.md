@@ -46,6 +46,14 @@ Fonksiyon URL’leri: `https://<project-ref>.supabase.co/functions/v1/<function-
 
 İstek gövdeleri için kaynak: `src/services/paidSignupApi.ts` ve ilgili `index.ts` dosyaları.
 
+## Vercel: `/api/supabase-functions` proxy
+
+Canlı sitede tarayıcıdan doğrudan `*.supabase.co/functions/v1/...` çağrısı bazen ağ/CORS ile kesilir. Bu repoda **production + canlı alan adı** iken (localhost hariç) istekler varsayılan olarak **aynı sitedeki** `POST /api/supabase-functions?fn=create-pending-signup` üzerinden gider; Vercel sunucusu Supabase Edge’e iletir.
+
+- Vercel’de yine `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY` gerekir (serverless `process.env` ile okunur).
+- `vercel.json` içinde SPA rewrite, `api/` yolunu hariç tutar.
+- Proxy’yi kapatmak: `VITE_SUPABASE_EDGE_PROXY=0`.
+
 ## Sorun giderme: tarayıcıda « Failed to fetch »
 
 - **CORS:** Tarayıcı önce `OPTIONS` isteği atar; yanıtta `Access-Control-Allow-Methods` ve uygun header’lar olmalı (bu repodaki fonksiyonlar buna göre güncellendi). Değişiklikten sonra fonksiyonları yeniden deploy edin.

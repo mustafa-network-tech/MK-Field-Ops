@@ -83,7 +83,7 @@
     "billingCycle": "Fatura dönemi",
     "billingMonthly": "Aylık",
     "billingYearly": "Yıllık",
-    "edgeFunctionUnreachable": "Sunucuya ulaşılamadı. Canlı sitede VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY değişkenlerinin tanımlı olduğundan ve bu değişkenler eklendikten sonra sitenin yeniden derlenip yayınlandığından emin olun. Supabase Dashboard’da Edge Function create-pending-signup ve veritabanında pending_signups migration’ının uygulandığını kontrol edin."
+    "edgeFunctionUnreachable": "Sunucuya ulaşılamadı. Vercel’de değişken adları tam olarak VITE_SUPABASE_URL ve VITE_SUPABASE_ANON_KEY olmalı ve Environment: Production seçili olmalı; kaydettikten sonra Redeploy (mümkünse cache kapalı) yapın. Supabase proje URL’si ile Edge’i deploy ettiğiniz proje aynı olmalı; create-pending-signup deploy edilmiş ve pending_signups migration uygulanmış olmalı."
   },
   "pendingJoin": {
     "title": "Katılım talebi bekleniyor",

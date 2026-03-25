@@ -83,7 +83,7 @@
     "billingCycle": "Billing cycle",
     "billingMonthly": "Monthly",
     "billingYearly": "Yearly",
-    "edgeFunctionUnreachable": "Could not reach the server. On production, ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in your host and redeploy after adding them. In Supabase: deploy Edge Function create-pending-signup and apply the pending_signups migration."
+    "edgeFunctionUnreachable": "Could not reach the server. In Vercel, use exact names VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY, enable them for Production, save, then Redeploy (disable build cache if unsure). The Supabase project in those values must match where you deployed Edge Functions; deploy create-pending-signup and apply the pending_signups migration in Supabase SQL."
   },
   "pendingJoin": {
     "title": "Join request pending",
