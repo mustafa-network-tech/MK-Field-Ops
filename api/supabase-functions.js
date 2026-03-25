@@ -1,54 +1,64 @@
 /**
- * Vercel Serverless: tarayıcı → /api/supabase-functions?fn=… → Supabase Edge.
- * Proje "type": "module" olduğu için ESM default export kullanılır (module.exports çalışmaz).
- * Ortam: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
+ * Vercel Edge Function: tarayıcı → /api/supabase-functions?fn=… → Supabase Edge.
+ * Node (req,res) + "type":"module" kombinasyonu bazen sorun çıkarır; Edge + Request/Response daha tutarlıdır.
  */
+export const config = { runtime: 'edge' };
+
 const ALLOWED = new Set(['create-pending-signup', 'mock-payment-success']);
 
-function parseBody(req) {
-  const b = req.body;
-  if (b == null) return {};
-  if (typeof b === 'string') {
-    try {
-      return JSON.parse(b);
-    } catch {
-      return {};
-    }
+export default async function handler(request) {
+  if (request.method === 'GET') {
+    return Response.json({ ok: true, name: 'supabase-functions-proxy', runtime: 'edge' });
   }
-  if (typeof b === 'object') return b;
-  return {};
-}
-
-export default async function handler(req, res) {
-  if (req.method === 'GET') {
-    return res.status(200).json({ ok: true, name: 'supabase-functions-proxy' });
-  }
-  if (req.method === 'OPTIONS') {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-    return res.status(204).end();
-  }
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const fn = typeof req.query?.fn === 'string' ? req.query.fn : '';
-  if (!ALLOWED.has(fn)) {
-    return res.status(400).json({ error: 'Invalid function name' });
-  }
-
-  const supabaseUrl = String(process.env.VITE_SUPABASE_URL || '')
-    .trim()
-    .replace(/\/$/, '');
-  const anonKey = String(process.env.VITE_SUPABASE_ANON_KEY || '').trim();
-  if (!supabaseUrl || !anonKey) {
-    return res.status(500).json({
-      error: 'Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY on server',
+  if (request.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type',
+      },
     });
   }
+  if (request.method !== 'POST') {
+    return Response.json({ error: 'Method not allowed' }, { status: 405 });
+  }
 
-  const mockSecret = String(process.env.VITE_MOCK_PAYMENT_SECRET || '').trim();
+  const url = new URL(request.url);
+  const fn = url.searchParams.get('fn') || '';
+  if (!ALLOWED.has(fn)) {
+    return Response.json({ error: 'Invalid function name' }, { status: 400 });
+  }
+
+  const supabaseUrl = String(
+    process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
+  )
+    .trim()
+    .replace(/\/$/, '');
+  const anonKey = String(
+    process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || ''
+  ).trim();
+
+  if (!supabaseUrl || !anonKey) {
+    return Response.json(
+      {
+        error:
+          'Missing Supabase URL or anon key on server (set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY or SUPABASE_URL + SUPABASE_ANON_KEY)',
+      },
+      { status: 500 }
+    );
+  }
+
+  let payload = {};
+  try {
+    payload = await request.json();
+  } catch {
+    payload = {};
+  }
+
+  const mockSecret = String(
+    process.env.VITE_MOCK_PAYMENT_SECRET || process.env.MOCK_PAYMENT_SECRET || ''
+  ).trim();
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${anonKey}`,
@@ -56,7 +66,6 @@ export default async function handler(req, res) {
   };
   if (mockSecret) headers['x-mock-payment-secret'] = mockSecret;
 
-  const payload = parseBody(req);
   const target = `${supabaseUrl}/functions/v1/${fn}`;
   try {
     const r = await fetch(target, {
@@ -71,9 +80,9 @@ export default async function handler(req, res) {
     } catch {
       body = { error: 'Non-JSON upstream', raw: text.slice(0, 500) };
     }
-    return res.status(r.status).json(body);
+    return Response.json(body, { status: r.status });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
-    return res.status(502).json({ error: 'Upstream unreachable', detail: msg });
+    return Response.json({ error: 'Upstream unreachable', detail: msg }, { status: 502 });
   }
 }

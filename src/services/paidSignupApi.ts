@@ -11,7 +11,7 @@ const MOCK_SECRET = (import.meta.env.VITE_MOCK_PAYMENT_SECRET as string | undefi
 /** Workspace/i18n: ağ veya CORS; tarayıcı genelde "Failed to fetch" döner */
 export const PAID_SIGNUP_NETWORK_ERROR = 'PAID_SIGNUP_NETWORK';
 
-/** Canlıda (Vercel) aynı kökenden /api proxy kullan; tarayıcı→Supabase doğrudan bazen bloklanır. Kapatmak: VITE_SUPABASE_EDGE_PROXY=0 */
+/** Canlıda (Vercel) önce /api proxy; olmazsa doğrudan Supabase (yedek). Kapatmak: VITE_SUPABASE_EDGE_PROXY=0 */
 function useEdgeProxy(): boolean {
   if (!import.meta.env.PROD) return false;
   if (typeof window === 'undefined') return false;
@@ -28,35 +28,35 @@ function functionsBaseUrl(): string | null {
   return `${url.replace(/\/$/, '')}/functions/v1`;
 }
 
-async function postFunction(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+async function postViaProxy(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const url = `${window.location.origin}/api/supabase-functions?fn=${encodeURIComponent(name)}`;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
+  const text = await res.text();
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
+  if (!res.ok) {
+    const err = typeof data.error === 'string' ? data.error : res.statusText;
+    throw new Error(err || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+async function postViaDirect(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const extraHeaders: Record<string, string> = {};
   if (MOCK_SECRET) extraHeaders['x-mock-payment-secret'] = MOCK_SECRET;
-
-  if (useEdgeProxy()) {
-    const url = `${window.location.origin}/api/supabase-functions?fn=${encodeURIComponent(name)}`;
-    let res: Response;
-    try {
-      res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-    } catch {
-      throw new Error(PAID_SIGNUP_NETWORK_ERROR);
-    }
-    const text = await res.text();
-    let data: Record<string, unknown>;
-    try {
-      data = JSON.parse(text) as Record<string, unknown>;
-    } catch {
-      throw new Error(PAID_SIGNUP_NETWORK_ERROR);
-    }
-    if (!res.ok) {
-      const err = typeof data.error === 'string' ? data.error : res.statusText;
-      throw new Error(err || `HTTP ${res.status}`);
-    }
-    return data;
-  }
 
   if (supabase) {
     const { data, error } = await supabase.functions.invoke(name, {
@@ -107,6 +107,20 @@ async function postFunction(name: string, body: Record<string, unknown>): Promis
     throw new Error(err || `HTTP ${res.status}`);
   }
   return data;
+}
+
+async function postFunction(name: string, body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  if (useEdgeProxy()) {
+    try {
+      return await postViaProxy(name, body);
+    } catch (e) {
+      if (e instanceof Error && e.message === PAID_SIGNUP_NETWORK_ERROR) {
+        return postViaDirect(name, body);
+      }
+      throw e;
+    }
+  }
+  return postViaDirect(name, body);
 }
 
 export type CreatePendingSignupInput = {
