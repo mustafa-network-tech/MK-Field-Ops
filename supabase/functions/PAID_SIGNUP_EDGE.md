@@ -53,8 +53,8 @@ Canlı sitede tarayıcıdan doğrudan `*.supabase.co/functions/v1/...` çağrıs
 - Vercel’de yine `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY` gerekir (serverless `process.env` ile okunur).
 - `vercel.json` içinde SPA rewrite, `api/` yolunu hariç tutar.
 - Proxy’yi kapatmak: `VITE_SUPABASE_EDGE_PROXY=0`.
-- Proje kökünde `"type": "module"` varsa API dosyası **`export default`** kullanmalı; `module.exports` Vercel’de fonksiyonu kırar.
-- Deploy sonrası tarayıcıda `GET https://<domain>/api/supabase-functions` → `{"ok":true,...}` görünmeli (proxy ayakta mı hızlı test).
+- Proxy dosyası: `api/supabase-functions/index.cjs` (Node + CommonJS; `type:module` ile uyumlu). Edge runtime 503/HTML verdiyse bu sürüm kullanılır.
+- Deploy sonrası `GET https://<domain>/api/supabase-functions` → `{"ok":true,"runtime":"nodejs",...}` görünmeli.
 
 ## Sorun giderme: tarayıcıda « Failed to fetch »
 
