@@ -1,13 +1,10 @@
 /**
- * Vercel: mock ödeme sonrası şirket + kullanıcı aktivasyonu (Edge yok).
+ * Vercel: mock ödeme sonrası aktivasyon. Ortak mantık: lib/mockPaymentSuccessServer.js
  */
-import { createClient } from '@supabase/supabase-js';
-import { activatePaidSignup } from './lib/activatePaidSignupNode.js';
-import { getMockSecret, parseJsonBody } from './lib/createPendingSignupServer.js';
+import { parseJsonBody } from './lib/createPendingSignupServer.js';
+import { runMockPaymentSuccess } from './lib/mockPaymentSuccessServer.js';
 
 export const config = { maxDuration: 60 };
-
-const PLANS = new Set(['starter', 'professional', 'enterprise']);
 
 function sendJson(res, status, obj) {
   try {
@@ -32,14 +29,6 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
-    const secret = getMockSecret();
-    if (secret) {
-      const h = String(req.headers?.['x-mock-payment-secret'] ?? '').trim();
-      if (h !== secret) {
-        return sendJson(res, 401, { error: 'Unauthorized' });
-      }
-    }
-
     const supabaseUrl = String(
       process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || ''
     )
@@ -59,49 +48,9 @@ export default async function handler(req, res) {
       });
     }
 
-    const body = parseJsonBody(req);
-    const pending_signup_id = String(body.pending_signup_id ?? '').trim();
-    const signup_token = String(body.signup_token ?? '').trim();
-    const password = String(body.password ?? '');
-    const selected_plan = String(body.selected_plan ?? '').trim();
-    const billing_cycle =
-      String(body.billing_cycle ?? 'monthly').trim() === 'yearly' ? 'yearly' : 'monthly';
-
-    if (!pending_signup_id || !signup_token || !password) {
-      return sendJson(res, 400, {
-        error: 'pending_signup_id, signup_token, and password are required',
-      });
-    }
-    if (!PLANS.has(selected_plan)) {
-      return sendJson(res, 400, { error: 'Invalid selected_plan' });
-    }
-
-    const admin = createClient(supabaseUrl, serviceRoleKey);
-    const result = await activatePaidSignup(admin, {
-      pendingSignupId: pending_signup_id,
-      signupToken: signup_token,
-      passwordPlain: password,
-      selectedPlan: selected_plan,
-      billingCycle: billing_cycle,
-    });
-
-    if (!result.ok) {
-      const code = result.code ?? 'error';
-      const status =
-        code === 'invalid_password' || code === 'invalid_token' || code === 'not_found'
-          ? 400
-          : code === 'in_progress'
-            ? 409
-            : 500;
-      return sendJson(res, status, { ok: false, error: result.error, code });
-    }
-
-    return sendJson(res, 200, {
-      ok: true,
-      already_completed: result.alreadyCompleted,
-      company_id: result.companyId,
-      user_id: result.userId,
-    });
+    const payload = parseJsonBody(req);
+    const out = await runMockPaymentSuccess(supabaseUrl, serviceRoleKey, req, payload);
+    return sendJson(res, out.status, out.body);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     if (!res.headersSent) {
