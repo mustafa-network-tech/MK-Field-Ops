@@ -1,13 +1,31 @@
 /**
- * Vercel Serverless: tarayıcı → /api/supabase-functions?fn=… → Supabase Edge (CORS / ağ sorunlarını aşar).
- * Ortam: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY (Vercel’de Production’da tanımlı olmalı).
+ * Vercel Serverless: tarayıcı → /api/supabase-functions?fn=… → Supabase Edge.
+ * Proje "type": "module" olduğu için ESM default export kullanılır (module.exports çalışmaz).
+ * Ortam: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
  */
 const ALLOWED = new Set(['create-pending-signup', 'mock-payment-success']);
 
-module.exports = async (req, res) => {
+function parseBody(req) {
+  const b = req.body;
+  if (b == null) return {};
+  if (typeof b === 'string') {
+    try {
+      return JSON.parse(b);
+    } catch {
+      return {};
+    }
+  }
+  if (typeof b === 'object') return b;
+  return {};
+}
+
+export default async function handler(req, res) {
+  if (req.method === 'GET') {
+    return res.status(200).json({ ok: true, name: 'supabase-functions-proxy' });
+  }
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     return res.status(204).end();
   }
@@ -15,7 +33,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const fn = typeof req.query.fn === 'string' ? req.query.fn : '';
+  const fn = typeof req.query?.fn === 'string' ? req.query.fn : '';
   if (!ALLOWED.has(fn)) {
     return res.status(400).json({ error: 'Invalid function name' });
   }
@@ -31,7 +49,6 @@ module.exports = async (req, res) => {
   }
 
   const mockSecret = String(process.env.VITE_MOCK_PAYMENT_SECRET || '').trim();
-  /** @type {Record<string, string>} */
   const headers = {
     'Content-Type': 'application/json',
     Authorization: `Bearer ${anonKey}`,
@@ -39,15 +56,15 @@ module.exports = async (req, res) => {
   };
   if (mockSecret) headers['x-mock-payment-secret'] = mockSecret;
 
+  const payload = parseBody(req);
   const target = `${supabaseUrl}/functions/v1/${fn}`;
   try {
     const r = await fetch(target, {
       method: 'POST',
       headers,
-      body: JSON.stringify(req.body ?? {}),
+      body: JSON.stringify(payload),
     });
     const text = await r.text();
-    /** @type {unknown} */
     let body;
     try {
       body = JSON.parse(text);
@@ -59,4 +76,4 @@ module.exports = async (req, res) => {
     const msg = e instanceof Error ? e.message : String(e);
     return res.status(502).json({ error: 'Upstream unreachable', detail: msg });
   }
-};
+}
