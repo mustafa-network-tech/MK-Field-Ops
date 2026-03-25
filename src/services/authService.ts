@@ -25,16 +25,33 @@ function getSupabaseProjectRef(): string {
 
 function buildProfileFromAuthUser(user: SupabaseUser, fallbackEmail: string) {
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const role = typeof meta.role === 'string' ? meta.role : null;
+  const roleApprovalStatus =
+    typeof meta.role_approval_status === 'string'
+      ? meta.role_approval_status
+      : role === 'superAdmin'
+        ? 'approved'
+        : 'approved';
   return {
     id: user.id,
-    company_id: typeof meta.company_id === 'string' ? meta.company_id : '',
-    role: typeof meta.role === 'string' ? meta.role : null,
+    company_id: role === 'superAdmin' ? '' : typeof meta.company_id === 'string' ? meta.company_id : '',
+    role,
     full_name: typeof meta.full_name === 'string' ? meta.full_name : null,
-    role_approval_status:
-      typeof meta.role_approval_status === 'string' ? meta.role_approval_status : 'approved',
+    role_approval_status: roleApprovalStatus,
     can_see_prices: null,
     email: user.email ?? fallbackEmail,
   };
+}
+
+function normalizeSessionProfile<T extends { role: string | null; company_id: string | null; role_approval_status: string }>(profile: T): T {
+  if (profile.role === 'superAdmin') {
+    return {
+      ...profile,
+      company_id: null,
+      role_approval_status: 'approved',
+    };
+  }
+  return profile;
 }
 
 async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
@@ -48,11 +65,15 @@ async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
   if (!existingError && existing) return existing;
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const companyId = typeof meta.company_id === 'string' ? meta.company_id : null;
   const role = typeof meta.role === 'string' ? meta.role : null;
+  const companyId = role === 'superAdmin' ? null : typeof meta.company_id === 'string' ? meta.company_id : null;
   const fullName = typeof meta.full_name === 'string' ? meta.full_name : null;
   const roleApprovalStatus =
-    typeof meta.role_approval_status === 'string' ? meta.role_approval_status : 'pending';
+    typeof meta.role_approval_status === 'string'
+      ? meta.role_approval_status
+      : role === 'superAdmin'
+        ? 'approved'
+        : 'pending';
 
   await supabase.from('profiles').upsert(
     {
@@ -72,7 +93,7 @@ async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
     .eq('id', user.id)
     .maybeSingle();
   if (repairedError || !repaired) return null;
-  return repaired;
+  return normalizeSessionProfile(repaired);
 }
 
 const normalize = (value: string) =>
@@ -111,7 +132,7 @@ export const authService = {
         store.setUserFromProfile(profileFromMeta, signedUser?.email ?? normalizedEmail);
         return { ok: true };
       }
-      if (profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
+      if (profile.role !== 'superAdmin' && profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
       store.setUserFromProfile(profile, signedUser?.email ?? normalizedEmail);
       const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
       await fetchCompanyDataFromSupabase(profile.company_id ?? '');
