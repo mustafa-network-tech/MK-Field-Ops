@@ -1,8 +1,8 @@
 /**
- * Vercel Serverless — mock-payment-success → Supabase Edge proxy.
- * create-pending-signup: ayrıca /api/create-pending-signup kullanın (paidSignupApi).
+ * Vercel Serverless — yedek: Edge’e proxy. Asıl yol: /api/create-pending-signup, /api/mock-payment-success.
  */
 import { runCreatePendingSignup, parseJsonBody } from './lib/createPendingSignupServer.js';
+import { runMockPaymentSuccess } from './lib/mockPaymentSuccessServer.js';
 
 /** Hobby: 10; Pro: 60’a kadar. mock-payment Edge proxy için süre. */
 export const config = { maxDuration: 60 };
@@ -71,6 +71,10 @@ export default async function handler(req, res) {
     const serviceRoleKey = String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim();
     if (fn === 'create-pending-signup' && serviceRoleKey) {
       const out = await runCreatePendingSignup(supabaseUrl, serviceRoleKey, req, payload);
+      return sendJson(res, out.status, out.body);
+    }
+    if (fn === 'mock-payment-success' && serviceRoleKey) {
+      const out = await runMockPaymentSuccess(supabaseUrl, serviceRoleKey, req, payload);
       return sendJson(res, out.status, out.body);
     }
 

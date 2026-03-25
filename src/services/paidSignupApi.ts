@@ -28,7 +28,36 @@ function functionsBaseUrl(): string | null {
   return `${url.replace(/\/$/, '')}/functions/v1`;
 }
 
-/** Hobby: ayrı route — Edge proxy + query string sorunlarını azaltır */
+/** Canlı Vercel: Edge yerine Node + service role (503/zaman aşımı riskini azaltır) */
+async function postMockPaymentVercelApi(body: Record<string, unknown>): Promise<Record<string, unknown>> {
+  const url = `${window.location.origin}/api/mock-payment-success`;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (MOCK_SECRET) headers['x-mock-payment-secret'] = MOCK_SECRET;
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
+  const text = await res.text();
+  let data: Record<string, unknown>;
+  try {
+    data = JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    throw new Error(PAID_SIGNUP_NETWORK_ERROR);
+  }
+  if (!res.ok) {
+    const err = typeof data.error === 'string' ? data.error : res.statusText;
+    throw new Error(err || `HTTP ${res.status}`);
+  }
+  return data;
+}
+
+/** Ayrı route — Edge proxy + query string sorunlarını azaltır */
 async function postCreatePendingVercelApi(body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const url = `${window.location.origin}/api/create-pending-signup`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -145,6 +174,9 @@ async function postFunction(name: string, body: Record<string, unknown>): Promis
     try {
       if (name === 'create-pending-signup') {
         return await postCreatePendingVercelApi(body);
+      }
+      if (name === 'mock-payment-success') {
+        return await postMockPaymentVercelApi(body);
       }
       return await postViaProxy(name, body);
     } catch (e) {
