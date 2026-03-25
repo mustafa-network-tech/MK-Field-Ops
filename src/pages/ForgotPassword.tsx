@@ -46,9 +46,10 @@ export function ForgotPassword() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value.replace(/\s+/g, ''))}
                 className={styles.input}
                 required
+                autoComplete="email"
               />
             </label>
             {error && <p className={styles.error}>{error}</p>}

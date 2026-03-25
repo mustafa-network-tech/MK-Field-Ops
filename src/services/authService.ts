@@ -12,6 +12,10 @@ function checkPassword(plain: string, hashed: string): boolean {
   return hashPassword(plain) === hashed;
 }
 
+function normalizeEmailInput(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 const normalize = (value: string) =>
   value
     .toLowerCase()
@@ -27,8 +31,9 @@ export type AuthResult = { ok: boolean; error?: string };
 export const authService = {
   /** Login: uses Supabase Auth when configured, else local store. */
   async login(email: string, password: string, companyId?: string): Promise<AuthResult> {
+    const normalizedEmail = normalizeEmailInput(email);
     if (supabase) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) {
       if (error.message.includes('Invalid login')) return { ok: false, error: 'auth.loginError' };
         return { ok: false, error: error.message };
@@ -42,13 +47,13 @@ export const authService = {
         .single();
       if (profileError || !profile) return { ok: false, error: 'auth.loginError' };
       if (profile.role_approval_status !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
-      store.setUserFromProfile(profile, data.user?.email ?? email);
+      store.setUserFromProfile(profile, data.user?.email ?? normalizedEmail);
       const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
       await fetchCompanyDataFromSupabase(profile.company_id ?? '');
       return { ok: true };
     }
     const users = companyId ? store.getUsers(companyId) : store.getUsers();
-    const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const user = users.find((u) => u.email.toLowerCase() === normalizedEmail);
     if (!user || !checkPassword(password, user.passwordHash)) return { ok: false, error: 'auth.loginError' };
     if (user.roleApprovalStatus !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
     store.setCurrentUserId(user.id);
@@ -67,6 +72,7 @@ export const authService = {
     billingCycle?: 'monthly' | 'yearly';
   }): Promise<AuthResult> {
     const { email, password, fullName, companyName, joinCode, plan, billingCycle = 'monthly' } = params;
+    const normalizedEmail = normalizeEmailInput(email);
     const name = companyName.trim();
     const code = joinCode.trim();
     if (!/^\d{4}$/.test(code)) return { ok: false, error: 'auth.joinCodeInvalid' };
@@ -74,7 +80,7 @@ export const authService = {
     const companies = store.getCompanies();
     const nameNorm = normalize(name);
     if (!supabase && companies.some((c) => normalize(c.name) === nameNorm)) return { ok: false, error: 'auth.companyNameExists' };
-    if (store.getUserByEmail(email)) return { ok: false, error: 'auth.emailExists' };
+    if (store.getUserByEmail(normalizedEmail)) return { ok: false, error: 'auth.emailExists' };
 
     if (supabase) {
       const cId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -116,7 +122,7 @@ export const authService = {
       if (plan === 'starter') store.ensureStarterDefaultProject(insertedCompany.id, plan);
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: { data: { full_name: fullName, company_id: insertedCompany.id, role: 'companyManager', role_approval_status: 'approved' } },
       });
@@ -129,7 +135,7 @@ export const authService = {
       await supabase.from('companies').update({ owner_user_id: userId }).eq('id', insertedCompany.id);
       if (authData.session) {
         const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', userId).single();
-        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? email);
+        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? normalizedEmail);
       }
       return { ok: true };
     }
@@ -144,13 +150,13 @@ export const authService = {
     if (plan === 'starter') store.ensureStarterDefaultProject(cId, plan);
     store.addUser({
       companyId: cId,
-      email,
+      email: normalizedEmail,
       passwordHash: hashPassword(password),
       fullName,
       role: 'companyManager',
       roleApprovalStatus: 'approved',
     });
-    const newUser = store.getUsers(cId).find((u) => u.email === email)!;
+    const newUser = store.getUsers(cId).find((u) => u.email === normalizedEmail)!;
     store.setCurrentUserId(newUser.id);
     return { ok: true };
   },
@@ -164,6 +170,7 @@ export const authService = {
     joinCode: string;
   }): Promise<AuthResult> {
     const { email, password, fullName, companyName, joinCode } = params;
+    const normalizedEmail = normalizeEmailInput(email);
     const name = companyName.trim();
     const code = joinCode.trim();
     if (!/^\d{4}$/.test(code)) return { ok: false, error: 'auth.joinCodeInvalid' };
@@ -176,7 +183,7 @@ export const authService = {
       if (rpcError || cId == null) return { ok: false, error: 'auth.companyNotFound' };
 
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email,
+        email: normalizedEmail,
         password,
         options: {
           data: {
@@ -194,7 +201,7 @@ export const authService = {
       if (!userId) return { ok: false, error: 'auth.loginError' };
       if (authData.session) {
         const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, can_see_prices').eq('id', userId).single();
-        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? email);
+        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? normalizedEmail);
       }
       return { ok: true };
     }
@@ -203,7 +210,7 @@ export const authService = {
     const company = companies.find((c) => normalize(c.name) === normalize(name) && (c as { join_code?: string }).join_code === code);
     if (!company) return { ok: false, error: 'auth.companyNotFound' };
     const cId = company.id;
-    if (store.getUserByEmail(email, cId)) return { ok: false, error: 'auth.emailExists' };
+    if (store.getUserByEmail(normalizedEmail, cId)) return { ok: false, error: 'auth.emailExists' };
     const existingUsers = store.getUsers(cId);
     const companyWithPlan = store.getCompany(cId, cId);
     if (!canPlanAddUser(getEffectivePlan(companyWithPlan), existingUsers.length)) {
@@ -211,7 +218,7 @@ export const authService = {
     }
     store.addUser({
       companyId: cId,
-      email,
+      email: normalizedEmail,
       passwordHash: hashPassword(password),
       fullName,
       role: undefined,

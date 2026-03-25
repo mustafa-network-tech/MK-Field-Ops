@@ -24,7 +24,12 @@ export function Register() {
     setError('');
     const first = firstName.trim();
     const last = lastName.trim();
+    const normalizedEmail = email.trim().toLowerCase();
     if (!first || !last) {
+      setError(t('validation.required'));
+      return;
+    }
+    if (!normalizedEmail) {
       setError(t('validation.required'));
       return;
     }
@@ -32,7 +37,7 @@ export function Register() {
     const fullName = `${first} ${last}`.trim();
     navigate('/workspace', {
       replace: false,
-      state: { email, password, fullName, plan: initialPlan },
+      state: { email: normalizedEmail, password, fullName, plan: initialPlan },
     });
     setLoading(false);
   };
@@ -68,7 +73,7 @@ export function Register() {
             <input
               type="email"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value.replace(/\s+/g, ''))}
               className={styles.input}
               required
               autoComplete="email"
