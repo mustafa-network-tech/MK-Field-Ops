@@ -528,8 +528,10 @@ export const authService = {
   /** Request password reset email (Supabase only). Returns ok: false with error key if Supabase not configured or request failed. */
   async requestPasswordReset(email: string): Promise<AuthResult> {
     if (!supabase) return { ok: false, error: 'auth.forgotPasswordNotConfigured' };
+    const appUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.trim();
+    const redirectOrigin = appUrl && /^https?:\/\//.test(appUrl) ? appUrl.replace(/\/$/, '') : window.location.origin;
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/login`,
+      redirectTo: `${redirectOrigin}/reset-password`,
     });
     if (error) return { ok: false, error: error.message };
     return { ok: true };

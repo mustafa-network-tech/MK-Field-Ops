@@ -10,6 +10,7 @@ const Register = lazy(() => import('./pages/Register').then((m) => ({ default: m
 const Workspace = lazy(() => import('./pages/Workspace').then((m) => ({ default: m.Workspace })));
 const PendingJoin = lazy(() => import('./pages/PendingJoin').then((m) => ({ default: m.PendingJoin })));
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword').then((m) => ({ default: m.ForgotPassword })));
+const ResetPassword = lazy(() => import('./pages/ResetPassword').then((m) => ({ default: m.ResetPassword })));
 const Dashboard = lazy(() => import('./pages/Dashboard').then((m) => ({ default: m.Dashboard })));
 const JobEntry = lazy(() => import('./pages/JobEntry').then((m) => ({ default: m.JobEntry })));
 const MyJobs = lazy(() => import('./pages/MyJobs').then((m) => ({ default: m.MyJobs })));
@@ -82,6 +83,7 @@ function AppRoutes() {
       <Route path="/pending-join" element={<PendingJoinRoute />} />
       <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+      <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />
       <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />
       <Route path="/kullanim-sartlari" element={<TermsOfUse />} />
