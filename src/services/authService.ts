@@ -17,6 +17,12 @@ function normalizeEmailInput(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function getSupabaseProjectRef(): string {
+  const raw = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
+  if (!raw) return 'unknown';
+  return raw.replace(/^https:\/\//, '').replace(/\.supabase\.co.*/, '');
+}
+
 async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
   if (!supabase) return null;
   const profileSelect = 'id, company_id, role, full_name, role_approval_status, can_see_prices, email';
@@ -74,7 +80,12 @@ export const authService = {
     if (supabase) {
       const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) {
-      if (error.message.includes('Invalid login')) return { ok: false, error: 'auth.loginError' };
+      if (error.message.includes('Invalid login')) {
+        return {
+          ok: false,
+          error: `Gecersiz e-posta veya sifre. Canli Supabase proje ref: ${getSupabaseProjectRef()}`,
+        };
+      }
         return { ok: false, error: error.message };
       }
       const signedUser = data.user;
