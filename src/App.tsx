@@ -83,7 +83,7 @@ function AppRoutes() {
       <Route path="/pending-join" element={<PendingJoinRoute />} />
       <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
       <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
-      <Route path="/reset-password" element={<PublicOnlyRoute><ResetPassword /></PublicOnlyRoute>} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />
       <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />
       <Route path="/kullanim-sartlari" element={<TermsOfUse />} />
