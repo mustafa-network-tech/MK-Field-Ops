@@ -1,17 +1,17 @@
 /**
- * Edge _shared/activatePaidSignup.ts ile aynı iş kuralları (Vercel Node).
+ * Edge ile aynı iş kuralı: supabase/functions/_shared/activatePaidSignup.ts
+ * Değişiklik yapılırken iki dosyayı da güncel tutun.
  */
 import { compareSync } from 'bcryptjs';
+import { randomUUID, timingSafeEqual } from 'node:crypto';
 
 const PLANS = ['starter', 'professional', 'enterprise'];
 
-function timingSafeEqual(a, b) {
-  const ta = new TextEncoder().encode(a);
-  const tb = new TextEncoder().encode(b);
+function timingSafeEqualStr(a, b) {
+  const ta = Buffer.from(a, 'utf8');
+  const tb = Buffer.from(b, 'utf8');
   if (ta.length !== tb.length) return false;
-  let out = 0;
-  for (let i = 0; i < ta.length; i++) out |= ta[i] ^ tb[i];
-  return out === 0;
+  return timingSafeEqual(ta, tb);
 }
 
 /**
@@ -56,7 +56,7 @@ export async function activatePaidSignup(admin, params) {
   }
 
   const tokenRow = String(row.signup_token ?? '');
-  if (!timingSafeEqual(tokenRow, signupToken.trim())) {
+  if (!timingSafeEqualStr(tokenRow, signupToken.trim())) {
     return { ok: false, error: 'Invalid signup token', code: 'invalid_token' };
   }
 
@@ -93,7 +93,7 @@ export async function activatePaidSignup(admin, params) {
   const campaignName = String(row.campaign_name).trim();
   const campaignCode = String(row.campaign_code).trim();
 
-  const cId = crypto.randomUUID();
+  const cId = randomUUID();
   const trialEnd = new Date();
   trialEnd.setDate(trialEnd.getDate() + 7);
   const planStart = new Date().toISOString();
@@ -217,10 +217,7 @@ export async function activatePaidSignup(admin, params) {
     if (msg === 'company_name_exists' || String(msg).includes('23505') || String(msg).includes('duplicate')) {
       return { ok: false, error: 'Company name already exists', code: 'company_name_exists' };
     }
-    if (
-      String(msg).toLowerCase().includes('already been registered') ||
-      String(msg).includes('already registered')
-    ) {
+    if (String(msg).toLowerCase().includes('already been registered') || String(msg).includes('already registered')) {
       return { ok: false, error: 'Email already registered', code: 'email_exists' };
     }
     return { ok: false, error: msg, code: 'activation_failed' };

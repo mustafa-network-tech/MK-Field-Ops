@@ -2,6 +2,7 @@
  * Core activation after successful payment (mock or Paddle webhook).
  * Idempotent: completed rows return { alreadyCompleted: true }.
  * Keep business logic here; HTTP handlers only parse input and call this.
+ * Vercel aynası: api/lib/activatePaidSignupNode.js (değişiklikte ikisini güncelle).
  */
 
 import { compareSync } from 'https://esm.sh/bcryptjs@2.4.3';

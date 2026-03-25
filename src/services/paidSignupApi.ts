@@ -28,7 +28,7 @@ function functionsBaseUrl(): string | null {
   return `${url.replace(/\/$/, '')}/functions/v1`;
 }
 
-/** Canlı Vercel: Edge yerine Node + service role (503/zaman aşımı riskini azaltır) */
+/** Canlı Vercel: Edge yerine doğrudan Node (503 / zaman aşımı önleme) */
 async function postMockPaymentVercelApi(body: Record<string, unknown>): Promise<Record<string, unknown>> {
   const url = `${window.location.origin}/api/mock-payment-success`;
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -51,7 +51,12 @@ async function postMockPaymentVercelApi(body: Record<string, unknown>): Promise<
     throw new Error(PAID_SIGNUP_NETWORK_ERROR);
   }
   if (!res.ok) {
-    const err = typeof data.error === 'string' ? data.error : res.statusText;
+    const err =
+      typeof data.error === 'string'
+        ? data.error
+        : typeof data.detail === 'string'
+          ? data.detail
+          : res.statusText;
     throw new Error(err || `HTTP ${res.status}`);
   }
   return data;
