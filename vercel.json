@@ -2,11 +2,6 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
-  "functions": {
-    "api/supabase-functions/index.cjs": {
-      "maxDuration": 30
-    }
-  },
   "rewrites": [
     { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
