@@ -55,6 +55,7 @@ Canlı sitede tarayıcıdan doğrudan `*.supabase.co/functions/v1/...` çağrıs
 - Proxy’yi kapatmak: `VITE_SUPABASE_EDGE_PROXY=0`.
 - Proxy dosyası: **`api/supabase-functions.js`** (tek dosya; Vercel’in güvenilir route kalıbı). Alt klasördeki `.cjs` bazen hiç deploy edilmeyebilir → “sunucuya ulaşılamadı”.
 - Deploy sonrası `GET https://<domain>/api/supabase-functions` → `{"ok":true,"runtime":"nodejs-esm",...}` görünmeli.
+- POST’ta **503 / HTML**: çoğunlukla **Vercel Hobby 10 sn** function limiti veya Supabase Edge soğuk başlangıç. `api/supabase-functions.js` içinde `export const config = { maxDuration: 60 }` (Pro’da etkili); Hobby’de en fazla 10 sn. Gerekirse **Vercel Pro** veya `create-pending-signup`’ı yeniden deploy (bcrypt tur sayısı düşürüldü).
 
 ## Sorun giderme: tarayıcıda « Failed to fetch »
 

@@ -51,7 +51,8 @@ Deno.serve(async (req: Request) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const admin = createClient(supabaseUrl, serviceKey);
 
-  const password_hash = hashSync(password, 10);
+  // 8 tur: soğuk başlangıçta 10s Vercel proxy sınırına yakalanmayı azaltır (güvenlik hâlâ yeterli)
+  const password_hash = hashSync(password, 8);
 
   const { data: inserted, error } = await admin
     .from('pending_signups')
