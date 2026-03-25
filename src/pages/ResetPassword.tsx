@@ -13,6 +13,11 @@ function parseHashTokens() {
   return { access_token, refresh_token, type };
 }
 
+function parseQueryCode() {
+  const qs = new URLSearchParams(window.location.search);
+  return qs.get('code');
+}
+
 export function ResetPassword() {
   const { t } = useI18n();
   const navigate = useNavigate();
@@ -29,6 +34,14 @@ export function ResetPassword() {
       if (!supabase) {
         if (mounted) setError(t('auth.forgotPasswordNotConfigured'));
         return;
+      }
+      const code = parseQueryCode();
+      if (code) {
+        const { error: codeErr } = await supabase.auth.exchangeCodeForSession(code);
+        if (codeErr && mounted) {
+          setError(codeErr.message);
+          return;
+        }
       }
       const { access_token, refresh_token, type } = parseHashTokens();
       if (type === 'recovery' && access_token && refresh_token) {
