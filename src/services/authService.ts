@@ -181,7 +181,10 @@ export const authService = {
       if (consistentProfile.role !== 'superAdmin' && consistentProfile.role_approval_status !== 'approved') {
         return { ok: false, error: 'auth.pendingApproval' };
       }
-      store.setUserFromProfile(consistentProfile, signedUser?.email ?? normalizedEmail);
+      store.setUserFromProfile(
+        { ...consistentProfile, company_id: consistentProfile.company_id ?? '' },
+        signedUser?.email ?? normalizedEmail
+      );
       const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
       await fetchCompanyDataFromSupabase(consistentProfile.company_id ?? '');
       return { ok: true };
