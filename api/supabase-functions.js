@@ -1,6 +1,6 @@
 /**
- * Vercel Node.js Serverless (CommonJS .cjs → package.json "type":"module" ile çakışmaz).
- * Edge runtime bazen 503/HTML döndürebiliyor; Node + req/res daha kararlı.
+ * Vercel Serverless — tek dosya `api/*.js` her zaman route olarak algılanır.
+ * ESM `export default` (package.json type:module ile uyumlu).
  */
 const ALLOWED = new Set(['create-pending-signup', 'mock-payment-success']);
 
@@ -18,9 +18,9 @@ function parseBody(req) {
   return {};
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   if (req.method === 'GET') {
-    return res.status(200).json({ ok: true, name: 'supabase-functions-proxy', runtime: 'nodejs' });
+    return res.status(200).json({ ok: true, name: 'supabase-functions-proxy', runtime: 'nodejs-esm' });
   }
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -83,4 +83,4 @@ module.exports = async (req, res) => {
     const msg = e instanceof Error ? e.message : String(e);
     return res.status(502).json({ error: 'Upstream unreachable', detail: msg });
   }
-};
+}

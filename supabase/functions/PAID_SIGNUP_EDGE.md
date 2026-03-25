@@ -53,8 +53,8 @@ Canlı sitede tarayıcıdan doğrudan `*.supabase.co/functions/v1/...` çağrıs
 - Vercel’de yine `VITE_SUPABASE_URL` ve `VITE_SUPABASE_ANON_KEY` gerekir (serverless `process.env` ile okunur).
 - `vercel.json` içinde SPA rewrite, `api/` yolunu hariç tutar.
 - Proxy’yi kapatmak: `VITE_SUPABASE_EDGE_PROXY=0`.
-- Proxy dosyası: `api/supabase-functions/index.cjs` (Node + CommonJS; `type:module` ile uyumlu). `vercel.json` içinde `functions` ile bu path’i eşleştirmeye çalışmayın; Vercel eşleşme hatası verebilir — API klasörü otomatik algılanır.
-- Deploy sonrası `GET https://<domain>/api/supabase-functions` → `{"ok":true,"runtime":"nodejs",...}` görünmeli.
+- Proxy dosyası: **`api/supabase-functions.js`** (tek dosya; Vercel’in güvenilir route kalıbı). Alt klasördeki `.cjs` bazen hiç deploy edilmeyebilir → “sunucuya ulaşılamadı”.
+- Deploy sonrası `GET https://<domain>/api/supabase-functions` → `{"ok":true,"runtime":"nodejs-esm",...}` görünmeli.
 
 ## Sorun giderme: tarayıcıda « Failed to fetch »
 
