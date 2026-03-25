@@ -44,6 +44,7 @@
     "role": "Rôle",
     "loginSuccess": "Connexion réussie",
     "loginError": "E-mail ou mot de passe incorrect",
+    "loginInvalidSupabase": "Connexion refusée : l’e-mail ou le mot de passe ne correspond pas à Supabase Auth. Une ligne seulement dans «profiles» ne suffit pas : le même e-mail doit exister sous Authentication → Users avec un mot de passe. Vérifiez le projet (.env).",
     "registerSuccess": "Inscription réussie",
     "registerError": "Échec de l'inscription",
     "selectRole": "Sélectionner le rôle",
@@ -55,6 +56,10 @@
     "forgotPasswordSend": "Envoyer le lien",
     "forgotPasswordSent": "Un lien de réinitialisation a été envoyé à votre adresse. Vérifiez votre boîte de réception (et les spams si besoin).",
     "forgotPasswordNotConfigured": "La réinitialisation n'est pas disponible dans cet environnement. Contactez l'administrateur.",
+    "sessionActiveHint": "Vous êtes connecté en tant que {email}",
+    "switchAccountLogout": "Pour utiliser un autre compte, déconnectez-vous d'abord.",
+    "forgotPasswordWhileLoggedIn": "Une session est active. Le lien de réinitialisation s'applique uniquement à l'e-mail saisi ci-dessous.",
+    "forgotPasswordRateLimit": "Trop de demandes. Réessayez dans quelques instants.",
     "backToLogin": "Retour à la connexion",
     "firstName": "Prénom",
     "lastName": "Nom",
@@ -355,6 +360,7 @@
     "menu": "Menu"
   },
   "topBar": {
+    "companyNamePending": "Chargement de l’entreprise…",
     "managementPanel": "Panneau de Gestion",
     "excelExport": "Exporter Excel",
     "language": "Langue",

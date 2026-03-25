@@ -476,6 +476,9 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
   if (!supabase || !companyId) return { ok: false, error: 'Not configured or no company' };
 
   try {
+    const { fetchCompanyLanguageFromSupabase } = await import('./companyService');
+    await fetchCompanyLanguageFromSupabase(companyId);
+
     const [
       campaignsRes,
       vehiclesRes,

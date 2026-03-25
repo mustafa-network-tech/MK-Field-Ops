@@ -44,6 +44,7 @@
     "role": "Rol",
     "loginSuccess": "Giriş başarılı",
     "loginError": "Geçersiz e-posta veya şifre",
+    "loginInvalidSupabase": "Giriş reddedildi: e-posta veya şifre Supabase Auth ile eşleşmiyor. Yalnızca «profiles» tablosuna el ile eklenmiş bir satır giriş için yeterli değildir — aynı e-posta için Authentication → Users altında kullanıcı oluşturulmuş ve şifre tanımlı olmalı (Dashboard’dan kullanıcı davet edin veya «Şifremi unuttum» ile şifre kurun). Ortamda yanlış Supabase projesi (URL/anon key) kullanılıyorsa .env değerlerini kontrol edin.",
     "registerSuccess": "Kayıt başarılı",
     "registerError": "Kayıt başarısız",
     "selectRole": "Rol seçin",
@@ -55,6 +56,10 @@
     "forgotPasswordSend": "Sıfırlama bağlantısı gönder",
     "forgotPasswordSent": "E-posta adresinize şifre sıfırlama bağlantısı gönderildi. Gelen kutunuzu (ve gerekiyorsa spam klasörünü) kontrol edin.",
     "forgotPasswordNotConfigured": "Şifre sıfırlama bu ortamda etkin değil. Yöneticinize başvurun.",
+    "sessionActiveHint": "Şu an oturum açık: {email}",
+    "switchAccountLogout": "Başka bir hesapla giriş yapmak için önce çıkış yapın.",
+    "forgotPasswordWhileLoggedIn": "Oturumunuz açık. Gönderilen sıfırlama bağlantısı yalnızca aşağıda yazdığınız e-posta adresine aittir.",
+    "forgotPasswordRateLimit": "Çok sık istek gönderildi. Bir süre sonra yeniden deneyin.",
     "backToLogin": "Giriş sayfasına dön",
     "firstName": "Ad",
     "lastName": "Soyad",
@@ -363,6 +368,7 @@
     "menu": "Menü"
   },
   "topBar": {
+    "companyNamePending": "Şirket bilgisi yükleniyor…",
     "managementPanel": "Yönetim Paneli",
     "excelExport": "Excel Aktar",
     "language": "Dil",

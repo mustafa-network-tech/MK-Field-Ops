@@ -44,6 +44,7 @@
     "role": "Rol",
     "loginSuccess": "Sesión iniciada correctamente",
     "loginError": "Correo o contraseña incorrectos",
+    "loginInvalidSupabase": "Inicio de sesión rechazado: el correo o la contraseña no coinciden con Supabase Auth. Una fila solo en «profiles» no basta: el mismo correo debe existir en Authentication → Users con contraseña (invite desde el panel o use «Olvidé mi contraseña»). Revise URL/clave del proyecto en .env.",
     "registerSuccess": "Registro correcto",
     "registerError": "Error en el registro",
     "selectRole": "Seleccionar rol",
@@ -55,6 +56,10 @@
     "forgotPasswordSend": "Enviar enlace",
     "forgotPasswordSent": "Se ha enviado un enlace de restablecimiento a su correo. Revise la bandeja de entrada (y spam si aplica).",
     "forgotPasswordNotConfigured": "El restablecimiento de contraseña no está disponible en este entorno. Contacte al administrador.",
+    "sessionActiveHint": "Sesión iniciada como {email}",
+    "switchAccountLogout": "Para usar otra cuenta, cierre sesión primero.",
+    "forgotPasswordWhileLoggedIn": "Tiene una sesión activa. El enlace de restablecimiento solo aplica al correo que escriba abajo.",
+    "forgotPasswordRateLimit": "Demasiadas solicitudes. Inténtelo de nuevo en un momento.",
     "backToLogin": "Volver al inicio de sesión",
     "firstName": "Nombre",
     "lastName": "Apellido",
@@ -355,6 +360,7 @@
     "menu": "Menú"
   },
   "topBar": {
+    "companyNamePending": "Cargando empresa…",
     "managementPanel": "Panel de Gestión",
     "excelExport": "Exportar Excel",
     "language": "Idioma",

@@ -75,14 +75,14 @@ function RootRoute() {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/login" element={<PublicOnlyRoute><Login /></PublicOnlyRoute>} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/workspace" element={<PublicOnlyRoute><Workspace /></PublicOnlyRoute>} />
       <Route path="/pricing" element={<Landing />} />
       <Route path="/plan-and-payment" element={<PlanChange />} />
       <Route path="/pending-join" element={<PendingJoinRoute />} />
       <Route path="/super-admin" element={<SuperAdminRoute><SuperAdmin /></SuperAdminRoute>} />
-      <Route path="/forgot-password" element={<PublicOnlyRoute><ForgotPassword /></PublicOnlyRoute>} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/kullanim-kilavuzu" element={<UserGuide />} />
       <Route path="/gizlilik-politikasi" element={<PrivacyPolicy />} />

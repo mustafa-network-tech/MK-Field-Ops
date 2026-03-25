@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
+import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import styles from './Auth.module.css';
 
 export function ForgotPassword() {
   const { t } = useI18n();
+  const { user } = useApp();
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -20,9 +22,9 @@ export function ForgotPassword() {
       const result = await authService.requestPasswordReset(email.trim());
       if (!result.ok) {
         const errorMessage =
-          result.error === 'auth.forgotPasswordNotConfigured'
-            ? (t(result.error) ?? 'An error occurred')
-            : (result.error ?? 'An error occurred');
+          result.error === 'auth.forgotPasswordNotConfigured' || result.error === 'auth.forgotPasswordRateLimit'
+            ? t(result.error)
+            : result.error ?? 'An error occurred';
         setError(errorMessage);
         return;
       }
@@ -37,6 +39,7 @@ export function ForgotPassword() {
       <div className={styles.card}>
         <h1 className={styles.title}>{t('app.title')}</h1>
         <h2 className={styles.subtitle}>{t('auth.forgotPasswordTitle')}</h2>
+        {user && <p className={styles.message}>{t('auth.forgotPasswordWhileLoggedIn')}</p>}
         {sent ? (
           <p className={styles.message}>{t('auth.forgotPasswordSent')}</p>
         ) : (

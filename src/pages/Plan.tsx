@@ -1,7 +1,7 @@
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
-import { getPlanUserLimit, getPlanTeamLimit } from '../services/planGating';
+import { getPlanUserLimit, getPlanTeamLimit, planApprovedSeatCount } from '../services/planGating';
 import {
   getSubscriptionState,
   getEffectivePlan,
@@ -49,7 +49,7 @@ export function Plan() {
   const effectivePlan = getEffectivePlan(c);
   const userLimit = getPlanUserLimit(effectivePlan);
   const teamLimit = getPlanTeamLimit(effectivePlan);
-  const userCount = store.getUsers(companyId).length;
+  const userCount = planApprovedSeatCount(store.getUsers(companyId));
   const teamCount = store.getTeams(companyId).length;
 
   const planStart = c?.plan_start_date ?? c?.createdAt ?? null;

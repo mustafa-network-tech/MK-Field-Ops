@@ -4,7 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { store } from '../../data/store';
 import { authService } from '../../services/authService';
 import { ensurePendingUserNotifications } from '../../services/activityNotificationService';
-import { canPlanAddUser } from '../../services/planGating';
+import { canPlanAddUser, planApprovedSeatCount } from '../../services/planGating';
 import { getEffectivePlan } from '../../services/subscriptionService';
 import { Card } from '../ui/Card';
 import type { User as UserType, Role } from '../../types';
@@ -28,7 +28,8 @@ export function UsersTab() {
   const [usersRefreshKey, setUsersRefreshKey] = useState(0);
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
-  const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), users.length);
+  const occupiedSeats = planApprovedSeatCount(users) + joinRequests.length;
+  const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), occupiedSeats);
   const hasCompanyManager = users.some((u) => u.role === 'companyManager');
   const assignableRoles: Role[] = hasCompanyManager ? ['projectManager', 'teamLeader'] : ['companyManager', 'projectManager', 'teamLeader'];
 
@@ -99,7 +100,7 @@ export function UsersTab() {
 
   const handleApproveJoinRequest = async (reqId: string) => {
     setLimitError('');
-    if (!canPlanAddUser(getEffectivePlan(company), users.length)) {
+    if (!canAddMoreUsers) {
       setLimitError(t('onboarding.userLimitReached'));
       return;
     }
@@ -110,6 +111,8 @@ export function UsersTab() {
       await authService.fetchCompanyProfilesIntoStore(companyId);
       refreshUser();
       loadJoinRequests();
+    } else {
+      setLimitError(t('onboarding.userLimitReached'));
     }
   };
 
@@ -137,7 +140,7 @@ export function UsersTab() {
 
   return (
     <>
-      {!canAddMoreUsers && users.length > 0 && (
+      {!canAddMoreUsers && (users.length > 0 || joinRequests.length > 0) && (
         <p className={styles.errorText}>{t('onboarding.userLimitReached')}</p>
       )}
       {limitError && <p className={styles.errorText}>{limitError}</p>}

@@ -8,7 +8,7 @@ import styles from './Auth.module.css';
 
 export function Login() {
   const { t } = useI18n();
-  const { setUser } = useApp();
+  const { user, setUser } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const afterPaidRegistration = Boolean((location.state as { afterPaidRegistration?: boolean } | null)?.afterPaidRegistration);
@@ -39,11 +39,26 @@ export function Login() {
     }
   };
 
+  const handleLogoutToSwitch = () => {
+    authService.logout();
+    setUser(undefined);
+    setError('');
+  };
+
   return (
     <div className={styles.wrap}>
       <div className={styles.card}>
         <h1 className={styles.title}>{t('app.title')}</h1>
         <h2 className={styles.subtitle}>{t('auth.login')}</h2>
+        {user && (
+          <div className={styles.message} role="status">
+            <p>{t('auth.sessionActiveHint', { email: user.email ?? '' })}</p>
+            <p>{t('auth.switchAccountLogout')}</p>
+            <button type="button" className={styles.primaryBtn} onClick={handleLogoutToSwitch}>
+              {t('auth.logout')}
+            </button>
+          </div>
+        )}
         {afterPaidRegistration && <p className={styles.message}>{t('auth.afterPaidRegistrationHint')}</p>}
         <form onSubmit={handleSubmit} className={styles.form}>
           <label className={styles.label}>

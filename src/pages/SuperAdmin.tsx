@@ -86,6 +86,11 @@ export function SuperAdmin() {
 
       {!loading && !error && (
         <>
+          <p className={styles.notice}>
+            <strong>Not:</strong> El ile yalnızca <code>profiles</code> tablosuna eklenen kullanıcılar giriş yapamaz.
+            Giriş <code>Authentication → Users</code> kaydına ve şifreye bağlıdır; kullanıcıyı buradan oluşturun veya
+            uygulamadan kayıt / şifre sıfırlama kullanın.
+          </p>
           <div className={styles.cards}>
             <div className={styles.card}>
               <span className={styles.cardLabel}>Toplam Sirket</span>

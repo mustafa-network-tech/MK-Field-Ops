@@ -37,6 +37,10 @@
 .companyName {
   font-weight: 600;
   font-size: 0.95rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(36vw, 22rem);
 }
 
 .companyPlan {
@@ -281,9 +285,15 @@
     gap: 0.5rem;
   }
 
-  /* Mobil header: sadece kullanıcı adı + onay bildirimi kalsın; diğerleri menüde */
+  /* Ortada şirket adı: dar alanda ellipsis; tam ad için title (TopBar) */
   .center {
-    display: none !important;
+    max-width: calc(100vw - 11rem);
+    padding: 0 0.25rem;
+  }
+
+  .companyName {
+    max-width: min(42vw, 11rem);
+    font-size: 0.82rem;
   }
 
   .excelBtn,

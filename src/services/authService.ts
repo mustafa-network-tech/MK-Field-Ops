@@ -1,6 +1,6 @@
 import { store } from '../data/store';
 import type { Role } from '../types';
-import { canPlanAddUser } from './planGating';
+import { canPlanAddUser, planApprovedSeatCount } from './planGating';
 import { getEffectivePlan } from './subscriptionService';
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -161,10 +161,8 @@ export const authService = {
       const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
       if (error) {
         if (error.message.includes('Invalid login')) {
-          return {
-            ok: false,
-            error: `Giris reddedildi (invalid login). Supabase proje ref: ${getSupabaseProjectRef()}`,
-          };
+          console.warn('[auth] signInWithPassword invalid credentials. Supabase ref:', getSupabaseProjectRef());
+          return { ok: false, error: 'auth.loginInvalidSupabase' };
         }
         return { ok: false, error: error.message };
       }
@@ -319,6 +317,16 @@ export const authService = {
       });
       if (rpcError || cId == null) return { ok: false, error: 'auth.companyNotFound' };
 
+      const { data: capacityOk, error: capError } = await supabase.rpc('company_join_capacity_ok', {
+        p_company_id: cId,
+      });
+      if (capError) {
+        console.warn('[auth] company_join_capacity_ok:', capError.message);
+      }
+      if (capacityOk === false) {
+        return { ok: false, error: 'onboarding.userLimitReached' };
+      }
+
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
@@ -332,6 +340,10 @@ export const authService = {
       });
       if (signUpError) {
         if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
+        const msg = (signUpError.message ?? '').toLowerCase();
+        if (msg.includes('user limit') || msg.includes('company_user_limit') || msg.includes('23514')) {
+          return { ok: false, error: 'onboarding.userLimitReached' };
+        }
         return { ok: false, error: signUpError.message };
       }
       const userId = authData.user?.id;
@@ -350,7 +362,8 @@ export const authService = {
     if (store.getUserByEmail(normalizedEmail, cId)) return { ok: false, error: 'auth.emailExists' };
     const existingUsers = store.getUsers(cId);
     const companyWithPlan = store.getCompany(cId, cId);
-    if (!canPlanAddUser(getEffectivePlan(companyWithPlan), existingUsers.length)) {
+    const seats = planApprovedSeatCount(existingUsers);
+    if (!canPlanAddUser(getEffectivePlan(companyWithPlan), seats)) {
       return { ok: false, error: 'onboarding.userLimitReached' };
     }
     store.addUser({
@@ -530,10 +543,17 @@ export const authService = {
     if (!supabase) return { ok: false, error: 'auth.forgotPasswordNotConfigured' };
     const appUrl = (import.meta.env.VITE_APP_URL as string | undefined)?.trim();
     const redirectOrigin = appUrl && /^https?:\/\//.test(appUrl) ? appUrl.replace(/\/$/, '') : window.location.origin;
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const normalizedEmail = normalizeEmailInput(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
       redirectTo: `${redirectOrigin}/reset-password`,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) {
+      const msg = (error.message ?? '').toLowerCase();
+      if (msg.includes('rate') || msg.includes('too many') || error.status === 429) {
+        return { ok: false, error: 'auth.forgotPasswordRateLimit' };
+      }
+      return { ok: false, error: error.message };
+    }
     return { ok: true };
   },
 };

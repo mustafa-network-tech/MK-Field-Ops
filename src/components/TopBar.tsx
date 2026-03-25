@@ -90,8 +90,8 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
           {companyLogoUrl && (
             <img src={companyLogoUrl} alt="" className={styles.companyLogo} />
           )}
-          <span className={styles.companyName}>
-            {companyName || '…'}
+          <span className={styles.companyName} title={companyName || undefined}>
+            {companyName?.trim() ? companyName : t('topBar.companyNamePending')}
             {planLabel && <span className={styles.companyPlan}> ({planLabel})</span>}
           </span>
         </div>

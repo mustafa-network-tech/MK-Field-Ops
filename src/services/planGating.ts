@@ -56,6 +56,18 @@ export function canPlanAddUser(
   return limit === Infinity || currentUserCount < limit;
 }
 
+/**
+ * Plan kotası için sayım: superAdmin ve onaysız profiller dahil edilmez.
+ * (Bekleyen join talepleri ayrıca eklenir: onaylı sayı + joinRequests.length.)
+ */
+export function planApprovedSeatCount(
+  users: { role?: string; roleApprovalStatus?: string }[]
+): number {
+  return users.filter(
+    (u) => u.role !== 'superAdmin' && u.roleApprovalStatus === 'approved'
+  ).length;
+}
+
 /** Maximum teams allowed for the plan (Starter = 3, Professional = 6, Enterprise = 14). */
 export function getPlanTeamLimit(plan: CompanyPlan | null | undefined): number {
   const p = normalizePlan(plan);

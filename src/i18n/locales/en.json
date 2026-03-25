@@ -44,6 +44,7 @@
     "role": "Role",
     "loginSuccess": "Login successful",
     "loginError": "Invalid email or password",
+    "loginInvalidSupabase": "Sign-in failed: email or password does not match Supabase Auth. A row only in «profiles» is not enough — the same email must exist under Authentication → Users with a password (invite the user from the Dashboard or use Forgot password). If this is the wrong project, check your .env Supabase URL and anon key.",
     "registerSuccess": "Registration successful",
     "registerError": "Registration failed",
     "selectRole": "Select role",
@@ -55,6 +56,10 @@
     "forgotPasswordSend": "Send reset link",
     "forgotPasswordSent": "A password reset link was sent to your email. Check your inbox (and spam folder if needed).",
     "forgotPasswordNotConfigured": "Password reset is not available in this environment. Contact your administrator.",
+    "sessionActiveHint": "You are signed in as {email}",
+    "switchAccountLogout": "To use another account, sign out first.",
+    "forgotPasswordWhileLoggedIn": "You have an active session. The reset link applies only to the email address you enter below.",
+    "forgotPasswordRateLimit": "Too many requests. Please try again after a short while.",
     "backToLogin": "Back to login",
     "firstName": "First Name",
     "lastName": "Last Name",
@@ -363,6 +368,7 @@
     "menu": "Menu"
   },
   "topBar": {
+    "companyNamePending": "Loading company…",
     "managementPanel": "Management Panel",
     "excelExport": "Excel Export",
     "language": "Language",

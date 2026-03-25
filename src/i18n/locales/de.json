@@ -44,6 +44,7 @@
     "role": "Rolle",
     "loginSuccess": "Anmeldung erfolgreich",
     "loginError": "Ungültige E-Mail oder Passwort",
+    "loginInvalidSupabase": "Anmeldung abgelehnt: E-Mail oder Passwort stimmen nicht mit Supabase Auth überein. Nur «profiles»-Eintrag reicht nicht — dieselbe E-Mail muss unter Authentication → Users mit Passwort existieren. .env prüfen.",
     "registerSuccess": "Registrierung erfolgreich",
     "registerError": "Registrierung fehlgeschlagen",
     "selectRole": "Rolle wählen",
@@ -55,6 +56,10 @@
     "forgotPasswordSend": "Link senden",
     "forgotPasswordSent": "Ein Link zum Zurücksetzen des Passworts wurde an Ihre E-Mail gesendet. Prüfen Sie Posteingang und Spam.",
     "forgotPasswordNotConfigured": "Passwort-Zurücksetzen ist in dieser Umgebung nicht verfügbar. Bitte wenden Sie sich an Ihren Administrator.",
+    "sessionActiveHint": "Angemeldet als {email}",
+    "switchAccountLogout": "Für ein anderes Konto zuerst abmelden.",
+    "forgotPasswordWhileLoggedIn": "Sie sind angemeldet. Der Link gilt nur für die unten eingegebene E-Mail-Adresse.",
+    "forgotPasswordRateLimit": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen.",
     "backToLogin": "Zurück zur Anmeldung",
     "firstName": "Vorname",
     "lastName": "Nachname",
@@ -355,6 +360,7 @@
     "menu": "Menü"
   },
   "topBar": {
+    "companyNamePending": "Unternehmen wird geladen…",
     "managementPanel": "Verwaltungsbereich",
     "excelExport": "Excel-Export",
     "language": "Sprache",

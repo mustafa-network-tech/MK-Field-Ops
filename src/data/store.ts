@@ -145,11 +145,16 @@ export const store = {
     return c ? { ...c, language_code: (c.language_code ?? 'en') as Company['language_code'] } : undefined;
   },
 
-  /** Ensure a company exists in store (e.g. from Supabase). Adds if missing. */
+  /** Ensure a company exists in store (e.g. from Supabase). Adds if missing; fills name if kayıt boş kaldıysa. */
   ensureCompany(id: string, name: string): void {
     const raw = load<Company[]>(STORAGE_KEYS.companies, []);
-    if (raw.some((c) => c.id === id)) return;
-    raw.push({ id, name, createdAt: new Date().toISOString(), language_code: 'en' });
+    const i = raw.findIndex((c) => c.id === id);
+    const trimmed = name.trim();
+    if (i === -1) {
+      raw.push({ id, name: trimmed || 'Company', createdAt: new Date().toISOString(), language_code: 'en' });
+    } else if (trimmed && !(raw[i].name && String(raw[i].name).trim())) {
+      raw[i] = { ...raw[i], name: trimmed };
+    }
     save(STORAGE_KEYS.companies, raw);
   },
 
