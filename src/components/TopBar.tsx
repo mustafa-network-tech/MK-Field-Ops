@@ -4,7 +4,6 @@ import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService } from '../services/authService';
 import { updateCompanyLanguageInSupabase } from '../services/companyService';
-import { store } from '../data/store';
 import { getEffectivePlan, getPlanWarningState, formatPlanExpiryRemaining } from '../services/subscriptionService';
 import styles from './TopBar.module.css';
 
@@ -26,7 +25,7 @@ const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 
 export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
   const { t, locale, setLocale } = useI18n();
-  const { user, setUser, refreshCompany } = useApp();
+  const { user, company, setUser, refreshCompany } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [langOpen, setLangOpen] = useState(false);
@@ -59,7 +58,6 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
 
   if (!user) return null;
 
-  const company = user.companyId ? store.getCompany(user.companyId, user.companyId) : undefined;
   const companyName = company?.name ?? '';
   const companyLogoUrl = company?.logo_url ?? null;
   const effectivePlan = getEffectivePlan(company);

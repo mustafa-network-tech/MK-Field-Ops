@@ -33,7 +33,6 @@ export function Settings() {
   const [validationError, setValidationError] = useState('');
   const [payrollSaving, setPayrollSaving] = useState(false);
 
-  const [companyName, setCompanyName] = useState(company?.name ?? '');
   const [logoUrl, setLogoUrl] = useState<string | null>(company?.logo_url ?? null);
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [pendingPreviewUrl, setPendingPreviewUrl] = useState<string | null>(null);
@@ -52,7 +51,6 @@ export function Settings() {
 
   useEffect(() => {
     if (company) {
-      setCompanyName(company.name);
       setLogoUrl(company.logo_url ?? null);
     }
   }, [company?.id, company?.name, company?.logo_url]);
@@ -197,9 +195,8 @@ export function Settings() {
         }
         newLogoUrl = result.url;
       }
-      const prevName = company?.name;
       const prevLogo = company?.logo_url ?? null;
-      const nextName = companyName.trim() || company?.name || 'Company';
+      const nextName = (company?.name ?? '').trim() || 'Company';
       const branding = await updateCompanyBrandingInSupabase(companyId, {
         name: nextName,
         logo_url: newLogoUrl,
@@ -221,15 +218,6 @@ export function Settings() {
       setCompanyMessage('saved');
       const actor = actorFromUser(user);
       if (actor) {
-        if (prevName !== (companyName.trim() || company?.name)) {
-          logEvent(actor, {
-            action: 'COMPANY_NAME_CHANGED',
-            entity_type: 'company',
-            entity_id: companyId,
-            company_id: companyId,
-            meta: { oldValue: prevName, newValue: companyName.trim() || company?.name },
-          });
-        }
         if (prevLogo !== newLogoUrl) {
           logEvent(actor, {
             action: 'COMPANY_LOGO_CHANGED',
@@ -258,10 +246,9 @@ export function Settings() {
             <input
               id="companyName"
               type="text"
-              value={companyName}
-              onChange={(e) => setCompanyName(e.target.value)}
-              placeholder={t('settings.companyNamePlaceholder')}
+              value={(company?.name ?? '').trim()}
               className={styles.inputFull}
+              readOnly
             />
           </div>
           <div className={styles.field}>
