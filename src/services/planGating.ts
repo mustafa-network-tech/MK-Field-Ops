@@ -32,10 +32,11 @@ function normalizePlan(plan: CompanyPlan | null | undefined): CompanyPlan | null
   return null;
 }
 
-/** Maximum users allowed for the plan. */
+/** Maximum users allowed for the plan. Bilinmeyen plan (null): kota uygulanmaz (UsersTab ile uyumlu). */
 export function getPlanUserLimit(plan: CompanyPlan | null | undefined): number {
   const p = normalizePlan(plan);
-  return p ? PLAN_USER_LIMITS[p] : 0;
+  if (!p) return Infinity;
+  return PLAN_USER_LIMITS[p];
 }
 
 /**
@@ -73,10 +74,11 @@ export function planApprovedSeatCount(
   ).length;
 }
 
-/** Maximum teams allowed for the plan (Starter = 3, Professional = 6, Enterprise = 14). */
+/** Maximum teams allowed for the plan. Bilinmeyen plan (null): ekip eklemeyi bloklamayın (plan senkronu gecikince 0 limit hatası olmasın). */
 export function getPlanTeamLimit(plan: CompanyPlan | null | undefined): number {
   const p = normalizePlan(plan);
-  return p ? PLAN_TEAM_LIMITS[p] : 0;
+  if (!p) return Infinity;
+  return PLAN_TEAM_LIMITS[p];
 }
 
 /** Whether the company can add one more team (currentCount is existing team count). */

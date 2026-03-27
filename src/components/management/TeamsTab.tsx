@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../../i18n/I18nContext';
 import { useApp } from '../../context/AppContext';
@@ -27,7 +27,7 @@ const defaultForm = {
 
 export function TeamsTab() {
   const { t } = useI18n();
-  const { user, company } = useApp();
+  const { user, company, profilesVersion } = useApp();
   const navigate = useNavigate();
   const companyId = user?.companyId ?? '';
   const teams = getTeamsForUser(companyId, user);
@@ -35,7 +35,19 @@ export function TeamsTab() {
   const activeTeamCount = allTeamsForCompany.filter((t) => !t.wipedAt).length;
   const wipedTeamsList = allTeamsForCompany.filter((t) => Boolean(t.wipedAt));
   const users = store.getUsers(companyId);
-  const eligibleLeaders = getEligibleTeamLeaders(companyId);
+  /** Profil listesi gecikince PM/TL bazen listede yok; lider seçiminde kendini yine göster. */
+  const eligibleLeaders = useMemo(() => {
+    const base = getEligibleTeamLeaders(companyId);
+    if (
+      user?.companyId === companyId &&
+      user.roleApprovalStatus === 'approved' &&
+      (user.role === 'projectManager' || user.role === 'teamLeader') &&
+      !base.some((u) => u.id === user.id)
+    ) {
+      return [user, ...base];
+    }
+    return base;
+  }, [companyId, user, profilesVersion]);
   const visibleLeaders = user?.role === 'teamLeader'
     ? eligibleLeaders.filter((u) => u.id === user.id)
     : eligibleLeaders;
@@ -205,7 +217,7 @@ export function TeamsTab() {
                     setForm((f) => ({ ...f, leaderId: user.id }));
                   }
                 }}
-                disabled={!canAddTeam || hasNoLeaders}
+                disabled={!canAddTeam}
               >
                 {t('teams.createTeam')}
               </button>

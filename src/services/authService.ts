@@ -23,7 +23,9 @@ function getSupabaseProjectRef(): string {
   return raw.replace(/^https:\/\//, '').replace(/\.supabase\.co.*/, '');
 }
 
-function getCompanyNameFromAuthMeta(user: SupabaseUser): string | null {
+/** Oturum metadata’sındaki şirket adı (store henüz dolmamışken üst çubuk için yedek). */
+export function getCompanyNameFromUserMetadata(user: SupabaseUser | null | undefined): string | null {
+  if (!user) return null;
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const raw = typeof meta.company_name === 'string' ? meta.company_name.trim() : '';
   return raw || null;
@@ -207,7 +209,7 @@ export const authService = {
       if (!profile) {
         const profileFromMeta = buildProfileFromAuthUser(signedUser, normalizedEmail);
         if (profileFromMeta.company_id) {
-          const metaCompanyName = getCompanyNameFromAuthMeta(signedUser);
+          const metaCompanyName = getCompanyNameFromUserMetadata(signedUser);
           if (metaCompanyName) store.ensureCompany(profileFromMeta.company_id, metaCompanyName);
         }
         store.setUserFromProfile(profileFromMeta, signedUser?.email ?? normalizedEmail);
@@ -218,7 +220,7 @@ export const authService = {
         return { ok: false, error: 'auth.pendingApproval' };
       }
       if (consistentProfile.company_id) {
-        const metaCompanyName = getCompanyNameFromAuthMeta(signedUser);
+        const metaCompanyName = getCompanyNameFromUserMetadata(signedUser);
         if (metaCompanyName) store.ensureCompany(consistentProfile.company_id, metaCompanyName);
       }
       store.setUserFromProfile(
@@ -440,7 +442,7 @@ export const authService = {
     const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email, can_see_prices').eq('id', session.user.id).single();
     if (!profile) return false;
     if (profile.company_id) {
-      const metaCompanyName = getCompanyNameFromAuthMeta(session.user);
+      const metaCompanyName = getCompanyNameFromUserMetadata(session.user);
       if (metaCompanyName) store.ensureCompany(profile.company_id, metaCompanyName);
     }
     store.setUserFromProfile(profile, profile.email ?? session.user.email ?? '');

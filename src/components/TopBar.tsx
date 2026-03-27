@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
-import { authService } from '../services/authService';
+import { authService, getCompanyNameFromUserMetadata } from '../services/authService';
+import { supabase } from '../services/supabaseClient';
 import { updateCompanyLanguageInSupabase } from '../services/companyService';
 import { getEffectivePlan, getPlanWarningState, formatPlanExpiryRemaining } from '../services/subscriptionService';
+import { store } from '../data/store';
 import styles from './TopBar.module.css';
 
 type TopBarProps = { managementNotificationCount?: number };
@@ -30,9 +32,36 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
   const location = useLocation();
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
+  const [companyNameFromSessionMeta, setCompanyNameFromSessionMeta] = useState<string | null>(null);
 
   const canChangeLanguage = user?.role === 'companyManager' || user?.role === 'projectManager';
   const canSeePlanWarning = user?.role === 'companyManager' || user?.role === 'projectManager';
+
+  useEffect(() => {
+    if (!supabase || !user?.companyId) {
+      setCompanyNameFromSessionMeta(null);
+      return;
+    }
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (cancelled || !session?.user) return;
+      setCompanyNameFromSessionMeta(getCompanyNameFromUserMetadata(session.user));
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.companyId, user?.id]);
+
+  /** Store’da isim boşsa oturum metadata’sı ile doldur (PM/CM aynı görünüm). */
+  useEffect(() => {
+    const cid = user?.companyId;
+    const meta = companyNameFromSessionMeta?.trim();
+    if (!cid || !meta) return;
+    const c = store.getCompany(cid, cid);
+    if (c && String(c.name ?? '').trim()) return;
+    store.ensureCompany(cid, meta);
+    refreshCompany();
+  }, [user?.companyId, companyNameFromSessionMeta, refreshCompany]);
 
   useEffect(() => {
     if (!langOpen) return;
@@ -58,7 +87,7 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
 
   if (!user) return null;
 
-  const companyName = company?.name ?? '';
+  const companyName = (company?.name?.trim() ? company.name : companyNameFromSessionMeta)?.trim() ?? '';
   const companyLogoUrl = company?.logo_url ?? null;
   const effectivePlan = getEffectivePlan(company);
   const planLabel = effectivePlan ? t(planKeys[effectivePlan] ?? effectivePlan) : null;
