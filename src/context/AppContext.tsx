@@ -20,7 +20,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | undefined>(() => store.getCurrentUser());
-  const [companyRefresh, setCompanyRefresh] = useState(0);
+  const [, setCompanyRefresh] = useState(0);
   const [profilesVersion, setProfilesVersion] = useState(0);
 
   useEffect(() => {
@@ -41,10 +41,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCompanyRefresh((n) => n + 1);
   }, []);
 
-  const company = useMemo(() => {
-    if (!user?.companyId) return undefined;
-    return store.getCompany(user.companyId, user.companyId);
-  }, [user?.companyId, companyRefresh]);
+  // Store tabanli company bilgisi bazen user.companyId degismeden guncellenebiliyor
+  // (login/restore akislari). Bu nedenle her render'da dogrudan oku.
+  const company = user?.companyId
+    ? store.getCompany(user.companyId, user.companyId)
+    : undefined;
 
   useEffect(() => {
     if (!user?.companyId) return;
