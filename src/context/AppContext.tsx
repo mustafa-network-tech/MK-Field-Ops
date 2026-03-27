@@ -52,6 +52,51 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     fetchCompanyLanguageFromSupabase(user.companyId).then(() => refreshCompany());
   }, [user?.companyId, refreshCompany]);
 
+  // Şirket verilerini (firma adı, plan, hakediş günü vb.) diğer kullanıcı aksiyonlarından sonra da
+  // cihazlar arasında güncel tutmak için odakta/periyodik hafif senkron.
+  useEffect(() => {
+    if (!user?.companyId) return;
+    let alive = true;
+
+    const syncFromCloud = async () => {
+      try {
+        await fetchCompanyLanguageFromSupabase(user.companyId);
+        const { fetchCompanyDataFromSupabase } = await import('../services/supabaseSyncService');
+        await fetchCompanyDataFromSupabase(user.companyId);
+        if (user.role === 'companyManager' || user.role === 'projectManager') {
+          await authService.fetchCompanyProfilesIntoStore(user.companyId);
+          setProfilesVersion((v) => v + 1);
+        }
+      } finally {
+        if (alive) refreshCompany();
+      }
+    };
+
+    const onFocus = () => {
+      void syncFromCloud();
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') void syncFromCloud();
+    };
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisibility);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void syncFromCloud();
+    }, 45000);
+
+    // İlk mount'ta da bir kez tetikle.
+    void syncFromCloud();
+
+    return () => {
+      alive = false;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.clearInterval(timer);
+    };
+  }, [user?.companyId, user?.role, refreshCompany]);
+
   // Starter plan: ensure default campaign and project exist so job entry works without Projects UI
   useEffect(() => {
     if (!user?.companyId || !company) return;
