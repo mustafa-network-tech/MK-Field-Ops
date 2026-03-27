@@ -23,6 +23,12 @@ function getSupabaseProjectRef(): string {
   return raw.replace(/^https:\/\//, '').replace(/\.supabase\.co.*/, '');
 }
 
+function getCompanyNameFromAuthMeta(user: SupabaseUser): string | null {
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const raw = typeof meta.company_name === 'string' ? meta.company_name.trim() : '';
+  return raw || null;
+}
+
 function buildProfileFromAuthUser(user: SupabaseUser, fallbackEmail: string) {
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const role = typeof meta.role === 'string' ? meta.role : null;
@@ -172,12 +178,20 @@ export const authService = {
       const profile = await fetchOrRepairProfile(signedUser, normalizedEmail);
       if (!profile) {
         const profileFromMeta = buildProfileFromAuthUser(signedUser, normalizedEmail);
+        if (profileFromMeta.company_id) {
+          const metaCompanyName = getCompanyNameFromAuthMeta(signedUser);
+          if (metaCompanyName) store.ensureCompany(profileFromMeta.company_id, metaCompanyName);
+        }
         store.setUserFromProfile(profileFromMeta, signedUser?.email ?? normalizedEmail);
         return { ok: true };
       }
       const consistentProfile = await repairProfileConsistency(profile, signedUser, normalizedEmail);
       if (consistentProfile.role !== 'superAdmin' && consistentProfile.role_approval_status !== 'approved') {
         return { ok: false, error: 'auth.pendingApproval' };
+      }
+      if (consistentProfile.company_id) {
+        const metaCompanyName = getCompanyNameFromAuthMeta(signedUser);
+        if (metaCompanyName) store.ensureCompany(consistentProfile.company_id, metaCompanyName);
       }
       store.setUserFromProfile(
         { ...consistentProfile, company_id: consistentProfile.company_id ?? '' },
@@ -259,7 +273,15 @@ export const authService = {
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
-        options: { data: { full_name: fullName, company_id: insertedCompany.id, role: 'companyManager', role_approval_status: 'approved' } },
+        options: {
+          data: {
+            full_name: fullName,
+            company_id: insertedCompany.id,
+            company_name: name,
+            role: 'companyManager',
+            role_approval_status: 'approved',
+          },
+        },
       });
       if (signUpError) {
         if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
@@ -389,6 +411,10 @@ export const authService = {
     if (!session?.user?.id) return false;
     const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email, can_see_prices').eq('id', session.user.id).single();
     if (!profile) return false;
+    if (profile.company_id) {
+      const metaCompanyName = getCompanyNameFromAuthMeta(session.user);
+      if (metaCompanyName) store.ensureCompany(profile.company_id, metaCompanyName);
+    }
     store.setUserFromProfile(profile, profile.email ?? session.user.email ?? '');
     const { fetchCompanyDataFromSupabase } = await import('./supabaseSyncService');
     if (profile.company_id) await fetchCompanyDataFromSupabase(profile.company_id);

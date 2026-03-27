@@ -28,7 +28,7 @@ export function UsersTab() {
   const [usersRefreshKey, setUsersRefreshKey] = useState(0);
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
-  const occupiedSeats = planApprovedSeatCount(users) + joinRequests.length;
+  const occupiedSeats = planApprovedSeatCount(users);
   const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), occupiedSeats);
   const hasCompanyManager = users.some((u) => u.role === 'companyManager');
   const assignableRoles: Role[] = hasCompanyManager ? ['projectManager', 'teamLeader'] : ['companyManager', 'projectManager', 'teamLeader'];

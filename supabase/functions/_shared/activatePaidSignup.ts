@@ -153,6 +153,7 @@ export async function activatePaidSignup(
       user_metadata: {
         full_name: fullName,
         company_id: cId,
+        company_name: campaignName,
         role: 'companyManager',
         role_approval_status: 'approved',
       },
