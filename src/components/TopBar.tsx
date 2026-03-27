@@ -1,10 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { authService, getCompanyNameFromUserMetadata } from '../services/authService';
 import { supabase } from '../services/supabaseClient';
-import { updateCompanyLanguageInSupabase } from '../services/companyService';
+import { fetchCompanyLanguageFromSupabase, updateCompanyLanguageInSupabase } from '../services/companyService';
 import { getEffectivePlan, getPlanWarningState, formatPlanExpiryRemaining } from '../services/subscriptionService';
 import { store } from '../data/store';
 import styles from './TopBar.module.css';
@@ -27,12 +27,15 @@ const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 
 export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
   const { t, locale, setLocale } = useI18n();
-  const { user, company, setUser, refreshCompany } = useApp();
+  const { user, company, setUser, refreshCompany, profilesVersion } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
   const [langOpen, setLangOpen] = useState(false);
   const langRef = useRef<HTMLDivElement>(null);
   const [companyNameFromSessionMeta, setCompanyNameFromSessionMeta] = useState<string | null>(null);
+  /** Şirket adı için buluttan doldurma (PM’de JWT’de company_name genelde yok). */
+  const companyHydrateInFlight = useRef(false);
+  const companyHydrateTotal = useRef(0);
 
   const canChangeLanguage = user?.role === 'companyManager' || user?.role === 'projectManager';
   const canSeePlanWarning = user?.role === 'companyManager' || user?.role === 'projectManager';
@@ -62,6 +65,32 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
     store.ensureCompany(cid, meta);
     refreshCompany();
   }, [user?.companyId, companyNameFromSessionMeta, refreshCompany]);
+
+  useLayoutEffect(() => {
+    companyHydrateTotal.current = 0;
+    companyHydrateInFlight.current = false;
+  }, [user?.companyId]);
+
+  useEffect(() => {
+    const cid = user?.companyId;
+    if (!cid || !supabase) return;
+    const trimmed = (store.getCompany(cid, cid)?.name ?? '').trim();
+    const nameOk = Boolean(trimmed) && trimmed !== 'Company';
+    if (nameOk) return;
+    if (companyHydrateInFlight.current || companyHydrateTotal.current >= 2) return;
+    companyHydrateInFlight.current = true;
+    companyHydrateTotal.current += 1;
+    let cancelled = false;
+    void fetchCompanyLanguageFromSupabase(cid)
+      .catch(() => {})
+      .finally(() => {
+        companyHydrateInFlight.current = false;
+        if (!cancelled) refreshCompany();
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.companyId, company?.name, profilesVersion, refreshCompany]);
 
   useEffect(() => {
     if (!langOpen) return;

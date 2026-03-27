@@ -76,6 +76,54 @@ export async function applyPendingPlanIfDue(companyId: string): Promise<void> {
   await supabase.rpc('apply_pending_plan_if_due', { p_company_id: companyId });
 }
 
+type CompanySnapshotRow = {
+  language_code?: string | null;
+  name?: string | null;
+  logo_url?: string | null;
+  plan?: string | null;
+  plan_start_date?: string | null;
+  plan_end_date?: string | null;
+  pending_plan?: string | null;
+  pending_plan_billing_cycle?: string | null;
+  payroll_start_day?: number | null;
+  subscription_status?: string | null;
+  closure_requested_at?: string | null;
+  purge_after?: string | null;
+  closed_by_user_id?: string | null;
+  id?: string;
+};
+
+const COMPANY_SNAPSHOT_SELECT =
+  'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day, subscription_status, closure_requested_at, purge_after, closed_by_user_id';
+
+/** Doğrudan SELECT boş/hatalı olabiliyor; get_my_company_snapshot ile yedek (PM dahil). */
+async function fetchCompanySnapshotRow(companyId: string): Promise<CompanySnapshotRow | null> {
+  if (!supabase) return null;
+  const { data: fromTable, error: tableErr } = await supabase
+    .from('companies')
+    .select(COMPANY_SNAPSHOT_SELECT)
+    .eq('id', companyId)
+    .maybeSingle();
+  if (tableErr) {
+    console.warn('fetchCompanySnapshotRow companies', tableErr);
+  }
+  if (fromTable) return fromTable as CompanySnapshotRow;
+
+  const { data: rpcData, error: rpcErr } = await supabase.rpc('get_my_company_snapshot');
+  if (rpcErr) {
+    console.warn('get_my_company_snapshot', rpcErr);
+    return null;
+  }
+  const rowRaw = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+  if (!rowRaw || typeof rowRaw !== 'object') return null;
+  const row = rowRaw as CompanySnapshotRow & { id?: string };
+  if (row.id != null && String(row.id) !== String(companyId)) {
+    console.warn('get_my_company_snapshot id mismatch', row.id, companyId);
+    return null;
+  }
+  return row;
+}
+
 /**
  * Fetch company row from Supabase and merge language_code, plan, plan dates, pending_plan into local store.
  * Applies pending plan if due (RPC) before fetch so DB is up to date. Call on app init when user is set.
@@ -83,18 +131,9 @@ export async function applyPendingPlanIfDue(companyId: string): Promise<void> {
 export async function fetchCompanyLanguageFromSupabase(companyId: string): Promise<void> {
   if (!supabase) return;
   await applyPendingPlanIfDue(companyId);
-  const { data, error } = await supabase
-    .from('companies')
-    .select(
-      'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day, subscription_status, closure_requested_at, purge_after, closed_by_user_id'
-    )
-    .eq('id', companyId)
-    .maybeSingle();
-  if (error) {
-    console.warn('fetchCompanyLanguageFromSupabase', error);
-    return;
-  }
+  const data = await fetchCompanySnapshotRow(companyId);
   if (!data) return;
+
   const language_code = normalizeLanguageCode(data.language_code);
   const plan: CompanyPlan | null = data.plan && ['starter', 'professional', 'enterprise'].includes(data.plan) ? (data.plan as CompanyPlan) : null;
   const pending_plan: CompanyPlan | null = data.pending_plan && ['starter', 'professional', 'enterprise'].includes(data.pending_plan) ? (data.pending_plan as CompanyPlan) : null;
