@@ -29,7 +29,9 @@ export function UsersTab() {
   const users = store.getUsers(companyId);
   const pending = users.filter((u) => u.roleApprovalStatus === 'pending');
   const occupiedSeats = planApprovedSeatCount(users);
-  const canAddMoreUsers = canPlanAddUser(getEffectivePlan(company), occupiedSeats);
+  const effectivePlan = getEffectivePlan(company);
+  const hasKnownPlan = effectivePlan !== null;
+  const canAddMoreUsers = hasKnownPlan ? canPlanAddUser(effectivePlan, occupiedSeats) : true;
   const hasCompanyManager = users.some((u) => u.role === 'companyManager');
   const assignableRoles: Role[] = hasCompanyManager ? ['projectManager', 'teamLeader'] : ['companyManager', 'projectManager', 'teamLeader'];
 
@@ -100,7 +102,7 @@ export function UsersTab() {
 
   const handleApproveJoinRequest = async (reqId: string) => {
     setLimitError('');
-    if (!canAddMoreUsers) {
+    if (hasKnownPlan && !canAddMoreUsers) {
       setLimitError(t('onboarding.userLimitReached'));
       return;
     }
@@ -140,7 +142,7 @@ export function UsersTab() {
 
   return (
     <>
-      {!canAddMoreUsers && (users.length > 0 || joinRequests.length > 0) && (
+      {hasKnownPlan && !canAddMoreUsers && (users.length > 0 || joinRequests.length > 0) && (
         <p className={styles.errorText}>{t('onboarding.userLimitReached')}</p>
       )}
       {limitError && <p className={styles.errorText}>{limitError}</p>}
