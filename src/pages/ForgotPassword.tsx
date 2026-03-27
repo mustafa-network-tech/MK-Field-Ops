@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
-import { authService } from '../services/authService';
+import { authService, toAuthErrorKey } from '../services/authService';
 import styles from './Auth.module.css';
 
 export function ForgotPassword() {
@@ -21,11 +21,7 @@ export function ForgotPassword() {
     try {
       const result = await authService.requestPasswordReset(email.trim());
       if (!result.ok) {
-        const errorMessage =
-          result.error === 'auth.forgotPasswordNotConfigured' || result.error === 'auth.forgotPasswordRateLimit'
-            ? t(result.error)
-            : result.error ?? 'An error occurred';
-        setError(errorMessage);
+        setError(t(toAuthErrorKey(result.error)));
         return;
       }
       setSent(true);

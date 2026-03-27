@@ -159,6 +159,34 @@ const normalize = (value: string) =>
 
 export type AuthResult = { ok: boolean; error?: string };
 
+/** UI için: servis/DB ham hatalarını i18n anahtarına normalize et. */
+export function toAuthErrorKey(error?: string): string {
+  if (!error) return 'auth.loginError';
+  if (
+    error.startsWith('auth.') ||
+    error.startsWith('onboarding.') ||
+    error.startsWith('validation.') ||
+    error.startsWith('planChangePage.')
+  ) {
+    return error;
+  }
+
+  const msg = error.toLowerCase();
+
+  if (msg.includes('invalid login') || msg.includes('invalid credentials')) return 'auth.loginError';
+  if (msg.includes('pending') && msg.includes('approval')) return 'auth.pendingApproval';
+  if (msg.includes('already registered') || msg.includes('email already')) return 'auth.emailExists';
+  if (msg.includes('company not found')) return 'auth.companyNotFound';
+  if (msg.includes('join code')) return 'auth.joinCodeInvalid';
+  if (msg.includes('company_user_limit') || msg.includes('user limit') || msg.includes('23514')) return 'onboarding.userLimitReached';
+  if (msg.includes('company name') && (msg.includes('exists') || msg.includes('duplicate'))) return 'auth.companyNameExists';
+  if (msg.includes('rate') || msg.includes('too many')) return 'auth.forgotPasswordRateLimit';
+  if (msg.includes('password reset') && msg.includes('not available')) return 'auth.forgotPasswordNotConfigured';
+
+  // Bilinmeyen hatalarda kod/metin gostermek yerine guvenli genel mesaj.
+  return 'auth.loginError';
+}
+
 export const authService = {
   /** Login: uses Supabase Auth when configured, else local store. */
   async login(email: string, password: string, companyId?: string): Promise<AuthResult> {

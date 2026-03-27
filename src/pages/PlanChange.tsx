@@ -4,7 +4,7 @@ import type { NavigateFunction } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
 import { store } from '../data/store';
-import { authService } from '../services/authService';
+import { authService, toAuthErrorKey } from '../services/authService';
 import { getEffectivePlan, getSubscriptionState, isPlanUpgrade } from '../services/subscriptionService';
 import { changeCompanyPlanInSupabase, renewCompanyPlanInSupabase, fetchCompanyLanguageFromSupabase, reopenCompanyWithinRetentionInSupabase } from '../services/companyService';
 import {
@@ -100,7 +100,7 @@ function PendingNewCompanyCheckout({
         });
         const loginResult = await authService.login(paidSession.email, paidSession.password);
         if (!loginResult.ok) {
-          setError(t(loginResult.error ?? 'planChangePage.errorGeneric'));
+          setError(t(toAuthErrorKey(loginResult.error)));
           return;
         }
         clearPaidSignupSession();
@@ -127,7 +127,7 @@ function PendingNewCompanyCheckout({
           billingCycle,
         });
         if (!result.ok) {
-          setError(t(result.error ?? 'planChangePage.errorGeneric'));
+          setError(t(toAuthErrorKey(result.error)));
           return;
         }
         clearPendingNewCompanySignup();

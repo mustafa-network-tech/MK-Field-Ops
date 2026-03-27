@@ -22,9 +22,9 @@ export const PLAN_TEAM_LIMITS: Record<CompanyPlan, number> = {
 export type PlanFeature = 'projects' | 'materials' | 'deliveryNotes';
 
 const PLAN_FEATURES: Record<PlanFeature, Record<CompanyPlan, boolean>> = {
-  projects: { starter: false, professional: true, enterprise: true },
-  materials: { starter: false, professional: true, enterprise: true },
-  deliveryNotes: { starter: false, professional: true, enterprise: true },
+  projects: { starter: true, professional: true, enterprise: true },
+  materials: { starter: true, professional: true, enterprise: true },
+  deliveryNotes: { starter: true, professional: true, enterprise: true },
 };
 
 function normalizePlan(plan: CompanyPlan | null | undefined): CompanyPlan | null {
@@ -38,13 +38,18 @@ export function getPlanUserLimit(plan: CompanyPlan | null | undefined): number {
   return p ? PLAN_USER_LIMITS[p] : 0;
 }
 
-/** Whether the plan can access the feature (projects, materials, delivery notes). */
+/**
+ * Planın özelliğe erişip erişemeyeceği. Plan bilinmiyorken (null) erişime izin verilir:
+ * şirket kaydı senkron olmadan yan menü / malzeme sekmesi kaybolmasın (UsersTab’daki bilinmeyen plan ile uyumlu).
+ * Bu sürümde tüm planlarda tüm özellikler açıktır.
+ */
 export function canPlanAccessFeature(
   plan: CompanyPlan | null | undefined,
   feature: PlanFeature
 ): boolean {
   const p = normalizePlan(plan);
-  return p ? PLAN_FEATURES[feature][p] : false;
+  if (!p) return true;
+  return PLAN_FEATURES[feature][p];
 }
 
 /** Whether the company can add one more user (currentCount is existing user count). */

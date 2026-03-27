@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import { useApp } from '../context/AppContext';
-import { authService } from '../services/authService';
+import { authService, toAuthErrorKey } from '../services/authService';
 import { store } from '../data/store';
 import styles from './Auth.module.css';
 
@@ -24,7 +24,7 @@ export function Login() {
     try {
       const result = await authService.login(email, password);
       if (!result.ok) {
-        setError(t(result.error ?? 'auth.loginError'));
+        setError(t(toAuthErrorKey(result.error)));
         return;
       }
       const loggedUser = store.getCurrentUser();

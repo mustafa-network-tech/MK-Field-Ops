@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
-import { authService } from '../services/authService';
+import { authService, toAuthErrorKey } from '../services/authService';
 import { supabase } from '../services/supabaseClient';
 import { createPendingSignupApi, PAID_SIGNUP_NETWORK_ERROR } from '../services/paidSignupApi';
 import { setPaidSignupSession, clearPaidSignupSession } from '../services/paidSignupSession';
@@ -137,7 +137,7 @@ export function Workspace() {
         joinCode: code,
       });
       if (!result.ok) {
-        setError(t(result.error ?? 'auth.loginError'));
+        setError(t(toAuthErrorKey(result.error)));
         return;
       }
       setMessage(t('auth.pendingCompanyManagerApproval'));
