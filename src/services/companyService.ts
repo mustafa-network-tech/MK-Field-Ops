@@ -4,7 +4,7 @@
  */
 
 import { store } from '../data/store';
-import type { CompanyLanguageCode, CompanyPlan } from '../types';
+import type { Company, CompanyLanguageCode, CompanyPlan } from '../types';
 import { isPlanUpgrade } from './subscriptionService';
 import { supabase } from './supabaseClient';
 
@@ -65,6 +65,24 @@ function normalizeLanguageCode(value: string | null | undefined): CompanyLanguag
     return value as CompanyLanguageCode;
   }
   return 'en';
+}
+
+function normalizePendingPlanBillingCycle(
+  raw: string | null | undefined
+): Company['pending_plan_billing_cycle'] | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === null || raw === '') return null;
+  if (raw === 'monthly' || raw === 'yearly') return raw;
+  return null;
+}
+
+function normalizeSubscriptionStatus(
+  raw: string | null | undefined
+): Company['subscription_status'] | undefined {
+  if (raw === undefined) return undefined;
+  if (raw === null || raw === '') return null;
+  if (raw === 'active' || raw === 'suspended' || raw === 'closed') return raw;
+  return null;
 }
 
 /**
@@ -137,6 +155,8 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
   const language_code = normalizeLanguageCode(data.language_code);
   const plan: CompanyPlan | null = data.plan && ['starter', 'professional', 'enterprise'].includes(data.plan) ? (data.plan as CompanyPlan) : null;
   const pending_plan: CompanyPlan | null = data.pending_plan && ['starter', 'professional', 'enterprise'].includes(data.pending_plan) ? (data.pending_plan as CompanyPlan) : null;
+  const pending_plan_billing_cycle = normalizePendingPlanBillingCycle(data.pending_plan_billing_cycle);
+  const subscription_status = normalizeSubscriptionStatus(data.subscription_status);
   const name = (data.name != null && String(data.name).trim()) ? String(data.name).trim() : 'Company';
   if (!store.getCompany(companyId, companyId)) {
     store.ensureCompany(companyId, name);
@@ -149,8 +169,8 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
     ...(data.plan_start_date !== undefined && { plan_start_date: data.plan_start_date ?? null }),
     ...(data.plan_end_date !== undefined && { plan_end_date: data.plan_end_date ?? null }),
     ...(pending_plan !== undefined && { pending_plan: pending_plan ?? null }),
-    ...(data.pending_plan_billing_cycle !== undefined && { pending_plan_billing_cycle: data.pending_plan_billing_cycle ?? null }),
-    ...(data.subscription_status !== undefined && { subscription_status: data.subscription_status ?? null }),
+    ...(pending_plan_billing_cycle !== undefined && { pending_plan_billing_cycle }),
+    ...(subscription_status !== undefined && { subscription_status }),
     ...(data.closure_requested_at !== undefined && { closure_requested_at: data.closure_requested_at ?? null }),
     ...(data.purge_after !== undefined && { purge_after: data.purge_after ?? null }),
     ...(data.closed_by_user_id !== undefined && { closed_by_user_id: data.closed_by_user_id ?? null }),
