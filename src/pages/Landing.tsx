@@ -1,83 +1,68 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import type { CSSProperties } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useI18n } from '../i18n/I18nContext';
 import styles from './Landing.module.css';
 
 const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 
-/** Landing sayfası logosu – navbar ve hero’da aynı dosya kullanılır; panel ayrı. */
 const LANDING_LOGO_SRC = '/landing-logo.png';
 
-/** Hero arka plan: 8 görsel – insansız, sadece ekipman/saha. Açılmayan ve insanlı görsel kaldırıldı. */
-const HERO_BG_IMAGES: string[] = [
-  'https://images.unsplash.com/photo-1769284022654-66c6b07dae78?w=1920&q=80',  // 1. bina inşaatı + kule vinç
-  'https://images.pexels.com/photos/2138126/pexels-photo-2138126.jpeg?auto=compress&cs=tinysrgb&w=1920', // 2. inşaat vinçleri / bina
-  'https://images.pexels.com/photos/2881224/pexels-photo-2881224.jpeg?auto=compress&cs=tinysrgb&w=1920', // 3. kablo / altyapı
-  'https://images.pexels.com/photos/2101137/pexels-photo-2101137.jpeg?auto=compress&cs=tinysrgb&w=1920', // 4. kepçe / kazı
-  'https://images.pexels.com/photos/8760709/pexels-photo-8760709.jpeg?auto=compress&cs=tinysrgb&w=1920', // 5. lojistik / forklift (açılmayan görsel yerine)
-  'https://images.pexels.com/photos/6940962/pexels-photo-6940962.jpeg?auto=compress&cs=tinysrgb&w=1920', // 6. kamyon
-  'https://images.pexels.com/photos/17743460/pexels-photo-17743460.jpeg?auto=compress&cs=tinysrgb&w=1920', // 7. inşaat sahası / maden (insansız; eskisi açılmıyordu)
-  'https://images.pexels.com/photos/29422321/pexels-photo-29422321.jpeg?auto=compress&cs=tinysrgb&w=1920', // 8. yol / asfalt (insansız; eskisi açılmıyordu)
+const HERO_BG =
+  'https://images.unsplash.com/photo-1769284022654-66c6b07dae78?w=1920&q=80';
+
+/** Tanıtım videosu (YouTube ID). Tanımlıysa embed; değilse public MP4. */
+const PROMO_VIDEO_ID =
+  (import.meta.env.VITE_LANDING_PROMO_VIDEO_ID as string | undefined)?.trim() ||
+  (import.meta.env.VITE_LANDING_DEMO_VIDEO_ID as string | undefined)?.trim() ||
+  '';
+
+const rawPromoPath = (import.meta.env.VITE_LANDING_PROMO_VIDEO_PATH as string | undefined)?.trim();
+const PROMO_VIDEO_PATH = rawPromoPath && rawPromoPath.length > 0 ? rawPromoPath : '/demo/mk-ops.mp4';
+
+const LIVE_DEMO_URL =
+  (import.meta.env.VITE_LANDING_LIVE_DEMO_URL as string | undefined)?.trim() ||
+  'https://mkops-demo.vercel.app/login';
+
+const WHATSAPP_PHONE_E164 =
+  (import.meta.env.VITE_LANDING_WHATSAPP_E164 as string | undefined)?.trim().replace(/^\+/, '') || '905456597551';
+
+function buildWhatsAppUrl(phoneE164: string, text: string): string {
+  const num = phoneE164.replace(/^\+/, '');
+  const q = text.trim() ? `?text=${encodeURIComponent(text)}` : '';
+  return `https://wa.me/${num}${q}`;
+}
+
+const SOLUTION_ICONS = [
+  <svg key="j" className={styles.blockIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>,
+  <svg key="m" className={styles.blockIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
+  <svg key="e" className={styles.blockIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="12" y1="1" x2="12" y2="23" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>,
 ];
 
-const HERO_SLIDE_INTERVAL_MS = 5000;
-const HERO_FADE_DURATION_MS = 800;
-
-/** Özellik kartları ikonları (dashboard, users, briefcase, handshake, boxes, activity) */
-const FEATURE_ICONS = [
-  /* 1 – Merkezi Operasyon Paneli: dashboard */
-  <svg key="1" className={styles.featureIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>,
-  /* 2 – Ekip ve Rol: users */
-  <svg key="2" className={styles.featureIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
-  /* 3 – Proje ve Görev: briefcase */
-  <svg key="3" className={styles.featureIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>,
-  /* 4 – Taşeron: handshake / partnership (link) */
-  <svg key="4" className={styles.featureIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>,
-  /* 5 – Stok/Malzeme: boxes */
-  <svg key="5" className={styles.featureIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
-  /* 6 – Gerçek Zamanlı: activity */
-  <svg key="6" className={styles.featureIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>,
-];
-
-/** Fayda kartları ikonları: clock, chart, building */
-const BENEFIT_ICONS = [
-  <svg key="1" className={styles.benefitIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>,
-  <svg key="2" className={styles.benefitIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>,
-  <svg key="3" className={styles.benefitIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>,
-];
-
-/** Nasıl Çalışır adımları: company, users, briefcase, package */
-const HOW_IT_WORKS_ICONS = [
-  <svg key="1" className={styles.howItWorksIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><line x1="9" y1="22" x2="9" y2="12" /><line x1="15" y1="22" x2="15" y2="12" /></svg>,
-  <svg key="2" className={styles.howItWorksIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
-  <svg key="3" className={styles.howItWorksIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>,
-  <svg key="4" className={styles.howItWorksIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" /><polyline points="3.27 6.96 12 12.01 20.73 6.96" /><line x1="12" y1="22.08" x2="12" y2="12" /></svg>,
+const HOW_ICONS = [
+  <svg key="1" className={styles.blockIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" /><polyline points="10 17 15 12 10 7" /><line x1="15" y1="12" x2="3" y2="12" /></svg>,
+  <svg key="2" className={styles.blockIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>,
+  <svg key="3" className={styles.blockIconSvg} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden><rect x="2" y="3" width="20" height="14" rx="2" /><line x1="8" y1="21" x2="16" y2="21" /><line x1="12" y1="17" x2="12" y2="21" /></svg>,
 ];
 
 export function Landing() {
   const { t, locale, setLocale } = useI18n();
   const location = useLocation();
-  const [heroSlideIndex, setHeroSlideIndex] = useState(0);
   const [langOpen, setLangOpen] = useState(false);
   const [langMenuPos, setLangMenuPos] = useState<CSSProperties>({});
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
   const langRef = useRef<HTMLDivElement>(null);
   const langMenuRef = useRef<HTMLUListElement>(null);
 
-  useEffect(() => {
-    if (location.pathname === '/pricing' || location.hash === '#pricing') {
-      const el = document.getElementById('pricing');
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }, [location.pathname, location.hash]);
+  const scrollToQuote = useCallback(() => {
+    document.getElementById('quote')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, []);
 
   useEffect(() => {
-    const id = setInterval(() => {
-      setHeroSlideIndex((i) => (i + 1) % HERO_BG_IMAGES.length);
-    }, HERO_SLIDE_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, []);
+    if (location.pathname === '/pricing' || location.hash === '#pricing' || location.hash === '#quote') {
+      const el = document.getElementById('quote');
+      if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    }
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     if (!langOpen) return;
@@ -90,7 +75,6 @@ export function Landing() {
     return () => document.removeEventListener('click', close);
   }, [langOpen]);
 
-  /** Dil listesi viewport içinde kalsın; kaydırınca kapanır (titreme olmaz) */
   useLayoutEffect(() => {
     if (!langOpen) {
       setLangMenuPos({});
@@ -126,25 +110,56 @@ export function Landing() {
     return () => window.removeEventListener('resize', positionMenu);
   }, [langOpen]);
 
+  const onQuoteSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const name = String(fd.get('name') ?? '').trim();
+    const company = String(fd.get('company') ?? '').trim();
+    const email = String(fd.get('email') ?? '').trim();
+    const phone = String(fd.get('phone') ?? '').trim();
+    const projectType = String(fd.get('projectType') ?? '').trim();
+    const description = String(fd.get('description') ?? '').trim();
+    const lines = [
+      t('landing.quoteWhatsAppPrefill'),
+      '',
+      `${t('landing.quoteName')}: ${name}`,
+      `${t('landing.quoteCompany')}: ${company}`,
+      `${t('landing.quoteEmail')}: ${email}`,
+      `${t('landing.quotePhone')}: ${phone}`,
+      `${t('landing.quoteProjectType')}: ${projectType}`,
+    ];
+    if (description) {
+      lines.push('', `${t('landing.quoteDescription')}:`, description);
+    }
+    const url = buildWhatsAppUrl(WHATSAPP_PHONE_E164, lines.join('\n'));
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const solutionKeys = ['solutionBlock1', 'solutionBlock2', 'solutionBlock3'] as const;
+  const howKeys = [
+    { title: 'howStep1Title', desc: 'howStep1Desc' },
+    { title: 'howStep2Title', desc: 'howStep2Desc' },
+    { title: 'howStep3Title', desc: 'howStep3Desc' },
+  ] as const;
+
   return (
     <div className={styles.page}>
-      {/* 1) ÜST NAVBAR */}
       <header className={styles.navbar}>
         <div className={styles.navInner}>
           <a href="#hero" className={styles.logo}>
             <img src={LANDING_LOGO_SRC} alt="MK-OPS" className={styles.logoImg} />
             <span className={styles.logoText}>MK-OPS</span>
           </a>
-          <nav className={styles.navLinks}>
-            <a href="#hero">{t('landing.navWhoWeAre')}</a>
-            <a href="#features">{t('landing.navFeatures')}</a>
-            <a href="#benefits">{t('landing.navBenefits')}</a>
-            <a href="#pricing">{t('landing.navPricing')}</a>
-            <a href="#support">{t('landing.navSupport')}</a>
+          <nav className={styles.navLinks} aria-label="Sayfa">
+            <a href="#problem">{t('landing.navProblem')}</a>
+            <a href="#solution">{t('landing.navSolution')}</a>
+            <a href="#how-it-works">{t('landing.navHow')}</a>
+            <a href={LIVE_DEMO_URL} target="_blank" rel="noopener noreferrer">
+              {t('landing.navDemo')}
+            </a>
+            <a href="#quote">{t('landing.navQuote')}</a>
           </nav>
           <div className={styles.navActions}>
-            <Link to="/login" className={styles.navBtnSecondary}>{t('landing.navLogin')}</Link>
-            <Link to="/register" className={styles.navBtnPrimary}>{t('landing.navStartFree')}</Link>
             <div className={styles.langDropdown} ref={langRef}>
               <button
                 type="button"
@@ -181,357 +196,190 @@ export function Landing() {
         </div>
       </header>
 
-      {/* 2) HERO — arka plan slider + overlay + içerik */}
       <section id="hero" className={styles.hero}>
-        <div className={styles.heroSlider} aria-hidden>
-          {HERO_BG_IMAGES.map((src, i) => (
-            <div
-              key={src}
-              className={styles.heroSlide}
-              data-active={i === heroSlideIndex}
-              style={{
-                backgroundImage: `url(${src})`,
-                transition: `opacity ${HERO_FADE_DURATION_MS}ms ease`,
-              }}
-            />
-          ))}
-        </div>
+        <div
+          className={styles.heroBg}
+          style={{ backgroundImage: `url(${HERO_BG})` }}
+          aria-hidden
+        />
         <div className={styles.heroOverlay} aria-hidden />
+        <div className={styles.heroFadeBottom} aria-hidden />
         <div className={styles.heroInner}>
-          <p className={styles.heroBrand}>MK-OPS</p>
+          <p className={styles.heroBrand}>MKOps</p>
           <h1 className={styles.heroTitle}>{t('landing.heroTitle')}</h1>
-          {t('landing.heroSubtitle') && <p className={styles.heroSubtitle}>{t('landing.heroSubtitle')}</p>}
-          <p className={styles.heroDescription}>{t('landing.heroDescription')}</p>
+          {t('landing.heroSubtitle') ? <p className={styles.heroSubtitle}>{t('landing.heroSubtitle')}</p> : null}
           <div className={styles.heroActions}>
-            <Link to="/register" className={styles.heroBtnPrimary}>
-              {t('landing.navStartFree')}
-            </Link>
-            <Link to="/login" className={styles.heroBtnSecondary}>{t('landing.heroLogin')}</Link>
-            <Link to="/kullanim-kilavuzu" className={styles.heroBtnGuide}>{t('landing.heroGuide')}</Link>
-          </div>
-        </div>
-      </section>
-
-      {/* 3) ÖZELLİKLER */}
-      <section id="features" className={styles.section}>
-        <div className={styles.sectionInner}>
-          <h2 className={styles.sectionTitle}>{t('landing.featuresTitle')}</h2>
-          <div className={styles.featureGrid}>
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className={styles.featureCard}>
-                <div className={styles.featureIcon}>{FEATURE_ICONS[i - 1]}</div>
-                <h3 className={styles.featureCardTitle}>{t(`landing.feature${i}Title`)}</h3>
-                <p className={styles.featureCardDesc}>{t(`landing.feature${i}Desc`)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 4) FAYDALAR */}
-      <section id="benefits" className={styles.sectionAlt}>
-        <div className={styles.sectionInner}>
-          <h2 className={styles.sectionTitle}>{t('landing.benefitsTitle')}</h2>
-          <div className={styles.benefitGrid}>
-            {[1, 2, 3].map((i) => (
-              <div key={i} className={styles.benefitCard}>
-                <div className={styles.benefitIcon}>{BENEFIT_ICONS[i - 1]}</div>
-                <h3 className={styles.benefitCardTitle}>{t(`landing.benefit${i}Title`)}</h3>
-                <p className={styles.benefitCardDesc}>{t(`landing.benefit${i}Desc`)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5) NASIL ÇALIŞIR */}
-      <section id="how-it-works" className={styles.section}>
-        <div className={styles.sectionInner}>
-          <h2 className={styles.sectionTitle}>{t('landing.howItWorksTitle')}</h2>
-          <div className={styles.howItWorksGrid}>
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className={styles.howItWorksCard}>
-                <div className={styles.howItWorksIcon}>{HOW_IT_WORKS_ICONS[i - 1]}</div>
-                <h3 className={styles.howItWorksCardTitle}>{t(`landing.step${i}Title`)}</h3>
-                <p className={styles.howItWorksCardDesc}>{t(`landing.step${i}Desc`)}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 6) FİYATLANDIRMA */}
-      <section id="pricing" className={styles.section}>
-        <div className={styles.sectionInner}>
-          <div className={styles.pricingHeader}>
-            <h2 className={styles.sectionTitle}>{t('landing.pricingTitle')}</h2>
-            <div className={styles.pricingSubtitle}>
-              <span className={styles.pricingPill}>
-                <span className={styles.pricingPillIcon} aria-hidden>
-                  ✔
-                </span>
-                <span>{t('landing.pricingBadgeTrial')}</span>
-              </span>
-              <span className={styles.pricingPill}>
-                <span className={styles.pricingPillIcon} aria-hidden>
-                  ✔
-                </span>
-                <span>{t('landing.pricingBadgeCancel')}</span>
-              </span>
-            </div>
-          </div>
-
-          <div className={styles.pricingToggleRow}>
-            <div
-              className={styles.pricingToggle}
-              role="tablist"
-              aria-label={t('landing.pricingToggleAria')}
+            <a
+              href={LIVE_DEMO_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.heroBtnPrimary}
             >
-              <button
-                type="button"
-                className={styles.pricingToggleOption}
-                data-active={billingPeriod === 'monthly'}
-                onClick={() => setBillingPeriod('monthly')}
-                role="tab"
-                aria-selected={billingPeriod === 'monthly'}
-              >
-                {t('landing.pricingToggleMonthly')}
-              </button>
-              <button
-                type="button"
-                className={styles.pricingToggleOption}
-                data-active={billingPeriod === 'yearly'}
-                onClick={() => setBillingPeriod('yearly')}
-                role="tab"
-                aria-selected={billingPeriod === 'yearly'}
-              >
-                {t('landing.pricingToggleYearly')}{' '}
-                <span className={styles.pricingToggleBadge}>
-                  {t('landing.pricingToggleYearlyBadge')}
-                </span>
-              </button>
-            </div>
+              {t('landing.btnInspectDemo')}
+            </a>
+            <button type="button" className={styles.heroBtnSecondary} onClick={scrollToQuote}>
+              {t('landing.btnGetQuote')}
+            </button>
           </div>
+        </div>
+      </section>
 
-          <div className={styles.pricingGrid}>
-            <div className={styles.pricingCard}>
-              <h3 className={styles.pricingCardTitle}>{t('landing.planStarter')}</h3>
-              <p className={styles.pricingPrice}>
-                {billingPeriod === 'monthly'
-                  ? t('landing.pricingPriceStarterMonthly')
-                  : t('landing.pricingPriceStarterYearly')}{' '}
-                <span className={styles.pricingValidUntil}>{t('landing.pricingValidUntil')}</span>
-              </p>
-              <div className={styles.pricingDivider} />
-              <div className={styles.pricingLists}>
-                <div className={styles.pricingListGroup}>
-                  <p className={styles.pricingListTitle}>
-                    {t('landing.pricingFeaturesTitle')}
-                  </p>
-                  <ul className={styles.pricingList}>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingStarterFeature1')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingStarterFeature2')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingStarterFeature3')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingStarterFeature4')}</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className={styles.pricingListGroup}>
-                  <p className={styles.pricingListTitle}>
-                    {t('landing.pricingLimitationsTitle')}
-                  </p>
-                  <ul className={styles.pricingList}>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingMinus} aria-hidden>—</span>
-                      <span>{t('landing.pricingStarterLimit1')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingMinus} aria-hidden>—</span>
-                      <span>{t('landing.pricingStarterLimit2')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingMinus} aria-hidden>—</span>
-                      <span>{t('landing.pricingStarterLimit3')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingMinus} aria-hidden>—</span>
-                      <span>{t('landing.pricingStarterLimit4')}</span>
-                    </li>
-                  </ul>
-                </div>
+      <section id="problem" className={styles.sectionProblem}>
+        <div className={styles.sectionProblemGlow} aria-hidden />
+        <div className={styles.cinematicInner}>
+          <p className={styles.sectionEyebrow}>{t('landing.navProblem')}</p>
+          <h2 className={styles.titleCinematic}>{t('landing.problemTitle')}</h2>
+          <p className={styles.leadCinematic}>{t('landing.problemSubtitle')}</p>
+          <ul className={styles.problemStripes}>
+            <li className={styles.problemStripe}>
+              <span className={styles.problemStripeMark} aria-hidden />
+              <span className={styles.problemStripeText}>{t('landing.problem1')}</span>
+            </li>
+            <li className={styles.problemStripe}>
+              <span className={styles.problemStripeMark} aria-hidden />
+              <span className={styles.problemStripeText}>{t('landing.problem2')}</span>
+            </li>
+            <li className={styles.problemStripe}>
+              <span className={styles.problemStripeMark} aria-hidden />
+              <span className={styles.problemStripeText}>{t('landing.problem3')}</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="solution" className={styles.sectionSolution}>
+        <div className={styles.cinematicInner}>
+          <p className={styles.sectionEyebrowLight}>{t('landing.navSolution')}</p>
+          <h2 className={styles.titleSolution}>MKOps</h2>
+          <p className={styles.leadSolution}>{t('landing.solutionLead')}</p>
+          <div className={styles.filmCardGrid}>
+            {solutionKeys.map((key, i) => (
+              <div key={key} className={styles.filmCard}>
+                <span className={styles.filmCardIndex}>{String(i + 1).padStart(2, '0')}</span>
+                <div className={styles.filmCardIcon}>{SOLUTION_ICONS[i]}</div>
+                <h3 className={styles.filmCardTitle}>{t(`landing.${key}`)}</h3>
               </div>
-              <Link to="/register?plan=starter" className={styles.pricingButton}>
-                {t('landing.navStartFree')}
-              </Link>
-            </div>
-            <div className={styles.pricingCardFeatured}>
-              <h3 className={styles.pricingCardTitle}>{t('landing.planPro')}</h3>
-              <p className={styles.pricingBadge}>
-                <span className={styles.pricingBadgeStar} aria-hidden>
-                  ★
-                </span>
-                {t('landing.pricingMostPopularBadge')}
-              </p>
-              <p className={styles.pricingPrice}>
-                {billingPeriod === 'monthly'
-                  ? t('landing.pricingPriceProMonthly')
-                  : t('landing.pricingPriceProYearly')}{' '}
-                <span className={styles.pricingValidUntil}>{t('landing.pricingValidUntil')}</span>
-              </p>
-              <div className={styles.pricingDivider} />
-              <div className={styles.pricingLists}>
-                <div className={styles.pricingListGroup}>
-                  <p className={styles.pricingListTitle}>
-                    {t('landing.pricingFeaturesTitle')}
-                  </p>
-                  <ul className={styles.pricingList}>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProFeature1')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProFeature2')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProFeature3')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProFeature4')}</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className={styles.pricingListGroup}>
-                  <p className={styles.pricingListTitle}>
-                    {t('landing.pricingOperationsTitle')}
-                  </p>
-                  <ul className={styles.pricingList}>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProOp1')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProOp2')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProOp3')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingProOp4')}</span>
-                    </li>
-                  </ul>
-                </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" className={styles.sectionHow}>
+        <div className={styles.sectionHowAccent} aria-hidden />
+        <div className={styles.cinematicInner}>
+          <p className={styles.sectionEyebrow}>{t('landing.navHow')}</p>
+          <h2 className={styles.titleCinematic}>{t('landing.howTitle')}</h2>
+          <div className={styles.timelineGrid}>
+            {howKeys.map((row, i) => (
+              <div key={row.title} className={styles.timelineCard}>
+                <span className={styles.timelineStep}>{String(i + 1).padStart(2, '0')}</span>
+                <div className={styles.timelineIcon}>{HOW_ICONS[i]}</div>
+                <h3 className={styles.timelineTitle}>{t(`landing.${row.title}`)}</h3>
+                <p className={styles.timelineDesc}>{t(`landing.${row.desc}`)}</p>
               </div>
-              <Link to="/register?plan=professional" className={styles.pricingButtonPrimary}>
-                {t('landing.navStartFree')}
-              </Link>
-            </div>
-            <div className={styles.pricingCard}>
-              <h3 className={styles.pricingCardTitle}>{t('landing.planEnterprise')}</h3>
-              <p className={styles.pricingPrice}>
-                {billingPeriod === 'monthly'
-                  ? t('landing.pricingPriceEnterpriseMonthly')
-                  : t('landing.pricingPriceEnterpriseYearly')}{' '}
-                <span className={styles.pricingValidUntil}>{t('landing.pricingValidUntil')}</span>
-              </p>
-              <div className={styles.pricingDivider} />
-              <div className={styles.pricingLists}>
-                <div className={styles.pricingListGroup}>
-                  <p className={styles.pricingListTitle}>
-                    {t('landing.pricingFeaturesTitle')}
-                  </p>
-                  <ul className={styles.pricingList}>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature1')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature2')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature3')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature4')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature5')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature6')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseFeature7')}</span>
-                    </li>
-                  </ul>
-                </div>
-                <div className={styles.pricingListGroup}>
-                  <p className={styles.pricingListTitle}>
-                    {t('landing.pricingOperationsTitle')}
-                  </p>
-                  <ul className={styles.pricingList}>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseOp1')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseOp2')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseOp3')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseOp4')}</span>
-                    </li>
-                    <li className={styles.pricingListItem}>
-                      <span className={styles.pricingCheck} aria-hidden>✔</span>
-                      <span>{t('landing.pricingEnterpriseOp5')}</span>
-                    </li>
-                  </ul>
-                </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="promo-video" className={styles.sectionDemo}>
+        <div className={styles.demoTheater}>
+          <div className={styles.cinematicInner}>
+            <h2 className={styles.titleDemo}>{t('landing.promoVideoSectionTitle')}</h2>
+            <p className={styles.promoVideoLead}>{t('landing.promoVideoCaption')}</p>
+            <div className={styles.videoFrame}>
+              <div className={styles.videoFrameInner}>
+                {PROMO_VIDEO_ID ? (
+                  <div className={styles.videoRatio}>
+                    <iframe
+                      title={t('landing.promoVideoAriaTitle')}
+                      src={`https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_ID}`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
+                ) : (
+                  <div className={styles.videoRatio}>
+                    <video
+                      className={styles.promoVideoEl}
+                      src={PROMO_VIDEO_PATH}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      aria-label={t('landing.promoVideoAriaTitle')}
+                    />
+                  </div>
+                )}
               </div>
-              <Link to="/register?plan=enterprise" className={styles.pricingButton}>
-                {t('landing.navStartFree')}
-              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 6) CTA */}
-      <section id="support" className={styles.cta}>
-        <div className={styles.ctaInner}>
-          <h2 className={styles.ctaTitle}>{t('landing.ctaTitle')}</h2>
-          <Link to="/register" className={styles.ctaButton}>{t('landing.ctaButton')}</Link>
+      <section id="quote" className={styles.quoteSection}>
+        <div className={styles.quoteGlow} aria-hidden />
+        <div className={styles.cinematicInner}>
+          <h2 className={styles.quoteTitle}>{t('landing.quoteTitle')}</h2>
+          <p className={styles.quoteSubtitle}>{t('landing.quoteSubtitle')}</p>
+          <form className={styles.quoteForm} onSubmit={onQuoteSubmit}>
+            <div className={styles.quoteRow}>
+              <label className={styles.quoteLabel}>
+                <span>{t('landing.quoteName')}</span>
+                <input name="name" type="text" required autoComplete="name" className={styles.quoteInput} />
+              </label>
+              <label className={styles.quoteLabel}>
+                <span>{t('landing.quoteCompany')}</span>
+                <input name="company" type="text" autoComplete="organization" className={styles.quoteInput} />
+              </label>
+            </div>
+            <div className={styles.quoteRow}>
+              <label className={styles.quoteLabel}>
+                <span>{t('landing.quoteEmail')}</span>
+                <input name="email" type="email" required autoComplete="email" className={styles.quoteInput} />
+              </label>
+              <label className={styles.quoteLabel}>
+                <span>{t('landing.quotePhone')}</span>
+                <input name="phone" type="tel" autoComplete="tel" className={styles.quoteInput} />
+              </label>
+            </div>
+            <label className={styles.quoteLabel}>
+              <span>{t('landing.quoteProjectType')}</span>
+              <input name="projectType" type="text" autoComplete="off" className={styles.quoteInput} />
+            </label>
+            <label className={styles.quoteLabel}>
+              <span>{t('landing.quoteDescription')}</span>
+              <textarea name="description" rows={4} className={styles.quoteTextarea} />
+            </label>
+            <button type="submit" className={styles.quoteSubmit}>
+              {t('landing.quoteRequestSubmit')}
+            </button>
+            <p className={styles.quoteFormFootnote}>{t('landing.quoteFormFootnote')}</p>
+          </form>
         </div>
       </section>
 
-      {/* 7) FOOTER */}
+      <section id="contact" className={styles.contactSection}>
+        <div className={styles.cinematicInner}>
+          <h2 className={styles.titleContact}>{t('landing.contactSectionTitle')}</h2>
+          <div className={styles.contactRow}>
+            <a href={t('landing.contactWebsiteUrl')} target="_blank" rel="noopener noreferrer" className={styles.contactLink}>
+              {t('landing.contactWebsiteLabel')}: mustafaoner.net
+            </a>
+            <a href={`mailto:${t('landing.contactEmailValue')}`} className={styles.contactLink}>
+              {t('landing.contactEmailLabel')}: {t('landing.contactEmailValue')}
+            </a>
+            <a
+              href={buildWhatsAppUrl(WHATSAPP_PHONE_E164, t('landing.quoteWhatsAppPrefill'))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.contactLink}
+            >
+              {t('landing.contactWhatsAppLabel')}
+            </a>
+          </div>
+        </div>
+      </section>
+
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.footerTop}>
