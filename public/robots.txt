@@ -1,0 +1,5 @@
+# https://mk-ops.tr
+User-agent: *
+Allow: /
+
+Sitemap: https://mk-ops.tr/sitemap.xml
