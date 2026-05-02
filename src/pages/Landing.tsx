@@ -20,10 +20,6 @@ const PROMO_VIDEO_ID =
 const rawPromoPath = (import.meta.env.VITE_LANDING_PROMO_VIDEO_PATH as string | undefined)?.trim();
 const PROMO_VIDEO_PATH = rawPromoPath && rawPromoPath.length > 0 ? rawPromoPath : '/demo/mk-ops.mp4';
 
-const LIVE_DEMO_URL =
-  (import.meta.env.VITE_LANDING_LIVE_DEMO_URL as string | undefined)?.trim() ||
-  'https://mkops-demo.vercel.app/login';
-
 const WHATSAPP_PHONE_E164 =
   (import.meta.env.VITE_LANDING_WHATSAPP_E164 as string | undefined)?.trim().replace(/^\+/, '') || '905456597551';
 
@@ -154,9 +150,8 @@ export function Landing() {
             <a href="#problem">{t('landing.navProblem')}</a>
             <a href="#solution">{t('landing.navSolution')}</a>
             <a href="#how-it-works">{t('landing.navHow')}</a>
-            <a href={LIVE_DEMO_URL} target="_blank" rel="noopener noreferrer">
-              {t('landing.navDemo')}
-            </a>
+            <Link to="/login">{t('landing.navLogin')}</Link>
+            <Link to="/register">{t('landing.navRegisterHint')}</Link>
             <a href="#quote">{t('landing.navQuote')}</a>
           </nav>
           <div className={styles.navActions}>
@@ -209,14 +204,12 @@ export function Landing() {
           <h1 className={styles.heroTitle}>{t('landing.heroTitle')}</h1>
           {t('landing.heroSubtitle') ? <p className={styles.heroSubtitle}>{t('landing.heroSubtitle')}</p> : null}
           <div className={styles.heroActions}>
-            <a
-              href={LIVE_DEMO_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.heroBtnPrimary}
-            >
-              {t('landing.btnInspectDemo')}
-            </a>
+            <Link to="/login" className={styles.heroBtnPrimary}>
+              {t('landing.heroLogin')}
+            </Link>
+            <Link to="/register" className={styles.heroBtnSecondary}>
+              {t('landing.navRegisterHint')}
+            </Link>
             <button type="button" className={styles.heroBtnSecondary} onClick={scrollToQuote}>
               {t('landing.btnGetQuote')}
             </button>
