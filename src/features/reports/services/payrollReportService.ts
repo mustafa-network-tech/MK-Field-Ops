@@ -1,0 +1,125 @@
+import { store } from '@/lib/storage/store';
+import { getJobWithDetails } from '@/features/jobs/services/jobCalculationService';
+import { getProjectDisplayKey } from '@/shared/utils/projectKey';
+import { roundMoney } from '@/shared/utils/formatLocale';
+import type { PayrollPeriod } from '@/shared/utils/periodUtils';
+import type { JobWithDetails } from '@/shared/types';
+
+/** Completion date for report: approvedAt if set, else job date. */
+function completionDate(job: { approvedAt?: string | null; date: string }): string {
+  const d = job.approvedAt ?? job.date;
+  return d.slice(0, 10);
+}
+
+function isInPeriod(dateStr: string, period: PayrollPeriod): boolean {
+  return dateStr >= period.start && dateStr <= period.end;
+}
+
+export type PayrollReportRow = {
+  completionDate: string;
+  projectId: string;
+  teamCode: string;
+  workItemName: string;
+  quantity: number;
+  unitPrice: number;
+  lineTotal: number;
+  teamEarnings: number;
+  companyShare: number;
+};
+
+export type PayrollReportData = {
+  companyName: string;
+  /** Company logo URL for PDF watermark; optional. */
+  logo_url?: string | null;
+  period: PayrollPeriod;
+  exportDate: string;
+  reportType: 'company' | 'team';
+  teamCode?: string;
+  teamName?: string;
+  /** When reportType is 'team': team's percentage share; used to show team unit price (unitPrice × percentage/100) in export. */
+  teamPercentage?: number;
+  totals: {
+    approvedJobsCount: number;
+    totalAmount: number;
+    teamEarnings: number;
+    companyShare: number;
+  };
+  jobs: PayrollReportRow[];
+  isEmpty: boolean;
+};
+
+/**
+ * Build report data: approved jobs whose completion date (approvedAt or date) falls within period.
+ * For company report, optional filterTeamIds limits to selected teams; when empty/omitted, all teams.
+ */
+export function getPayrollReportData(
+  companyId: string,
+  period: PayrollPeriod,
+  reportType: 'company' | 'team',
+  teamId?: string,
+  filterTeamIds?: string[]
+): PayrollReportData {
+  const company = store.getCompany(companyId, companyId);
+  const companyName = company?.name ?? companyId;
+  const teams = store.getTeams(companyId);
+  const workItems = store.getWorkItems(companyId);
+  const projects = store.getProjects(companyId);
+
+  const allJobs = store.getJobs(companyId).filter((j) => j.status === 'approved');
+  const withDetails: JobWithDetails[] = allJobs
+    .map((j) => getJobWithDetails(j, companyId))
+    .filter((j): j is JobWithDetails => j != null);
+
+  const rows: PayrollReportRow[] = [];
+  for (const j of withDetails) {
+    const compDate = completionDate(j);
+    if (!isInPeriod(compDate, period)) continue;
+    if (reportType === 'team' && teamId && j.teamId !== teamId) continue;
+    if (reportType === 'company' && filterTeamIds && filterTeamIds.length > 0 && !filterTeamIds.includes(j.teamId)) continue;
+
+    const team = teams.find((t) => t.id === j.teamId);
+    const workItem = workItems.find((w) => w.id === j.workItemId);
+    const project = j.projectId ? projects.find((p) => p.id === j.projectId) : undefined;
+    const projectId = project ? getProjectDisplayKey(project) : (j.projectId ?? '');
+    const teamCode = team?.code ?? j.teamId;
+    const workItemName = workItem ? (workItem.description || workItem.code) : j.workItemId;
+    const unitPrice = workItem?.unitPrice ?? 0;
+    rows.push({
+      completionDate: compDate,
+      projectId,
+      teamCode,
+      workItemName,
+      quantity: j.quantity,
+      unitPrice,
+      lineTotal: j.totalWorkValue,
+      teamEarnings: j.teamEarnings,
+      companyShare: j.companyShare,
+    });
+  }
+
+  rows.sort((a, b) => a.completionDate.localeCompare(b.completionDate));
+
+  const totalAmount = roundMoney(rows.reduce((s, r) => s + r.lineTotal, 0));
+  const totalTeamEarnings = roundMoney(rows.reduce((s, r) => s + r.teamEarnings, 0));
+  const totalCompanyShare = roundMoney(rows.reduce((s, r) => s + r.companyShare, 0));
+  const teamInfo = reportType === 'team' && teamId ? teams.find((t) => t.id === teamId) : undefined;
+
+  return {
+    companyName,
+    logo_url: company?.logo_url ?? null,
+    period,
+    exportDate: new Date().toISOString().slice(0, 10),
+    reportType,
+    teamCode: teamInfo?.code,
+    teamName: teamInfo?.description,
+    teamPercentage: teamInfo?.percentage,
+    totals: {
+      approvedJobsCount: rows.length,
+      totalAmount,
+      teamEarnings: totalTeamEarnings,
+      companyShare: totalCompanyShare,
+    },
+    jobs: rows,
+    isEmpty: rows.length === 0,
+  };
+}

@@ -1,0 +1,195 @@
+import { useEffect, useState } from 'react';
+import { useI18n } from '@/lib/i18n/I18nContext';
+import { useApp } from '@/app/providers/AppContext';
+import {
+  getDashboardSummary,
+  type DashboardSummaryScope,
+} from '@/features/dashboard/services/dashboardSummaryService';
+import { getTeamPercentageForUser } from '@/features/teams/services/teamScopeService';
+import { formatPriceForUser } from '@/shared/utils/priceRules';
+import { formatCurrency } from '@/shared/utils/formatLocale';
+import { Card } from '@/shared/components/ui/Card';
+import { readDashboardScope, writeDashboardScope } from './dashboardScopeStorage';
+import styles from './Dashboard.module.css';
+
+export function Dashboard() {
+  const { t, locale } = useI18n();
+  const { user } = useApp();
+  const companyId = user?.companyId ?? '';
+  const [viewScope, setViewScope] = useState<DashboardSummaryScope>(() =>
+    readDashboardScope(companyId)
+  );
+
+  useEffect(() => {
+    setViewScope(readDashboardScope(companyId));
+  }, [companyId]);
+
+  const summary = getDashboardSummary(companyId, user, { scope: viewScope });
+
+  if (!summary) {
+    return (
+      <div className={styles.page}>
+        <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+        <p className={styles.noData}>{t('common.noData')}</p>
+      </div>
+    );
+  }
+
+  const isAdmin = summary.role === 'companyManager' || summary.role === 'projectManager';
+
+  const setScope = (next: DashboardSummaryScope) => {
+    setViewScope(next);
+    writeDashboardScope(companyId, next);
+  };
+
+  const monthlyCardTitle =
+    summary.viewScope === 'payrollPeriod'
+      ? t('dashboard.payrollPeriodTotal')
+      : t('dashboard.monthlyTotal');
+
+  return (
+    <div className={styles.page}>
+      <div className={styles.pageHeader}>
+        <h1 className={styles.pageTitle}>{t('dashboard.title')}</h1>
+        <div
+          className={styles.scopeToggle}
+          role="group"
+          aria-label={t('dashboard.scopeToggleAria')}
+        >
+          <button
+            type="button"
+            className={styles.scopeBtn}
+            data-active={summary.viewScope === 'payrollPeriod'}
+            onClick={() => setScope('payrollPeriod')}
+          >
+            {t('dashboard.scopePayrollPeriod')}
+          </button>
+          <button
+            type="button"
+            className={styles.scopeBtn}
+            data-active={summary.viewScope === 'allTime'}
+            onClick={() => setScope('allTime')}
+          >
+            {t('dashboard.scopeAllTime')}
+          </button>
+        </div>
+      </div>
+      <p className={styles.meta} style={{ marginBottom: '0.35rem' }}>
+        {t('settings.activePeriodLabel')}: {summary.activePayrollPeriod.label}
+      </p>
+      {!summary.payrollPeriodUsesSettings && (
+        <p className={styles.scopeDefaultNote}>{t('dashboard.payrollPeriodDefaultNote')}</p>
+      )}
+      <p className={styles.scopeHint}>
+        {summary.viewScope === 'payrollPeriod'
+          ? t('dashboard.scopeHintPayroll')
+          : t('dashboard.scopeHintAllTime')}
+      </p>
+
+      {/* Top cards: admin/pm = 3 (Gross / Team / Company), TL = 1 (Team only) */}
+      <div className={styles.grid}>
+        {isAdmin ? (
+          <>
+            <Card title={t('jobs.totalWorkValue')}>
+              <p className={styles.bigNumber}>{formatCurrency(summary.grossTotal, locale)}</p>
+              <p className={styles.meta}>{summary.approvedCount} {t('dashboard.approvedJobs').toLowerCase()}</p>
+            </Card>
+            <Card title={t('jobs.teamEarnings')}>
+              <p className={styles.bigNumber}>{formatCurrency(summary.teamTotal, locale)}</p>
+            </Card>
+            <Card title={t('jobs.companyShare')}>
+              <p className={styles.bigNumber}>{formatCurrency(summary.companyTotal, locale)}</p>
+            </Card>
+          </>
+        ) : (
+          <Card title={t('jobs.teamEarnings')}>
+            <p className={styles.bigNumber}>{formatPriceForUser(summary.teamTotal, user, 'teamOnly', locale)}</p>
+            {getTeamPercentageForUser(companyId, user) != null && (
+              <p className={styles.meta}>{t('jobs.yourTeamShare')}: {getTeamPercentageForUser(companyId, user)}%</p>
+            )}
+            <p className={styles.meta}>{summary.approvedCount} {t('dashboard.approvedJobs').toLowerCase()}</p>
+          </Card>
+        )}
+      </div>
+
+      <div className={styles.grid}>
+        <Card title={t('dashboard.pendingApprovals')}>
+          <p className={styles.bigNumber}>{summary.pendingCount}</p>
+          <p className={styles.meta}>{t('jobs.submitted')}</p>
+        </Card>
+        <Card title={t('dashboard.approvedJobs')}>
+          <p className={styles.bigNumber}>{summary.approvedCount}</p>
+        </Card>
+      </div>
+
+      {/* Weekly / Monthly summary: admin = 3 amounts each, TL = team only */}
+      {isAdmin ? (
+        <div className={styles.grid}>
+          <Card title={t('dashboard.weeklyTotal')}>
+            <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(summary.weekly.gross_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(summary.weekly.team_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(summary.weekly.company_total, locale)}</p>
+            <p className={styles.meta}>{summary.weekly.count} jobs</p>
+          </Card>
+          <Card title={monthlyCardTitle}>
+            <p className={styles.meta}>{t('jobs.totalWorkValue')}: {formatCurrency(summary.monthly.gross_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.teamEarnings')}: {formatCurrency(summary.monthly.team_total, locale)}</p>
+            <p className={styles.meta}>{t('jobs.companyShare')}: {formatCurrency(summary.monthly.company_total, locale)}</p>
+            <p className={styles.meta}>{summary.monthly.count} jobs</p>
+          </Card>
+        </div>
+      ) : (
+        <div className={styles.grid}>
+          <Card title={t('dashboard.weeklyTotal')}>
+            <p className={styles.bigNumber}>{formatPriceForUser(summary.weekly.team_total, user, 'teamOnly', locale)}</p>
+            <p className={styles.meta}>{summary.weekly.count} jobs</p>
+          </Card>
+          <Card title={monthlyCardTitle}>
+            <p className={styles.bigNumber}>{formatPriceForUser(summary.monthly.team_total, user, 'teamOnly', locale)}</p>
+            <p className={styles.meta}>{summary.monthly.count} jobs</p>
+          </Card>
+        </div>
+      )}
+
+      {/* Team summary: admin = table with Gross, Team, Company columns; TL = Team only */}
+      <Card title={t('dashboard.teamEarningsSummary')}>
+        {isAdmin ? (
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>{t('teams.teamCode')}</th>
+                  <th>{t('jobs.totalWorkValue')}</th>
+                  <th>{t('jobs.teamEarnings')}</th>
+                  <th>{t('jobs.companyShare')}</th>
+                  <th>{t('dashboard.approvedJobs')}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {summary.teamSummary.map((row) => (
+                  <tr key={row.code}>
+                    <td><strong>{row.code}</strong></td>
+                    <td>{formatCurrency(row.gross, locale)}</td>
+                    <td>{formatCurrency(row.team, locale)}</td>
+                    <td>{formatCurrency(row.company, locale)}</td>
+                    <td>{row.count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <ul className={styles.list}>
+            {summary.teamSummary.map((row) => (
+              <li key={row.code}>
+                <strong>{row.code}</strong>: {formatPriceForUser(row.team, user, 'teamOnly', locale)} ({row.count} jobs)
+              </li>
+            ))}
+            {summary.teamSummary.length === 0 && <li className={styles.noData}>{t('common.noData')}</li>}
+          </ul>
+        )}
+        {isAdmin && summary.teamSummary.length === 0 && <p className={styles.noData}>{t('common.noData')}</p>}
+      </Card>
+    </div>
+  );
+}

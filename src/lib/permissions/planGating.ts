@@ -1,0 +1,91 @@
+/**
+ * Plan-based feature gating for MK-OPS SaaS.
+ * Starter: 4 users, 3 teams. Professional: 7 users, 6 teams. Enterprise: 15 users, 14 teams.
+ * Company Manager cannot be team leader; Project Managers can be assigned as team leaders.
+ */
+
+import type { CompanyPlan } from '@/shared/types';
+
+export const PLAN_USER_LIMITS: Record<CompanyPlan, number> = {
+  starter: 4,
+  professional: 7,
+  enterprise: 15,
+};
+
+/** Starter: 3 teams; Professional: 6 teams; Enterprise: 14 teams. */
+export const PLAN_TEAM_LIMITS: Record<CompanyPlan, number> = {
+  starter: 3,
+  professional: 6,
+  enterprise: 14,
+};
+
+export type PlanFeature = 'projects' | 'materials' | 'deliveryNotes';
+
+const PLAN_FEATURES: Record<PlanFeature, Record<CompanyPlan, boolean>> = {
+  projects: { starter: true, professional: true, enterprise: true },
+  materials: { starter: true, professional: true, enterprise: true },
+  deliveryNotes: { starter: true, professional: true, enterprise: true },
+};
+
+function normalizePlan(plan: CompanyPlan | null | undefined): CompanyPlan | null {
+  if (plan && (plan === 'starter' || plan === 'professional' || plan === 'enterprise')) return plan;
+  return null;
+}
+
+/** Maximum users allowed for the plan. Bilinmeyen plan (null): kota uygulanmaz (UsersTab ile uyumlu). */
+export function getPlanUserLimit(plan: CompanyPlan | null | undefined): number {
+  const p = normalizePlan(plan);
+  if (!p) return Infinity;
+  return PLAN_USER_LIMITS[p];
+}
+
+/**
+ * Planın özelliğe erişip erişemeyeceği. Plan bilinmiyorken (null) erişime izin verilir:
+ * şirket kaydı senkron olmadan yan menü / malzeme sekmesi kaybolmasın (UsersTab’daki bilinmeyen plan ile uyumlu).
+ * Bu sürümde tüm planlarda tüm özellikler açıktır.
+ */
+export function canPlanAccessFeature(
+  plan: CompanyPlan | null | undefined,
+  feature: PlanFeature
+): boolean {
+  const p = normalizePlan(plan);
+  if (!p) return true;
+  return PLAN_FEATURES[feature][p];
+}
+
+/** Whether the company can add one more user (currentCount is existing user count). */
+export function canPlanAddUser(
+  plan: CompanyPlan | null | undefined,
+  currentUserCount: number
+): boolean {
+  const limit = getPlanUserLimit(plan);
+  return limit === Infinity || currentUserCount < limit;
+}
+
+/**
+ * Plan kotası için sayım: superAdmin ve onaysız profiller dahil edilmez.
+ * (Bekleyen join talepleri ayrıca eklenir: onaylı sayı + joinRequests.length.)
+ */
+export function planApprovedSeatCount(
+  users: { role?: string; roleApprovalStatus?: string }[]
+): number {
+  return users.filter(
+    (u) => u.role !== 'superAdmin' && u.roleApprovalStatus === 'approved'
+  ).length;
+}
+
+/** Maximum teams allowed for the plan. Bilinmeyen plan (null): ekip eklemeyi bloklamayın (plan senkronu gecikince 0 limit hatası olmasın). */
+export function getPlanTeamLimit(plan: CompanyPlan | null | undefined): number {
+  const p = normalizePlan(plan);
+  if (!p) return Infinity;
+  return PLAN_TEAM_LIMITS[p];
+}
+
+/** Whether the company can add one more team (currentCount is existing team count). */
+export function canPlanAddTeam(
+  plan: CompanyPlan | null | undefined,
+  currentTeamCount: number
+): boolean {
+  const limit = getPlanTeamLimit(plan);
+  return limit === Infinity || currentTeamCount < limit;
+}
