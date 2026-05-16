@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '@/app/providers/AppContext';
 import { authService } from '@/features/auth/services/authService';
+import { deleteCompanyAsSuperAdmin } from '@/features/settings/services/superAdminService';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import styles from './SuperAdmin.module.css';
 
@@ -28,8 +29,12 @@ export function SuperAdmin() {
   const [companyCount, setCompanyCount] = useState(0);
   const [userCount, setUserCount] = useState(0);
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<CompanyRow | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
+  const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState('');
 
-  useEffect(() => {
+  const loadData = useCallback(() => {
     if (!user || user.role !== 'superAdmin') return;
     if (!supabase) {
       setError('Supabase baglantisi bulunamadi.');
@@ -57,10 +62,36 @@ export function SuperAdmin() {
       .finally(() => setLoading(false));
   }, [user]);
 
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   const sortedCompanies = useMemo(
     () => [...companies].sort((a, b) => a.name.localeCompare(b.name, 'tr')),
     [companies]
   );
+
+  const handleDeleteCompany = async () => {
+    if (!deleteTarget) return;
+    if (deleteConfirmName.trim() !== deleteTarget.name.trim()) {
+      setDeleteMessage('Sirket adi eslesmiyor. Silme iptal edildi.');
+      return;
+    }
+    setDeleteSubmitting(true);
+    setDeleteMessage('');
+    const result = await deleteCompanyAsSuperAdmin(deleteTarget.id);
+    setDeleteSubmitting(false);
+    if (!result.ok) {
+      setDeleteMessage(result.error === 'forbidden' ? 'Yetkiniz yok.' : `Silme basarisiz: ${result.error}`);
+      return;
+    }
+    setDeleteMessage(
+      `${deleteTarget.name} silindi. ${result.detachedUsers} kullanicinin uyeligi kaldirildi; hesaplari engellenmedi.`
+    );
+    setDeleteTarget(null);
+    setDeleteConfirmName('');
+    loadData();
+  };
 
   if (!user || user.role !== 'superAdmin') return null;
 
@@ -83,13 +114,13 @@ export function SuperAdmin() {
 
       {loading ? <p className={styles.muted}>Yukleniyor...</p> : null}
       {error ? <p className={styles.error}>{error}</p> : null}
+      {deleteMessage ? <p className={styles.notice}>{deleteMessage}</p> : null}
 
       {!loading && !error && (
         <>
           <p className={styles.notice}>
-            <strong>Not:</strong> El ile yalnızca <code>profiles</code> tablosuna eklenen kullanıcılar giriş yapamaz.
-            Giriş <code>Authentication → Users</code> kaydına ve şifreye bağlıdır; kullanıcıyı buradan oluşturun veya
-            uygulamadan kayıt / şifre sıfırlama kullanın.
+            <strong>Not:</strong> Sirket silindiginde tum operasyonel veriler kalici olarak silinir. Uyelerin
+            Authentication hesabi kalir; yalnizca sirket uyeligi kaldirilir ve baska bir sirkete katilabilirler.
           </p>
           <div className={styles.cards}>
             <div className={styles.card}>
@@ -110,6 +141,7 @@ export function SuperAdmin() {
                   <tr>
                     <th>Sirket</th>
                     <th>Plan</th>
+                    <th>Islem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -117,6 +149,19 @@ export function SuperAdmin() {
                     <tr key={c.id}>
                       <td>{c.name}</td>
                       <td>{planLabel(c.plan)}</td>
+                      <td>
+                        <button
+                          type="button"
+                          className={styles.deleteBtn}
+                          onClick={() => {
+                            setDeleteTarget(c);
+                            setDeleteConfirmName('');
+                            setDeleteMessage('');
+                          }}
+                        >
+                          Sil
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -125,7 +170,52 @@ export function SuperAdmin() {
           </section>
         </>
       )}
+
+      {deleteTarget ? (
+        <div className={styles.modalBackdrop} role="presentation">
+          <div className={styles.modal} role="dialog" aria-labelledby="delete-company-title">
+            <h2 id="delete-company-title" className={styles.modalTitle}>
+              Sirketi sil: {deleteTarget.name}
+            </h2>
+            <p className={styles.modalText}>
+              Bu islem geri alinamaz. Sirket verileri silinir; kullanici hesaplari engellenmez, yalnizca uyelikleri
+              kaldirilir. Onaylamak icin sirket adini yazin.
+            </p>
+            <label className={styles.modalLabel}>
+              Sirket adi
+              <input
+                type="text"
+                className={styles.modalInput}
+                value={deleteConfirmName}
+                onChange={(e) => setDeleteConfirmName(e.target.value)}
+                placeholder={deleteTarget.name}
+                autoComplete="off"
+              />
+            </label>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.deleteBtn}
+                disabled={deleteSubmitting || deleteConfirmName.trim() !== deleteTarget.name.trim()}
+                onClick={() => void handleDeleteCompany()}
+              >
+                {deleteSubmitting ? 'Siliniyor...' : 'Kalici sil'}
+              </button>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                disabled={deleteSubmitting}
+                onClick={() => {
+                  setDeleteTarget(null);
+                  setDeleteConfirmName('');
+                }}
+              >
+                Iptal
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
-

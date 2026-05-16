@@ -108,3 +108,83 @@
   color: #b91c1c;
 }
 
+.deleteBtn {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid #b91c1c;
+  background: #fff;
+  color: #b91c1c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.deleteBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cancelBtn {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 12px 40px rgba(15, 23, 42, 0.2);
+}
+
+.modalTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.modalText {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: #475569;
+}
+
+.modalLabel {
+  display: block;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: #334155;
+}
+
+.modalInput {
+  display: block;
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+.modalActions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+

@@ -429,6 +429,32 @@ export const authService = {
     return { ok: true };
   },
 
+  /** Oturum açık, şirketi olmayan kullanıcı: mevcut şirkete katılım talebi gönderir. */
+  async requestJoinCompany(params: {
+    companyName: string;
+    joinCode: string;
+  }): Promise<AuthResult> {
+    const name = params.companyName.trim();
+    const code = params.joinCode.trim();
+    if (!/^\d{4}$/.test(code)) return { ok: false, error: 'auth.joinCodeInvalid' };
+    if (!supabase) return { ok: false, error: 'auth.loginError' };
+
+    const { data, error } = await supabase.rpc('request_join_company', {
+      p_company_name: name,
+      p_join_code: code,
+    });
+    if (error) return { ok: false, error: error.message };
+
+    const row = data as { ok?: boolean; error?: string } | null;
+    if (!row?.ok) {
+      if (row?.error === 'company_not_found') return { ok: false, error: 'auth.companyNotFound' };
+      if (row?.error === 'capacity_full') return { ok: false, error: 'onboarding.userLimitReached' };
+      if (row?.error === 'already_member') return { ok: false, error: 'pendingJoin.alreadyMember' };
+      return { ok: false, error: row?.error ?? 'auth.loginError' };
+    }
+    return { ok: true };
+  },
+
   logout(): void {
     supabase?.auth.signOut();
     store.setCurrentUserId(null);

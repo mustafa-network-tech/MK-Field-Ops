@@ -92,7 +92,12 @@
   },
   "pendingJoin": {
     "title": "Katılım talebi bekleniyor",
-    "message": "Şirkete katılım talebiniz gönderildi. Şirket yöneticisi onaylayacak veya reddedecektir. Çıkış yapıp daha sonra tekrar giriş yapabilirsiniz."
+    "message": "Şirkete katılım talebiniz gönderildi. Şirket yöneticisi onaylayacak veya reddedecektir. Çıkış yapıp daha sonra tekrar giriş yapabilirsiniz.",
+    "detachedTitle": "Şirket üyeliği bulunmuyor",
+    "detachedMessage": "Önceki şirketiniz kaldırılmış olabilir. Aynı hesapla başka bir şirkete katılmak için ad ve katılım kodunu girin.",
+    "submitJoin": "Katılım talebi gönder",
+    "requestSent": "Katılım talebiniz gönderildi.",
+    "alreadyMember": "Zaten bir şirkete bağlısınız."
   },
   "joinRequests": {
     "title": "Katılım talepleri",
