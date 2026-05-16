@@ -93,7 +93,6 @@ export function AppRoutes() {
           <Route path="settings" element={<Settings />} />
           <Route path="payroll" element={<PayrollPeriods />} />
           <Route path="audit-logs" element={<AuditLogs />} />
-          <Route path="plan" element={<Navigate to="/plan-and-payment" replace />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

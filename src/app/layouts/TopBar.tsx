@@ -5,7 +5,6 @@ import { useApp } from '@/app/providers/AppContext';
 import { authService, getCompanyNameFromUserMetadata } from '@/features/auth/services/authService';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import { fetchCompanyLanguageFromSupabase, updateCompanyLanguageInSupabase } from '@/features/companies/services/companyService';
-import { getEffectivePlan, getPlanWarningState, formatPlanExpiryRemaining } from '@/features/companies/services/subscriptionService';
 import { store } from '@/lib/storage/store';
 import styles from './TopBar.module.css';
 
@@ -15,12 +14,6 @@ const roleKeys: Record<string, string> = {
   companyManager: 'roles.companyManager',
   projectManager: 'roles.projectManager',
   teamLeader: 'roles.teamLeader',
-};
-
-const planKeys: Record<string, string> = {
-  starter: 'onboarding.planStarter',
-  professional: 'onboarding.planProfessional',
-  enterprise: 'onboarding.planEnterprise',
 };
 
 const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
@@ -38,7 +31,6 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
   const companyHydrateTotal = useRef(0);
 
   const canChangeLanguage = user?.role === 'companyManager' || user?.role === 'projectManager';
-  const canSeePlanWarning = user?.role === 'companyManager' || user?.role === 'projectManager';
 
   useEffect(() => {
     if (!supabase || !user?.companyId) {
@@ -118,22 +110,6 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
 
   const companyName = (company?.name?.trim() ? company.name : companyNameFromSessionMeta)?.trim() ?? '';
   const companyLogoUrl = company?.logo_url ?? null;
-  const effectivePlan = getEffectivePlan(company);
-  const planLabel = effectivePlan ? t(planKeys[effectivePlan] ?? effectivePlan) : null;
-  const planWarningState = getPlanWarningState(company);
-  const planWarningText = planWarningState && canSeePlanWarning
-    ? (() => {
-        if (planWarningState.kind === 'expiring_soon') {
-          const { days, hours } = formatPlanExpiryRemaining(planWarningState.remainingMs);
-          if (days > 0) return t('planExpiry.daysHoursLeft', { days, hours });
-          return t('planExpiry.hoursLeft', { hours });
-        }
-        if (planWarningState.kind === 'suspended') {
-          return t('planExpiry.suspendedGrace', { days: planWarningState.graceRemainingDays });
-        }
-        return t('planExpiry.closed');
-      })()
-    : null;
 
   return (
     <header className={styles.topBar}>
@@ -148,22 +124,10 @@ export function TopBar({ managementNotificationCount = 0 }: TopBarProps) {
           )}
           <span className={styles.companyName} title={companyName || undefined}>
             {companyName?.trim() ? companyName : t('topBar.companyNamePending')}
-            {planLabel && <span className={styles.companyPlan}> ({planLabel})</span>}
           </span>
         </div>
       )}
       <div className={styles.right}>
-        {canSeePlanWarning && planWarningText && (
-          <button
-            type="button"
-            className={styles.planExpiryWarning}
-            onClick={() => navigate('/plan-and-payment')}
-            title={planWarningText}
-          >
-            <span className={styles.planExpiryWarningIcon} aria-hidden>⚠</span>
-            <span className={styles.planExpiryWarningText}>{planWarningText}</span>
-          </button>
-        )}
         <button
           type="button"
           className={`${styles.navBtn} ${managementNotificationCount > 0 ? styles.navBtnPulse : ''}`}

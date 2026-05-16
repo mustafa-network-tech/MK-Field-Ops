@@ -9,7 +9,7 @@ import {
   type SuperAdminCompanyUser,
 } from '@/features/settings/services/superAdminService';
 import { getAdminUsagePeriodInfo } from '@/features/companies/services/subscriptionService';
-import { getCompanyUserLimit, getPlanUserLimit } from '@/lib/permissions/planGating';
+import { getCompanyUserLimit } from '@/lib/permissions/planGating';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { CompanyPlan } from '@/shared/types';
 import styles from './SuperAdmin.module.css';
@@ -38,14 +38,6 @@ function formatDateTimeTr(iso: string | null | undefined): string {
 function companyPlan(plan: string | null | undefined): CompanyPlan | null {
   if (plan === 'starter' || plan === 'professional' || plan === 'enterprise') return plan;
   return null;
-}
-
-function planLabel(plan: string | null | undefined): string {
-  if (!plan) return '-';
-  if (plan === 'starter') return 'Baslangic';
-  if (plan === 'professional') return 'Profesyonel';
-  if (plan === 'enterprise') return 'Kurumsal';
-  return plan;
 }
 
 function roleLabel(role: string | null | undefined): string {
@@ -306,13 +298,12 @@ export function SuperAdmin() {
           </div>
 
           <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>Sirketler ve Planlari</h2>
+            <h2 className={styles.sectionTitle}>Sirketler</h2>
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
                     <th>Sirket</th>
-                    <th>Plan</th>
                     <th>Uyeler</th>
                     <th>Islem</th>
                   </tr>
@@ -322,19 +313,17 @@ export function SuperAdmin() {
                     const members = usersByCompanyId.get(c.id) ?? [];
                     const approvedCount = members.filter((m) => m.role_approval_status === 'approved').length;
                     const plan = companyPlan(c.plan);
-                    const planLimit = getPlanUserLimit(plan);
                     const effectiveLimit = getCompanyUserLimit(plan, c.max_users_override);
                     const usageInfo = getAdminUsagePeriodInfo(c);
                     const isExpanded = expandedCompanyId === c.id;
                     return (
                       <Fragment key={c.id}>
                         <tr>
-                          <td>{c.name}</td>
                           <td>
-                            {planLabel(c.plan)}
+                            <span className={styles.companyName}>{c.name}</span>
                             <span className={styles.limitHint}>
                               {' '}
-                              ({approvedCount}/{effectiveLimit === Infinity ? '∞' : effectiveLimit})
+                              ({approvedCount}/{effectiveLimit === Infinity ? '∞' : effectiveLimit} uye)
                             </span>
                             {usageInfo.isConfigured ? (
                               <span
@@ -376,27 +365,27 @@ export function SuperAdmin() {
                         </tr>
                         {isExpanded ? (
                           <tr key={`${c.id}-users`} className={styles.usersRow}>
-                            <td colSpan={4}>
+                            <td colSpan={3}>
                               <div className={styles.limitPanel}>
                                 <p className={styles.limitPanelTitle}>Uye limiti</p>
                                 <p className={styles.muted}>
-                                  Plan limiti: {planLimit === Infinity ? '∞' : planLimit}
+                                  Gecerli kota: {effectiveLimit === Infinity ? '∞' : effectiveLimit}
                                   {c.max_users_override != null
-                                    ? ` · Ozel limit: ${c.max_users_override}`
-                                    : ' · Ozel limit yok (plan gecerli)'}
+                                    ? ` (ozel: ${c.max_users_override})`
+                                    : ''}
                                   {' · '}
                                   Kullanilan (onayli): {approvedCount}
                                 </p>
                                 <div className={styles.limitForm}>
                                   <label className={styles.limitLabel}>
-                                    Ozel limit (bos = plan)
+                                    Maksimum uye sayisi
                                     <input
                                       type="number"
                                       min={1}
                                       max={999}
                                       className={styles.limitInput}
                                       value={limitDrafts[c.id] ?? ''}
-                                      placeholder={planLimit === Infinity ? '' : String(planLimit)}
+                                      placeholder="orn. 10"
                                       onChange={(e) =>
                                         setLimitDrafts((prev) => ({
                                           ...prev,
@@ -419,7 +408,7 @@ export function SuperAdmin() {
                                     disabled={limitSavingId === c.id}
                                     onClick={() => void handleResetUserLimitToPlan(c)}
                                   >
-                                    Plana don
+                                    Ozel limiti kaldir
                                   </button>
                                 </div>
                               </div>

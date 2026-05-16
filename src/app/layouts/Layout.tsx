@@ -20,19 +20,7 @@ export function Layout() {
   const { user, setUser, company, refreshCompany, profilesVersion } = useApp();
   const navigate = useNavigate();
   const location = useLocation();
-  const [showPlanUpdateSuccess, setShowPlanUpdateSuccess] = useState(() => !!(location.state as { planChangeSuccess?: boolean } | null)?.planChangeSuccess);
   const sub = getSubscriptionState(company);
-  const isPlanPage = location.pathname === '/plan' || location.pathname === '/plan-and-payment';
-
-  useEffect(() => {
-    const state = location.state as { planChangeSuccess?: boolean } | null;
-    if (state?.planChangeSuccess) setShowPlanUpdateSuccess(true);
-  }, [location.state]);
-
-  const dismissPlanSuccess = () => {
-    setShowPlanUpdateSuccess(false);
-    navigate(location.pathname, { replace: true, state: {} });
-  };
 
   useEffect(() => {
     const code = company?.language_code;
@@ -173,11 +161,6 @@ export function Layout() {
                 {t('auditLogs.title')}
               </NavLink>
             )}
-            {canAccessAuditLogs && (
-              <NavLink to="/plan-and-payment" className={({ isActive }) => (isActive ? styles.linkActive : styles.link)}>
-                {t('planPage.title')}
-              </NavLink>
-            )}
           </nav>
           <div className={styles.sidebarFooter}>
             <div className={styles.sidebarLang}>
@@ -210,50 +193,18 @@ export function Layout() {
               <p className={styles.offlineMessage}>{t('offline.message')}</p>
             </div>
           )}
-          {showPlanUpdateSuccess && (
-            <div className={styles.planUpdateBanner} role="status">
-              <p>{t('planChangePage.planUpdateComplete')}</p>
-              <button type="button" className={styles.planUpdateBannerClose} onClick={dismissPlanSuccess} aria-label={t('common.close')}>
-                ×
-              </button>
-            </div>
-          )}
-          {sub.isClosed && !isPlanPage && (
-            <div className={styles.subscriptionBannerClosed} role="alert">
-              <p>{t('planPage.bannerClosedMessage')}</p>
-              <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
-            </div>
-          )}
-          {sub.isAdminUsageExpired && !isPlanPage && (
+          {sub.isAdminUsageExpired && (
             <div className={styles.subscriptionBannerUsage} role="alert">
               <p>{t('planPage.bannerAdminUsageExpired')}</p>
             </div>
           )}
-          {isOnline && sub.isGracePeriod && !sub.isClosed && !sub.isAdminUsageExpired && !isPlanPage && (
-            <div className={styles.subscriptionBannerGrace} role="alert">
-              <p>{t('planPage.bannerExpired')}</p>
-              <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
+          <Outlet />
+          {sub.isAdminUsageExpired && (
+            <div className={styles.subscriptionOverlay} aria-hidden>
+              <div className={styles.subscriptionOverlayContent}>
+                <p>{t('planPage.overlayAdminUsageExpired')}</p>
+              </div>
             </div>
-          )}
-          {sub.isClosed && !isPlanPage ? null : (
-            <>
-              <Outlet />
-              {sub.isAdminUsageExpired && !isPlanPage && (
-                <div className={styles.subscriptionOverlay} aria-hidden>
-                  <div className={styles.subscriptionOverlayContent}>
-                    <p>{t('planPage.overlayAdminUsageExpired')}</p>
-                  </div>
-                </div>
-              )}
-              {sub.isGracePeriod && !sub.isAdminUsageExpired && !isPlanPage && (
-                <div className={styles.subscriptionOverlay} aria-hidden>
-                  <div className={styles.subscriptionOverlayContent}>
-                    <p>{t('planPage.bannerExpired')}</p>
-                    <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
-                  </div>
-                </div>
-              )}
-            </>
           )}
         </main>
       </div>
