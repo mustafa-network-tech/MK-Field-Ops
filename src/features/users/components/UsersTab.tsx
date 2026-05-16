@@ -31,7 +31,7 @@ export function UsersTab() {
   const occupiedSeats = planApprovedSeatCount(users);
   const effectivePlan = getEffectivePlan(company);
   const hasKnownPlan = effectivePlan !== null;
-  const canAddMoreUsers = hasKnownPlan ? canPlanAddUser(effectivePlan, occupiedSeats) : true;
+  const canAddMoreUsers = hasKnownPlan ? canPlanAddUser(effectivePlan, occupiedSeats, company?.max_users_override) : true;
   const hasCompanyManager = users.some((u) => u.role === 'companyManager');
   const assignableRoles: Role[] = hasCompanyManager ? ['projectManager', 'teamLeader'] : ['companyManager', 'projectManager', 'teamLeader'];
 

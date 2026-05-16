@@ -63,9 +63,45 @@ export type SubscriptionState = {
   isExpired: boolean;
   isGracePeriod: boolean;
   isClosed: boolean;
+  /** Super admin kullanım süresi doldu: görüntüleme açık, yeni işlem kapalı. */
+  isAdminUsageExpired: boolean;
+  /** Kullanım bitiş (super admin süresi, ISO). */
+  adminUsageExpiresAt: string | null;
+  /** Kalan gün (super admin süresi). */
+  adminUsageRemainingDays: number | null;
   /** Whether any operational action should be disabled (suspended or closed). */
   isOperationsDisabled: boolean;
 };
+
+export type AdminUsagePeriodInfo = {
+  isConfigured: boolean;
+  isExpired: boolean;
+  expiresAt: string | null;
+  remainingDays: number | null;
+};
+
+/** Super admin tarafından tanımlanan gün bazlı kullanım süresi. */
+export function getAdminUsagePeriodInfo(company: {
+  usage_period_days?: number | null;
+  usage_period_started_at?: string | null;
+} | undefined): AdminUsagePeriodInfo {
+  const days = company?.usage_period_days;
+  const started = parseDate(company?.usage_period_started_at ?? null);
+  if (days == null || days < 1 || !started) {
+    return { isConfigured: false, isExpired: false, expiresAt: null, remainingDays: null };
+  }
+  const expires = new Date(started);
+  expires.setDate(expires.getDate() + days);
+  const now = new Date();
+  const remainingMs = expires.getTime() - now.getTime();
+  const remainingDays = Math.ceil(remainingMs / (24 * 60 * 60 * 1000));
+  return {
+    isConfigured: true,
+    isExpired: now >= expires,
+    expiresAt: expires.toISOString(),
+    remainingDays,
+  };
+}
 
 function parseDate(s: string | null | undefined): Date | null {
   if (!s || !s.trim()) return null;
@@ -79,8 +115,34 @@ function parseDate(s: string | null | undefined): Date | null {
  * Otherwise: now > plan_end_date + 15 days => closed; now > plan_end_date => suspended (grace); else active.
  * When plan exists but plan_end_date is missing (e.g. company created before dates existed), use createdAt + 1 month as end.
  */
-export function getSubscriptionState(company: { plan_end_date?: string | null; subscription_status?: string | null; plan?: string | null; createdAt?: string | null } | undefined): SubscriptionState {
+export function getSubscriptionState(company: {
+  plan_end_date?: string | null;
+  subscription_status?: string | null;
+  plan?: string | null;
+  createdAt?: string | null;
+  usage_period_days?: number | null;
+  usage_period_started_at?: string | null;
+} | undefined): SubscriptionState {
   const closedByAdmin = company?.subscription_status === 'closed';
+  const adminUsage = getAdminUsagePeriodInfo(company);
+
+  if (!closedByAdmin && adminUsage.isConfigured && adminUsage.isExpired) {
+    return {
+      status: 'active',
+      planEndDate: company?.plan_end_date ?? null,
+      suspensionDate: null,
+      remainingDays: null,
+      graceRemainingDays: null,
+      isExpired: false,
+      isGracePeriod: false,
+      isClosed: false,
+      isAdminUsageExpired: true,
+      adminUsageExpiresAt: adminUsage.expiresAt,
+      adminUsageRemainingDays: adminUsage.remainingDays,
+      isOperationsDisabled: true,
+    };
+  }
+
   let planEnd = parseDate(company?.plan_end_date ?? null);
   if (!planEnd && company?.plan && company?.createdAt) {
     const start = parseDate(company.createdAt);
@@ -101,6 +163,9 @@ export function getSubscriptionState(company: { plan_end_date?: string | null; s
       isExpired: true,
       isGracePeriod: false,
       isClosed: true,
+      isAdminUsageExpired: false,
+      adminUsageExpiresAt: adminUsage.expiresAt,
+      adminUsageRemainingDays: adminUsage.remainingDays,
       isOperationsDisabled: true,
     };
   }
@@ -115,6 +180,9 @@ export function getSubscriptionState(company: { plan_end_date?: string | null; s
       isExpired: false,
       isGracePeriod: false,
       isClosed: false,
+      isAdminUsageExpired: false,
+      adminUsageExpiresAt: adminUsage.expiresAt,
+      adminUsageRemainingDays: adminUsage.remainingDays,
       isOperationsDisabled: false,
     };
   }
@@ -135,6 +203,9 @@ export function getSubscriptionState(company: { plan_end_date?: string | null; s
       isExpired: true,
       isGracePeriod: false,
       isClosed: true,
+      isAdminUsageExpired: false,
+      adminUsageExpiresAt: adminUsage.expiresAt,
+      adminUsageRemainingDays: adminUsage.remainingDays,
       isOperationsDisabled: true,
     };
   }
@@ -151,6 +222,9 @@ export function getSubscriptionState(company: { plan_end_date?: string | null; s
       isExpired: true,
       isGracePeriod: true,
       isClosed: false,
+      isAdminUsageExpired: false,
+      adminUsageExpiresAt: adminUsage.expiresAt,
+      adminUsageRemainingDays: adminUsage.remainingDays,
       isOperationsDisabled: true,
     };
   }
@@ -164,6 +238,9 @@ export function getSubscriptionState(company: { plan_end_date?: string | null; s
     isExpired: false,
     isGracePeriod: false,
     isClosed: false,
+    isAdminUsageExpired: false,
+    adminUsageExpiresAt: adminUsage.expiresAt,
+    adminUsageRemainingDays: adminUsage.remainingDays,
     isOperationsDisabled: false,
   };
 }

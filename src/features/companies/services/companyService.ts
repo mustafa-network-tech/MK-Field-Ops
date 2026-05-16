@@ -104,6 +104,9 @@ type CompanySnapshotRow = {
   pending_plan?: string | null;
   pending_plan_billing_cycle?: string | null;
   payroll_start_day?: number | null;
+  max_users_override?: number | null;
+  usage_period_days?: number | null;
+  usage_period_started_at?: string | null;
   subscription_status?: string | null;
   closure_requested_at?: string | null;
   purge_after?: string | null;
@@ -112,7 +115,7 @@ type CompanySnapshotRow = {
 };
 
 const COMPANY_SNAPSHOT_SELECT =
-  'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day, subscription_status, closure_requested_at, purge_after, closed_by_user_id';
+  'language_code, name, logo_url, plan, plan_start_date, plan_end_date, pending_plan, pending_plan_billing_cycle, payroll_start_day, max_users_override, usage_period_days, usage_period_started_at, subscription_status, closure_requested_at, purge_after, closed_by_user_id';
 
 /** Doğrudan SELECT boş/hatalı olabiliyor; get_my_company_snapshot ile yedek (PM dahil). */
 async function fetchCompanySnapshotRow(companyId: string): Promise<CompanySnapshotRow | null> {
@@ -170,6 +173,11 @@ export async function fetchCompanyLanguageFromSupabase(companyId: string): Promi
     ...(data.plan_end_date !== undefined && { plan_end_date: data.plan_end_date ?? null }),
     ...(pending_plan !== undefined && { pending_plan: pending_plan ?? null }),
     ...(pending_plan_billing_cycle !== undefined && { pending_plan_billing_cycle }),
+    ...(data.max_users_override !== undefined && { max_users_override: data.max_users_override ?? null }),
+    ...(data.usage_period_days !== undefined && { usage_period_days: data.usage_period_days ?? null }),
+    ...(data.usage_period_started_at !== undefined && {
+      usage_period_started_at: data.usage_period_started_at ?? null,
+    }),
     ...(subscription_status !== undefined && { subscription_status }),
     ...(data.closure_requested_at !== undefined && { closure_requested_at: data.closure_requested_at ?? null }),
     ...(data.purge_after !== undefined && { purge_after: data.purge_after ?? null }),

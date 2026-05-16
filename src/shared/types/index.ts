@@ -21,6 +21,12 @@ export interface Company {
   join_code?: string | null;
   /** Plan tied to company. */
   plan?: CompanyPlan | null;
+  /** Super admin özel kullanıcı kotası; null ise plan limiti geçerlidir. */
+  max_users_override?: number | null;
+  /** Super admin kullanım süresi (gün). */
+  usage_period_days?: number | null;
+  /** Kullanım süresi başlangıcı (ISO). */
+  usage_period_started_at?: string | null;
   billing_cycle?: 'monthly' | 'yearly' | null;
   plan_status?: string | null;
   trial_end_date?: string | null;

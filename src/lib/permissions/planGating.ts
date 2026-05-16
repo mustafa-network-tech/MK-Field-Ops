@@ -39,6 +39,15 @@ export function getPlanUserLimit(plan: CompanyPlan | null | undefined): number {
   return PLAN_USER_LIMITS[p];
 }
 
+/** Şirket kotası: super admin override varsa o, yoksa plan limiti. */
+export function getCompanyUserLimit(
+  plan: CompanyPlan | null | undefined,
+  maxUsersOverride?: number | null
+): number {
+  if (maxUsersOverride != null && maxUsersOverride >= 1) return maxUsersOverride;
+  return getPlanUserLimit(plan);
+}
+
 /**
  * Planın özelliğe erişip erişemeyeceği. Plan bilinmiyorken (null) erişime izin verilir:
  * şirket kaydı senkron olmadan yan menü / malzeme sekmesi kaybolmasın (UsersTab’daki bilinmeyen plan ile uyumlu).
@@ -56,9 +65,10 @@ export function canPlanAccessFeature(
 /** Whether the company can add one more user (currentCount is existing user count). */
 export function canPlanAddUser(
   plan: CompanyPlan | null | undefined,
-  currentUserCount: number
+  currentUserCount: number,
+  maxUsersOverride?: number | null
 ): boolean {
-  const limit = getPlanUserLimit(plan);
+  const limit = getCompanyUserLimit(plan, maxUsersOverride);
   return limit === Infinity || currentUserCount < limit;
 }
 

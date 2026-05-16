@@ -1087,6 +1087,8 @@
     "bannerGraceMessage": "Aboneliğiniz {expiredDate} tarihinde sona erdi. Şirketiniz {suspensionDate} tarihinde kalıcı olarak askıya alınacaktır.",
     "bannerGraceCountdown": "Kalıcı askıya alınmaya {days} gün kaldı.",
     "bannerExpiringSoon": "Planınız {days} gün içinde sona erecek. Hizmet kesintisini önlemek için yenileyin.",
+    "bannerAdminUsageExpired": "Tanımlı kullanım süreniz doldu. Mevcut verilerinizi görüntüleyebilirsiniz; yeni işlem yapılamaz.",
+    "overlayAdminUsageExpired": "Kullanım süresi doldu — salt okunur mod. Veriler görüntülenebilir; kayıt, onay ve düzenleme kapalıdır.",
     "graceNote": "Süre sona erdikten sonra kalıcı askıya alınmadan önce yenilemek için {days} gün (ücretsiz ek süre) hakkınız vardır. Şirket verileri asla silinmez; yalnızca erişim engellenir.",
     "pendingPlanNote": "Planınız {date} tarihinde {plan} planına geçecektir."
   },

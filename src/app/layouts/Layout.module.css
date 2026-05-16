@@ -315,7 +315,8 @@
 }
 
 .subscriptionBannerClosed,
-.subscriptionBannerGrace {
+.subscriptionBannerGrace,
+.subscriptionBannerUsage {
   padding: 1rem 1.25rem;
   border-radius: 8px;
   margin-bottom: 1rem;
@@ -331,6 +332,12 @@
   background: #fffbeb;
   border: 1px solid #fde68a;
   color: #b45309;
+}
+
+.subscriptionBannerUsage {
+  background: #eff6ff;
+  border: 1px solid #93c5fd;
+  color: #1e40af;
 }
 
 .subscriptionBannerLink {

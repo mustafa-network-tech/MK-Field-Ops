@@ -19,27 +19,39 @@ export function PendingJoin() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!supabase) {
+    const client = supabase;
+    if (!client) {
       setChecking(false);
       return;
     }
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        setChecking(false);
-        return;
-      }
-      supabase
-        .from('join_requests')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('status', 'pending')
-        .maybeSingle()
-        .then(({ data }) => {
-          setHasPendingRequest(Boolean(data?.id));
+
+    let cancelled = false;
+
+    void (async () => {
+      try {
+        const { data: { user } } = await client.auth.getUser();
+        if (cancelled) return;
+        if (!user) {
           setChecking(false);
-        })
-        .catch(() => setChecking(false));
-    });
+          return;
+        }
+        const { data } = await client
+          .from('join_requests')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('status', 'pending')
+          .maybeSingle();
+        if (cancelled) return;
+        setHasPendingRequest(Boolean(data?.id));
+        setChecking(false);
+      } catch {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleLogout = () => {

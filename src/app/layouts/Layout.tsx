@@ -224,7 +224,12 @@ export function Layout() {
               <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
             </div>
           )}
-          {isOnline && sub.isGracePeriod && !sub.isClosed && !isPlanPage && (
+          {sub.isAdminUsageExpired && !isPlanPage && (
+            <div className={styles.subscriptionBannerUsage} role="alert">
+              <p>{t('planPage.bannerAdminUsageExpired')}</p>
+            </div>
+          )}
+          {isOnline && sub.isGracePeriod && !sub.isClosed && !sub.isAdminUsageExpired && !isPlanPage && (
             <div className={styles.subscriptionBannerGrace} role="alert">
               <p>{t('planPage.bannerExpired')}</p>
               <NavLink to="/plan-and-payment" className={styles.subscriptionBannerLink}>{t('planPage.title')}</NavLink>
@@ -233,7 +238,14 @@ export function Layout() {
           {sub.isClosed && !isPlanPage ? null : (
             <>
               <Outlet />
-              {sub.isGracePeriod && !isPlanPage && (
+              {sub.isAdminUsageExpired && !isPlanPage && (
+                <div className={styles.subscriptionOverlay} aria-hidden>
+                  <div className={styles.subscriptionOverlayContent}>
+                    <p>{t('planPage.overlayAdminUsageExpired')}</p>
+                  </div>
+                </div>
+              )}
+              {sub.isGracePeriod && !sub.isAdminUsageExpired && !isPlanPage && (
                 <div className={styles.subscriptionOverlay} aria-hidden>
                   <div className={styles.subscriptionOverlayContent}>
                     <p>{t('planPage.bannerExpired')}</p>

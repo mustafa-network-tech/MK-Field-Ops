@@ -1,7 +1,7 @@
 import { useI18n } from '@/lib/i18n/I18nContext';
 import { useApp } from '@/app/providers/AppContext';
 import { store } from '@/lib/storage/store';
-import { getPlanUserLimit, getPlanTeamLimit, planApprovedSeatCount } from '@/lib/permissions/planGating';
+import { getCompanyUserLimit, getPlanTeamLimit, planApprovedSeatCount } from '@/lib/permissions/planGating';
 import {
   getSubscriptionState,
   getEffectivePlan,
@@ -47,7 +47,7 @@ export function Plan() {
   const c = store.getCompany(companyId, companyId) ?? company;
   const sub = getSubscriptionState(c);
   const effectivePlan = getEffectivePlan(c);
-  const userLimit = getPlanUserLimit(effectivePlan);
+  const userLimit = getCompanyUserLimit(effectivePlan, c?.max_users_override);
   const teamLimit = getPlanTeamLimit(effectivePlan);
   const userCount = planApprovedSeatCount(store.getUsers(companyId));
   const teamCount = store.getTeams(companyId).length;
