@@ -11,14 +11,6 @@ const LANDING_LOGO_SRC = '/landing-logo.png';
 const HERO_BG = '/image/hero.jpeg';
 
 /** Tanıtım videosu (YouTube ID). Tanımlıysa embed; değilse public MP4. */
-const PROMO_VIDEO_ID =
-  (import.meta.env.VITE_LANDING_PROMO_VIDEO_ID as string | undefined)?.trim() ||
-  (import.meta.env.VITE_LANDING_DEMO_VIDEO_ID as string | undefined)?.trim() ||
-  '';
-
-const rawPromoPath = (import.meta.env.VITE_LANDING_PROMO_VIDEO_PATH as string | undefined)?.trim();
-const PROMO_VIDEO_PATH = rawPromoPath && rawPromoPath.length > 0 ? rawPromoPath : '/demo/mk-ops.mp4';
-
 const WHATSAPP_PHONE_E164 =
   (import.meta.env.VITE_LANDING_WHATSAPP_E164 as string | undefined)?.trim().replace(/^\+/, '') || '905456597551';
 
@@ -278,40 +270,6 @@ export function Landing() {
                 <p className={styles.timelineDesc}>{t(`landing.${row.desc}`)}</p>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      <section id="promo-video" className={styles.sectionDemo}>
-        <div className={styles.demoTheater}>
-          <div className={styles.cinematicInner}>
-            <h2 className={styles.titleDemo}>{t('landing.promoVideoSectionTitle')}</h2>
-            <p className={styles.promoVideoLead}>{t('landing.promoVideoCaption')}</p>
-            <div className={styles.videoFrame}>
-              <div className={styles.videoFrameInner}>
-                {PROMO_VIDEO_ID ? (
-                  <div className={styles.videoRatio}>
-                    <iframe
-                      title={t('landing.promoVideoAriaTitle')}
-                      src={`https://www.youtube-nocookie.com/embed/${PROMO_VIDEO_ID}`}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      allowFullScreen
-                    />
-                  </div>
-                ) : (
-                  <div className={styles.videoRatio}>
-                    <video
-                      className={styles.promoVideoEl}
-                      src={PROMO_VIDEO_PATH}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      aria-label={t('landing.promoVideoAriaTitle')}
-                    />
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       </section>
