@@ -8,8 +8,7 @@ const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 
 const LANDING_LOGO_SRC = '/landing-logo.png';
 
-const HERO_BG =
-  'https://images.unsplash.com/photo-1769284022654-66c6b07dae78?w=1920&q=80';
+const HERO_BG = '/image/hero.jpeg';
 
 /** Tanıtım videosu (YouTube ID). Tanımlıysa embed; değilse public MP4. */
 const PROMO_VIDEO_ID =
