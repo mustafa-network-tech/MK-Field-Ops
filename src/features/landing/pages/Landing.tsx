@@ -207,6 +207,14 @@ export function Landing() {
             <Link to="/login" className={styles.heroBtnPrimary}>
               {t('landing.heroLogin')}
             </Link>
+            <a
+              href="https://mkops-demo.vercel.app/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.heroBtnDemo}
+            >
+              {t('landing.heroDemo') || 'Demo'}
+            </a>
             <Link to="/register" className={styles.heroBtnSecondary}>
               {t('landing.navRegisterHint')}
             </Link>
