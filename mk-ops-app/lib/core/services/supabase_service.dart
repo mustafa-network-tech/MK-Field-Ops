@@ -80,6 +80,7 @@ class SupabaseService {
     int limit = 50,
     int offset = 0,
   }) async {
+    // Filters must be applied BEFORE .order()/.range()
     var query = client
         .from(AppConstants.tableJobs)
         .select('''
@@ -88,22 +89,25 @@ class SupabaseService {
           teams(id, code, description, percentage),
           work_items(id, code, unit_type, unit_price, description)
         ''')
-        .eq('company_id', companyId)
-        .order('job_date', ascending: false)
-        .order('created_at', ascending: false)
-        .range(offset, offset + limit - 1);
+        .eq('company_id', companyId);
 
     if (teamId != null) query = query.eq('team_id', teamId);
     if (status != null) query = query.eq('status', status);
     if (projectId != null) query = query.eq('project_id', projectId);
     if (dateFrom != null) {
-      query = query.gte('job_date', dateFrom.toIso8601String().substring(0, 10));
+      query = query.gte(
+          'job_date', dateFrom.toIso8601String().substring(0, 10));
     }
     if (dateTo != null) {
-      query = query.lte('job_date', dateTo.toIso8601String().substring(0, 10));
+      query = query.lte(
+          'job_date', dateTo.toIso8601String().substring(0, 10));
     }
 
-    final data = await query;
+    final data = await query
+        .order('job_date', ascending: false)
+        .order('created_at', ascending: false)
+        .range(offset, offset + limit - 1);
+
     return data.map((e) => Job.fromMap(e)).toList();
   }
 
@@ -169,15 +173,15 @@ class SupabaseService {
     required String companyId,
     String? status,
   }) async {
+    // Filters must be applied BEFORE .order()
     var query = client
         .from(AppConstants.tableProjects)
         .select()
-        .eq('company_id', companyId)
-        .order('created_at', ascending: false);
+        .eq('company_id', companyId);
 
     if (status != null) query = query.eq('status', status);
 
-    final data = await query;
+    final data = await query.order('created_at', ascending: false);
     return data.map((e) => Project.fromMap(e)).toList();
   }
 
@@ -187,17 +191,17 @@ class SupabaseService {
     required String companyId,
     String? leaderId,
   }) async {
+    // Use .filter() instead of .is_() for null checks
     var query = client
         .from(AppConstants.tableTeams)
         .select()
         .eq('company_id', companyId)
-        .is_('wiped_at', null)
-        .eq('approval_status', 'approved')
-        .order('code');
+        .filter('wiped_at', 'is', null)
+        .eq('approval_status', 'approved');
 
     if (leaderId != null) query = query.eq('leader_id', leaderId);
 
-    final data = await query;
+    final data = await query.order('code');
     return data.map((e) => Team.fromMap(e)).toList();
   }
 
@@ -281,44 +285,47 @@ class SupabaseService {
     PayrollPeriod? activePeriod,
   }) async {
     final today = DateTime.now();
-    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-    // Today's jobs
+    // Today's jobs - fetch IDs and use .length
     var todayQuery = client
         .from(AppConstants.tableJobs)
-        .select('id', const FetchOptions(count: CountOption.exact))
+        .select('id')
         .eq('company_id', companyId)
         .eq('job_date', todayStr);
+
     if (profile.isTeamLeader) {
-      final teams = await fetchTeams(
-          companyId: companyId, leaderId: profile.id);
+      final teams =
+          await fetchTeams(companyId: companyId, leaderId: profile.id);
       if (teams.isNotEmpty) {
         todayQuery = todayQuery.inFilter(
             'team_id', teams.map((t) => t.id).toList());
       }
     }
-    final todayResult = await todayQuery;
+    final todayJobs = await todayQuery;
 
     // Pending approvals
     var pendingQuery = client
         .from(AppConstants.tableJobs)
-        .select('id', const FetchOptions(count: CountOption.exact))
+        .select('id')
         .eq('company_id', companyId)
         .eq('status', AppConstants.jobSubmitted);
+
     if (profile.isTeamLeader) {
-      final teams = await fetchTeams(
-          companyId: companyId, leaderId: profile.id);
+      final teams =
+          await fetchTeams(companyId: companyId, leaderId: profile.id);
       if (teams.isNotEmpty) {
         pendingQuery = pendingQuery.inFilter(
             'team_id', teams.map((t) => t.id).toList());
       }
     }
-    final pendingResult = await pendingQuery;
+    final pendingJobs = await pendingQuery;
 
     // Active projects
-    final projectsResult = await client
+    final activeProjects = await client
         .from(AppConstants.tableProjects)
-        .select('id', const FetchOptions(count: CountOption.exact))
+        .select('id')
         .eq('company_id', companyId)
         .eq('status', AppConstants.projectActive);
 
@@ -341,8 +348,8 @@ class SupabaseService {
           .eq('payroll_period_id', activePeriod.id);
 
       if (profile.isTeamLeader) {
-        final teams = await fetchTeams(
-            companyId: companyId, leaderId: profile.id);
+        final teams =
+            await fetchTeams(companyId: companyId, leaderId: profile.id);
         if (teams.isNotEmpty) {
           earningsQuery = earningsQuery.inFilter(
               'team_id', teams.map((t) => t.id).toList());
@@ -352,17 +359,18 @@ class SupabaseService {
       final earningsData = await earningsQuery;
       for (final row in earningsData) {
         final qty = double.tryParse(row['quantity'].toString()) ?? 0;
-        final price =
-            double.tryParse(row['work_items']?['unit_price']?.toString() ?? '0') ?? 0;
+        final price = double.tryParse(
+                row['work_items']?['unit_price']?.toString() ?? '0') ??
+            0;
         earnings += qty * price;
       }
     }
 
     return DashboardStats(
-      todayJobCount: todayResult.count ?? 0,
-      pendingApprovalCount: pendingResult.count ?? 0,
+      todayJobCount: todayJobs.length,
+      pendingApprovalCount: pendingJobs.length,
       currentPeriodEarnings: earnings,
-      activeProjectCount: projectsResult.count ?? 0,
+      activeProjectCount: activeProjects.length,
       unreadNotificationCount: unreadCount,
     );
   }
@@ -420,14 +428,14 @@ class SupabaseService {
       final pct = double.tryParse(
               row['teams']?['percentage']?.toString() ?? '0') ??
           0;
-      final status = row['status'] as String? ?? '';
+      final rowStatus = row['status'] as String? ?? '';
 
-      if (status == 'approved') {
+      if (rowStatus == 'approved') {
         final jobTotal = qty * price;
         totalGross += jobTotal;
         teamShare += jobTotal * (pct / 100);
         approvedCount++;
-      } else if (status == 'submitted') {
+      } else if (rowStatus == 'submitted') {
         pendingCount++;
       }
     }
