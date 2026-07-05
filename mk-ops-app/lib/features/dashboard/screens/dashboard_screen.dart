@@ -134,7 +134,7 @@ class _DashboardBody extends ConsumerWidget {
                     physics: const NeverScrollableScrollPhysics(),
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 1.35,
+                    childAspectRatio: 1.4,
                     children: [
                       StatCard(
                         label: 'Bugünkü İşler',

@@ -146,6 +146,19 @@ class PayrollParams {
     this.periodId,
     this.teamId,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PayrollParams &&
+          companyId == other.companyId &&
+          profile == other.profile &&
+          periodId == other.periodId &&
+          teamId == other.teamId;
+
+  @override
+  int get hashCode =>
+      Object.hash(companyId, profile, periodId, teamId);
 }
 
 final payrollSummaryProvider =
@@ -176,6 +189,21 @@ class JobsParams {
     this.dateFrom,
     this.dateTo,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is JobsParams &&
+          companyId == other.companyId &&
+          teamId == other.teamId &&
+          status == other.status &&
+          projectId == other.projectId &&
+          dateFrom == other.dateFrom &&
+          dateTo == other.dateTo;
+
+  @override
+  int get hashCode =>
+      Object.hash(companyId, teamId, status, projectId, dateFrom, dateTo);
 }
 
 final jobsProvider =

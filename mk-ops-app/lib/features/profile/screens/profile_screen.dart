@@ -134,7 +134,7 @@ class ProfileScreen extends ConsumerWidget {
                       );
                       if (confirm == true) {
                         await ref.read(supabaseServiceProvider).signOut();
-                        if (context.mounted) context.go('/auth/login');
+                        // Yönlendirme main.dart'taki auth stream listener tarafından yapılır
                       }
                     },
                     style: OutlinedButton.styleFrom(

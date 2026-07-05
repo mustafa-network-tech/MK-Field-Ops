@@ -47,7 +47,11 @@ class Company extends Equatable {
         timezone: (map['timezone'] as String?) ?? 'Europe/Istanbul',
       );
 
-  bool get isActive => subscriptionStatus == 'active';
+  // null veya 'trial' → yeni şirket, aktif sayılır; 'suspended'/'closed' değil
+  bool get isActive =>
+      subscriptionStatus == null ||
+      subscriptionStatus == 'active' ||
+      subscriptionStatus == 'trial';
   bool get isSuspended => subscriptionStatus == 'suspended';
   bool get isClosed => subscriptionStatus == 'closed';
 
@@ -169,13 +173,13 @@ class Project extends Equatable {
   });
 
   factory Project.fromMap(Map<String, dynamic> map) => Project(
-        id: map['id'] as String,
-        companyId: map['company_id'] as String,
-        campaignId: map['campaign_id'] as String,
+        id: (map['id'] as String?) ?? '',
+        companyId: (map['company_id'] as String?) ?? '',
+        campaignId: (map['campaign_id'] as String?) ?? '',
         projectYear: (map['project_year'] as int?) ?? DateTime.now().year,
         externalProjectId: (map['external_project_id'] as String?) ?? '',
         receivedDate: map['received_date'] != null
-            ? DateTime.parse(map['received_date'].toString())
+            ? DateTime.tryParse(map['received_date'].toString()) ?? DateTime.now()
             : DateTime.now(),
         name: map['name'] as String?,
         description: map['description'] as String?,
@@ -183,7 +187,9 @@ class Project extends Equatable {
         completedAt: map['completed_at'] != null
             ? DateTime.tryParse(map['completed_at'].toString())
             : null,
-        createdAt: DateTime.parse(map['created_at'].toString()),
+        createdAt: map['created_at'] != null
+            ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
+            : DateTime.now(),
       );
 
   bool get isActive => status == 'ACTIVE';
@@ -225,9 +231,9 @@ class Team extends Equatable {
   });
 
   factory Team.fromMap(Map<String, dynamic> map) => Team(
-        id: map['id'] as String,
-        companyId: map['company_id'] as String,
-        code: map['code'] as String,
+        id: (map['id'] as String?) ?? '',
+        companyId: (map['company_id'] as String?) ?? '',
+        code: (map['code'] as String?) ?? '',
         description: map['description'] as String?,
         percentage: double.tryParse(map['percentage']?.toString() ?? '70') ?? 70.0,
         leaderId: map['leader_id'] as String?,
@@ -239,7 +245,9 @@ class Team extends Equatable {
         wipedAt: map['wiped_at'] != null
             ? DateTime.tryParse(map['wiped_at'].toString())
             : null,
-        createdAt: DateTime.parse(map['created_at'].toString()),
+        createdAt: map['created_at'] != null
+            ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
+            : DateTime.now(),
       );
 
   bool get isActive => wipedAt == null && approvalStatus == 'approved';
@@ -268,10 +276,10 @@ class WorkItem extends Equatable {
   });
 
   factory WorkItem.fromMap(Map<String, dynamic> map) => WorkItem(
-        id: map['id'] as String,
-        companyId: map['company_id'] as String,
-        code: map['code'] as String,
-        unitType: map['unit_type'] as String,
+        id: (map['id'] as String?) ?? '',
+        companyId: (map['company_id'] as String?) ?? '',
+        code: (map['code'] as String?) ?? '',
+        unitType: (map['unit_type'] as String?) ?? '',
         unitPrice:
             double.tryParse(map['unit_price']?.toString() ?? '0') ?? 0.0,
         description: (map['description'] as String?) ?? '',
@@ -335,12 +343,14 @@ class Job extends Equatable {
   });
 
   factory Job.fromMap(Map<String, dynamic> map) => Job(
-        id: map['id'] as String,
-        companyId: map['company_id'] as String,
-        jobDate: DateTime.parse(map['job_date'].toString()),
+        id: (map['id'] as String?) ?? '',
+        companyId: (map['company_id'] as String?) ?? '',
+        jobDate: map['job_date'] != null
+            ? DateTime.tryParse(map['job_date'].toString()) ?? DateTime.now()
+            : DateTime.now(),
         projectId: map['project_id'] as String?,
-        teamId: map['team_id'] as String,
-        workItemId: map['work_item_id'] as String,
+        teamId: (map['team_id'] as String?) ?? '',
+        workItemId: (map['work_item_id'] as String?) ?? '',
         quantity:
             double.tryParse(map['quantity']?.toString() ?? '0') ?? 0.0,
         equipmentIds: (map['equipment_ids'] as List<dynamic>?)
@@ -355,18 +365,22 @@ class Job extends Equatable {
             ? DateTime.tryParse(map['approved_at'].toString())
             : null,
         rejectedBy: map['rejected_by'] as String?,
-        createdBy: map['created_by'] as String,
-        createdAt: DateTime.parse(map['created_at'].toString()),
-        updatedAt: DateTime.parse(map['updated_at'].toString()),
+        createdBy: (map['created_by'] as String?) ?? '',
+        createdAt: map['created_at'] != null
+            ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
+            : DateTime.now(),
+        updatedAt: map['updated_at'] != null
+            ? DateTime.tryParse(map['updated_at'].toString()) ?? DateTime.now()
+            : DateTime.now(),
         payrollPeriodId: map['payroll_period_id'] as String?,
         rejectionReason: map['rejection_reason'] as String?,
-        project: map['projects'] != null
+        project: (map['projects'] is Map)
             ? Project.fromMap(map['projects'] as Map<String, dynamic>)
             : null,
-        team: map['teams'] != null
+        team: (map['teams'] is Map)
             ? Team.fromMap(map['teams'] as Map<String, dynamic>)
             : null,
-        workItem: map['work_items'] != null
+        workItem: (map['work_items'] is Map)
             ? WorkItem.fromMap(map['work_items'] as Map<String, dynamic>)
             : null,
       );
@@ -460,12 +474,14 @@ class AppNotification extends Equatable {
   factory AppNotification.fromMap(Map<String, dynamic> map,
       {bool isRead = false}) =>
       AppNotification(
-        id: map['id'] as String,
-        companyId: map['company_id'] as String,
-        type: map['type'] as String,
-        titleKey: map['title_key'] as String,
+        id: (map['id'] as String?) ?? '',
+        companyId: (map['company_id'] as String?) ?? '',
+        type: (map['type'] as String?) ?? '',
+        titleKey: (map['title_key'] as String?) ?? '',
         meta: (map['meta'] as Map<String, dynamic>?) ?? {},
-        createdAt: DateTime.parse(map['created_at'].toString()),
+        createdAt: map['created_at'] != null
+            ? DateTime.tryParse(map['created_at'].toString()) ?? DateTime.now()
+            : DateTime.now(),
         isRead: isRead,
       );
 

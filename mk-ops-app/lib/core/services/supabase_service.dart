@@ -33,6 +33,82 @@ class SupabaseService {
 
   Stream<AuthState> get authStream => client.auth.onAuthStateChange;
 
+  /// YENİ ŞİRKET + SAHİP KULLANICI oluşturur.
+  /// Anon olarak şirketi oluşturur, sonra companyManager rolüyle kaydolur.
+  /// Dönüş: null → başarılı, String → hata mesajı.
+  Future<String?> createNewCompanyAndRegister({
+    required String email,
+    required String password,
+    required String fullName,
+    required String companyName,
+    required String joinCode,
+  }) async {
+    try {
+      // 1. Anon olarak şirketi oluştur (plan=starter trial, hemen aktif)
+      final companyRow = await client.from('companies').insert({
+        'name': companyName.trim(),
+        'join_code': joinCode.trim(),
+        'plan': 'starter',
+        'billing_cycle': 'monthly',
+        'plan_status': 'trial',
+        'subscription_status': 'active',
+      }).select('id').single();
+
+      final companyId = companyRow['id'] as String;
+
+      // 2. Kullanıcıyı companyManager olarak kaydet;
+      //    handle_new_auth_user trigger'ı profili otomatik oluşturacak.
+      await client.auth.signUp(
+        email: email,
+        password: password,
+        data: {
+          'full_name': fullName.trim(),
+          'company_id': companyId,
+          'role': 'companyManager',
+          'role_approval_status': 'approved',
+        },
+      );
+
+      return null;
+    } catch (e) {
+      final msg = e.toString();
+      if (msg.contains('idx_companies_name_unique') ||
+          msg.contains('unique') && msg.contains('name')) {
+        return 'Bu şirket adı zaten kullanılıyor.';
+      }
+      if (msg.contains('already registered') || msg.contains('User already registered')) {
+        return 'Bu e-posta adresi zaten kayıtlı.';
+      }
+      return 'Kayıt yapılamadı. Lütfen tekrar deneyin.';
+    }
+  }
+
+  /// Kayıtlı kullanıcıyı mevcut bir şirkete katılım talebi gönderir.
+  /// join_code 4 haneli rakam olmalı.
+  /// Dönüş: null → başarılı, String → hata mesajı.
+  Future<String?> requestJoinCompany({
+    required String companyName,
+    required String joinCode,
+  }) async {
+    try {
+      final result = await client.rpc('request_join_company', params: {
+        'p_company_name': companyName.trim(),
+        'p_join_code': joinCode.trim(),
+      });
+      final row = result as Map<String, dynamic>?;
+      if (row == null || row['ok'] != true) {
+        final err = row?['error'] as String? ?? 'unknown';
+        if (err == 'company_not_found') return 'Şirket adı veya katılım kodu hatalı.';
+        if (err == 'capacity_full') return 'Şirket kullanıcı limitine ulaşmış.';
+        if (err == 'already_member') return 'Bu şirkette zaten kayıtlısınız.';
+        return 'Katılım isteği gönderilemedi.';
+      }
+      return null;
+    } catch (e) {
+      return 'Katılım isteği gönderilemedi: ${e.toString()}';
+    }
+  }
+
   // ── Profile ─────────────────────────────────────────────────────────────────
 
   Future<AppProfile?> fetchProfile(String userId) async {
@@ -191,18 +267,20 @@ class SupabaseService {
     required String companyId,
     String? leaderId,
   }) async {
-    // Use .filter() instead of .is_() for null checks
     var query = client
         .from(AppConstants.tableTeams)
         .select()
         .eq('company_id', companyId)
-        .filter('wiped_at', 'is', null)
         .eq('approval_status', 'approved');
 
     if (leaderId != null) query = query.eq('leader_id', leaderId);
 
     final data = await query.order('code');
-    return data.map((e) => Team.fromMap(e)).toList();
+    // wiped_at null kontrolünü Dart tarafında yap (Supabase .is_ API uyumsuzluğunu önler)
+    return data
+        .where((e) => e['wiped_at'] == null)
+        .map((e) => Team.fromMap(e))
+        .toList();
   }
 
   // ── WorkItems ───────────────────────────────────────────────────────────────

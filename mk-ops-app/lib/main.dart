@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -10,7 +11,6 @@ import 'core/theme/app_theme.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // System UI
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
@@ -22,10 +22,8 @@ Future<void> main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Load .env
   await dotenv.load(fileName: '.env');
 
-  // Init Supabase
   await Supabase.initialize(
     url: dotenv.env['SUPABASE_URL']!,
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
@@ -34,17 +32,45 @@ Future<void> main() async {
     ),
   );
 
-  // Init locale
   await initializeDateFormatting('tr_TR', null);
 
   runApp(const ProviderScope(child: MkOpsApp()));
 }
 
-class MkOpsApp extends ConsumerWidget {
+class MkOpsApp extends ConsumerStatefulWidget {
   const MkOpsApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MkOpsApp> createState() => _MkOpsAppState();
+}
+
+class _MkOpsAppState extends ConsumerState<MkOpsApp> {
+  late final StreamSubscription<AuthState> _authSub;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auth event'lerini app seviyesinde dinle
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
+      if (event.event == AuthChangeEvent.signedOut) {
+        // Router henüz build edilmiş olacak; mounted + addPostFrameCallback ile güvenli yönlendirme
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            ref.read(routerProvider).go('/auth/login');
+          }
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
     return MaterialApp.router(

@@ -35,8 +35,6 @@ dependencies:
   path_provider: ^2.1.4
 
   # Reports
-  pdf: ^3.11.0
-  printing: ^5.12.0
   excel: ^4.0.2
   share_plus: ^9.0.0
 
