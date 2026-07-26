@@ -22,6 +22,9 @@ import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../shared/widgets/main_scaffold.dart';
 
+// Root navigator key — main.dart'ta auth çıkışı bu key üzerinden yapılır
+final rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 // Supabase auth stream'ini dinleyip GoRouter'ı tetikleyen notifier
 class _AuthStreamNotifier extends ChangeNotifier {
   _AuthStreamNotifier() {
@@ -43,6 +46,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   ref.onDispose(notifier.dispose);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/splash',
     refreshListenable: notifier,
     redirect: (context, state) {

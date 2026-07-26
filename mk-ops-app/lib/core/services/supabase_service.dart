@@ -44,14 +44,19 @@ class SupabaseService {
     required String joinCode,
   }) async {
     try {
-      // 1. Anon olarak şirketi oluştur (plan=starter trial, hemen aktif)
+      // 1. Şirket INSERT'i anon rolüyle yapılmalı (TO anon RLS politikası).
+      //    Eğer eski oturum açıksa (authenticated), politika devreye girmez → RLS hatası.
+      //    Bu yüzden önce oturumu temizliyoruz.
+      if (client.auth.currentUser != null) {
+        await client.auth.signOut();
+      }
+
       final companyRow = await client.from('companies').insert({
         'name': companyName.trim(),
         'join_code': joinCode.trim(),
         'plan': 'starter',
         'billing_cycle': 'monthly',
         'plan_status': 'trial',
-        'subscription_status': 'active',
       }).select('id').single();
 
       final companyId = companyRow['id'] as String;
@@ -73,13 +78,17 @@ class SupabaseService {
     } catch (e) {
       final msg = e.toString();
       if (msg.contains('idx_companies_name_unique') ||
-          msg.contains('unique') && msg.contains('name')) {
+          (msg.contains('unique') && msg.contains('name'))) {
         return 'Bu şirket adı zaten kullanılıyor.';
       }
       if (msg.contains('already registered') || msg.contains('User already registered')) {
         return 'Bu e-posta adresi zaten kayıtlı.';
       }
-      return 'Kayıt yapılamadı. Lütfen tekrar deneyin.';
+      if (msg.contains('violates row-level security') || msg.contains('new row violates')) {
+        return 'Şirket oluşturulamadı. Bu şirket adı daha önce alınmış olabilir; farklı bir ad deneyin.';
+      }
+      // Debug: gerçek hatayı göster
+      return 'Kayıt yapılamadı: $msg';
     }
   }
 

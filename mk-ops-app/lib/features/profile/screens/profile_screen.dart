@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/providers/providers.dart';
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_widgets.dart';
 import '../../../core/constants/app_constants.dart';
@@ -134,7 +135,11 @@ class ProfileScreen extends ConsumerWidget {
                       );
                       if (confirm == true) {
                         await ref.read(supabaseServiceProvider).signOut();
-                        // Yönlendirme main.dart'taki auth stream listener tarafından yapılır
+                        // rootNavigatorKey üzerinden güvenli yönlendirme
+                        final ctx = rootNavigatorKey.currentContext;
+                        if (ctx != null) {
+                          GoRouter.of(ctx).go('/auth/login');
+                        }
                       }
                     },
                     style: OutlinedButton.styleFrom(

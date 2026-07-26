@@ -246,7 +246,7 @@ export function Landing() {
               Fiber · Telekom · Altyapı
             </motion.span>
             <motion.h1 className={styles.heroTitle} variants={fadeUp}>
-              Fiber Optik ve Saha Operasyonlarını<br />
+              Mustafa — Fiber Optik ve Saha Operasyonlarını<br />
               <span className={styles.heroTitleAccent}>Tek Panelden Yönetin</span>
             </motion.h1>
             <motion.p className={styles.heroSubtitle} variants={fadeUp}>

@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:go_router/go_router.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 
@@ -51,12 +52,13 @@ class _MkOpsAppState extends ConsumerState<MkOpsApp> {
   void initState() {
     super.initState();
     // Auth event'lerini app seviyesinde dinle
+    // rootNavigatorKey ile ShellRoute bağımsız, root context'ten navigate edilir
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((event) {
       if (event.event == AuthChangeEvent.signedOut) {
-        // Router henüz build edilmiş olacak; mounted + addPostFrameCallback ile güvenli yönlendirme
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) {
-            ref.read(routerProvider).go('/auth/login');
+          final ctx = rootNavigatorKey.currentContext;
+          if (ctx != null) {
+            GoRouter.of(ctx).go('/auth/login');
           }
         });
       }
