@@ -625,7 +625,7 @@
     "editMaterial": "Editar stock de material",
     "editEquipment": "Editar equipo",
     "editWorkItem": "Editar concepto",
-    "codeMustBeFiveDigits": "El código del concepto debe tener exactamente 5 dígitos (ej. 00001).",
+    "codeMustBeFiveDigitsOptionalD": "El código del concepto debe tener 5 dígitos, seguido opcionalmente de D (p. ej. 00007 o 00007D).",
     "codeMustBeUnique": "Este código de concepto ya está usado en esta empresa.",
     "unitTypeRequired": "El tipo de unidad del concepto (ej. metro, unidad, etc.) es obligatorio.",
     "unitPriceMustBePositive": "El precio unitario debe ser mayor que cero."

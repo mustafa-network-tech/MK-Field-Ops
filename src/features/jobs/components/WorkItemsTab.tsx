@@ -48,9 +48,9 @@ export function WorkItemsTab() {
     setCodeError('');
     setUnitTypeError('');
 
-    const rawCode = form.code.trim();
-    if (!/^\d{5}$/.test(rawCode)) {
-      setCodeError(t('catalog.codeMustBeFiveDigits'));
+    const rawCode = form.code.trim().toUpperCase();
+    if (!/^\d{5}D?$/.test(rawCode)) {
+      setCodeError(t('catalog.codeMustBeFiveDigitsOptionalD'));
       return;
     }
 
@@ -119,7 +119,14 @@ export function WorkItemsTab() {
         <form onSubmit={handleSave} className={styles.form}>
           <label className={styles.label}>
             {t('catalog.code')}
-            <input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} className={styles.input} required />
+            <input
+              value={form.code}
+              onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
+              className={styles.input}
+              maxLength={6}
+              placeholder="00007 veya 00007D"
+              required
+            />
           </label>
           {codeError && <p className={styles.saveError}>{codeError}</p>}
           <label className={styles.label}>

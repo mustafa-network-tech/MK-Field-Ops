@@ -625,7 +625,7 @@
     "editMaterial": "Modifier le stock",
     "editEquipment": "Modifier l'équipement",
     "editWorkItem": "Modifier le poste",
-    "codeMustBeFiveDigits": "Le code du poste doit comporter exactement 5 chiffres (ex. 00001).",
+    "codeMustBeFiveDigitsOptionalD": "Le code du poste doit comporter 5 chiffres, éventuellement suivis de D (ex. 00007 ou 00007D).",
     "codeMustBeUnique": "Ce code de poste est déjà utilisé pour cette entreprise.",
     "unitTypeRequired": "Le type d'unité du poste (ex. mètre, pièce, etc.) est obligatoire.",
     "unitPriceMustBePositive": "Le prix unitaire doit être supérieur à zéro."

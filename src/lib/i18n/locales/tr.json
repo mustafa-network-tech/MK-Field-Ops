@@ -649,7 +649,7 @@
     "editMaterial": "Malzeme Stoğu Düzenle",
     "editEquipment": "Ekipman Düzenle",
     "editWorkItem": "İş Kalemi Düzenle",
-    "codeMustBeFiveDigits": "İş kalemi kodu tam 5 haneli rakam olmalıdır (örn. 00001).",
+    "codeMustBeFiveDigitsOptionalD": "İş kalemi kodu 5 rakamdan oluşmalı ve sonunda isteğe bağlı D bulunmalıdır (örn. 00007 veya 00007D).",
     "codeMustBeUnique": "Bu iş kalemi kodu bu şirket için zaten kullanılıyor.",
     "unitTypeRequired": "İş kalemi birim tipi (örneğin metre, adet vb.) zorunludur.",
     "unitPriceMustBePositive": "Birim fiyat sıfırdan büyük olmalıdır."
