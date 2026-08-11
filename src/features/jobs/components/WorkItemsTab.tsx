@@ -25,6 +25,7 @@ export function WorkItemsTab() {
 
   const UNIT_TYPE_OPTIONS: { value: string; label: string }[] = [
     { value: 'm3', label: t('deliveryNotes.unitCubicMeter') },
+    { value: 'm2', label: t('deliveryNotes.unitSquareMeter') },
     { value: 'kg', label: t('deliveryNotes.unitKilo') },
     { value: 'm', label: t('deliveryNotes.unitMeter') },
     { value: 'pcs', label: t('deliveryNotes.unitPiece') },

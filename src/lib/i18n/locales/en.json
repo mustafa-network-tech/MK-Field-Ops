@@ -490,6 +490,7 @@
     "unitMeter": "meter",
     "unitKilo": "kg",
     "unitCubicMeter": "m³",
+    "unitSquareMeter": "m²",
     "selectUnitPlaceholder": "Select unit",
     "viewDetail": "View detail",
     "selectMaterial": "Select material",
