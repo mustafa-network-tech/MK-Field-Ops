@@ -1,52 +1,137 @@
-# MKOPS – Multi-Tenant SaaS
+# MK Field OPS
 
-Multi-tenant web application for telecom field job tracking with full **English / Turkish** bilingual support. Language can be switched from the top bar without page reload.
+Telekom saha operasyonlarını tek merkezden yönetmek için geliştirilmiş, çok kiracılı (multi-tenant) bir SaaS uygulamasıdır. Şirketler; ekiplerini, projelerini, saha işlerini, malzeme stoklarını, onay süreçlerini, bordro dönemlerini ve raporlarını birbirinden izole çalışma alanlarında yönetir.
 
-## Run locally
+## Başlıca özellikler
+
+- Şirket bazlı veri izolasyonu ve rol tabanlı yetkilendirme
+- Şirket yöneticisi, proje yöneticisi, ekip lideri ve süper yönetici rolleri
+- Ekip, proje, araç, ekipman, malzeme ve iş kalemi yönetimi
+- Günlük saha işi girişi ve taslak / gönderildi / onaylandı / reddedildi akışı
+- Malzeme teslim fişleri ve stok takibi
+- Ekip kazancı, şirket payı ve bordro dönemi hesaplamaları
+- Dashboard, denetim kayıtları, Excel ve PDF raporları
+- Türkçe, İngilizce, Almanca, Fransızca ve İspanyolca arayüz
+- Abonelik planı ve ödeme sonrası şirket aktivasyon akışı
+
+## Teknolojiler
+
+- React 18, TypeScript ve Vite 5
+- React Router
+- Supabase (Auth, PostgreSQL, Storage ve Edge Functions)
+- `xlsx`, `jsPDF` ve `jspdf-autotable`
+- Vercel API Functions ve Vercel dağıtım yapılandırması
+
+## Gereksinimler
+
+- Node.js 18 veya üzeri
+- npm
+- Çalışan bir Supabase projesi
+- Veritabanı ve Edge Function işlemleri için isteğe bağlı olarak Supabase CLI
+
+## Yerelde çalıştırma
+
+1. Bağımlılıkları kurun:
+
+   ```bash
+   npm install
+   ```
+
+2. Ortam dosyasını oluşturun:
+
+   Windows PowerShell:
+
+   ```powershell
+   Copy-Item .env.example .env.local
+   ```
+
+   macOS / Linux:
+
+   ```bash
+   cp .env.example .env.local
+   ```
+
+3. `.env.local` dosyasındaki zorunlu Supabase değerlerini doldurun:
+
+   ```env
+   VITE_SUPABASE_URL=https://proje-ref.supabase.co
+   VITE_SUPABASE_ANON_KEY=supabase-anon-key
+   ```
+
+   Kullanılabilen diğer değişkenler ve açıklamaları `.env.example` dosyasındadır. Gerçek anahtarları repoya eklemeyin.
+
+4. Geliştirme sunucusunu başlatın:
+
+   ```bash
+   npm run dev
+   ```
+
+5. Tarayıcıda [http://localhost:5173](http://localhost:5173) adresini açın.
+
+> PowerShell çalıştırma ilkesi `npm.ps1` dosyasını engelliyorsa komutları `npm.cmd install` ve `npm.cmd run dev` biçiminde kullanabilirsiniz.
+
+## Veritabanı kurulumu
+
+Supabase migration dosyaları `supabase/migrations/` klasöründedir. Yeni bir ortam kurarken migration sırası ve dikkat edilmesi gereken noktalar için [`docs/MIGRATION_RUN_ORDER.md`](docs/MIGRATION_RUN_ORDER.md) dosyasını izleyin. Şema hakkında genel bilgi için [`docs/SUPABASE_FULL_SCHEMA_OVERVIEW.md`](docs/SUPABASE_FULL_SCHEMA_OVERVIEW.md) belgesine bakın.
+
+Supabase CLI kullanacaksanız önce projeyi bağlayın:
 
 ```bash
-npm install
-npm run dev
+npm run supabase:login
+npm run supabase:link
 ```
 
-Then open **http://localhost:5173**.
+Kayıt ve mock ödeme Edge Function'larını dağıtmak için:
 
-- **Build:** `npm run build`
-- **Preview build:** `npm run preview`
+```bash
+npm run deploy:functions
+```
 
-## Features
+## Kullanılabilir komutlar
 
-- **Multi-tenant:** Data isolated by Company ID. First user of a company becomes Company Manager.
-- **Roles (3 only):** Company Manager, Project Manager, Team Leader.
-- **Registration & approval:**
-  - New company → first user = Company Manager (auto).
-  - Project Manager → needs Company Manager approval.
-  - Team Leader → needs both Company Manager and Project Manager approval.
-- **Teams:** Team Code, Description, adjustable percentage. Team Leader-created teams need one approval (Company Manager or Project Manager).
-- **Catalogs (editable by Company Manager & Project Manager):** Materials (code, price), Equipment (code, description), Work Items (unit type, unit price, description).
-- **Daily job entry:** Date, Team, Work Item, Quantity, Used Materials, Used Equipment, Notes. Status: Draft → Submitted → Approved/Rejected. One approval from Company Manager or Project Manager.
-- **Financials:** Total Work Value = Quantity × Unit Price; Team Earnings = Total × Team %; Company Share = remainder. Shown on dashboard and reports.
-- **Dashboard:** Daily/Weekly/Monthly totals, pending approvals, approved jobs, team and company earnings.
-- **UI:** Top bar with user name + active role (e.g. “Mustafa Öner – Company Manager”), Management Panel, Excel Export, EN/TR language switch.
+| Komut | Açıklama |
+| --- | --- |
+| `npm run dev` | Vite geliştirme sunucusunu `5173` portunda başlatır. |
+| `npm run build` | TypeScript kontrolünü çalıştırır ve production çıktısını `dist/` içine üretir. |
+| `npm run preview` | Hazırlanan production build'ini yerelde önizler. |
+| `npm run supabase:login` | Supabase CLI oturumu açar. |
+| `npm run supabase:link` | Yerel projeyi bir Supabase projesine bağlar. |
+| `npm run deploy:functions` | Kayıt ve mock ödeme Edge Function'larını dağıtır. |
 
-## Tech stack
+## Proje yapısı
 
-- **React 18** + **TypeScript**
-- **Vite**
-- **React Router**
-- **JSON i18n** (EN/TR), global language state, no hardcoded UI strings
-- **LocalStorage** data layer (ready to swap for Node.js / Supabase)
-- **xlsx** for Excel export
+```text
+api/                    Vercel serverless API uçları
+docs/                   Kurulum, kullanım ve veritabanı belgeleri
+public/                 Statik dosyalar ve tanıtım videosu
+src/
+  app/                  Router, layout, provider ve uygulama yapılandırması
+  features/             Özellik bazlı sayfalar, bileşenler ve servisler
+  lib/                  Supabase, i18n, izinler ve yerel saklama yardımcıları
+  shared/               Ortak tipler, UI bileşenleri, servisler ve araçlar
+supabase/
+  functions/            Supabase Edge Function'ları
+  migrations/           Veritabanı migration dosyaları
+```
 
-## Project structure
+## Production build
 
-- `src/i18n/` – locales (en.json, tr.json), `I18nContext` (language state, `t()`)
-- `src/types/` – shared types (User, Company, Team, Job, Catalog, etc.)
-- `src/data/store.ts` – persistence (company-scoped reads/writes)
-- `src/services/` – auth, job calculations, Excel export
-- `src/context/AppContext.tsx` – current user & company
-- `src/components/` – TopBar, Layout, UI primitives, management tabs
-- `src/pages/` – Login, Register, Dashboard, Job Entry, My Jobs, Management, Approvals, Reports
+```bash
+npm run build
+npm run preview
+```
 
-To add another language: add a new JSON under `src/i18n/locales/` and extend the `Locale` type and `messages` map in `I18nContext.tsx`.
-deploy
+Build çıktısı `dist/` klasöründe oluşur. SPA yönlendirmeleri ve API route ayarları `vercel.json` içinde tanımlıdır.
+
+## Ek belgeler
+
+- [Kullanım kılavuzu](docs/KULLANIM-KILAVUZU.md)
+- [Giriş ve üyelik kuralları](docs/GIRIS-VE-UYE-OL-KURALLARI.md)
+- [Storage kurulumu](docs/STORAGE_SETUP.md)
+- [Dil kontrol test listesi](docs/LANGUAGE_CONTROL_TEST_CHECKLIST.md)
+
+## Güvenlik
+
+- `.env` ve `.env.local` dosyalarını paylaşmayın veya commitlemeyin.
+- `SUPABASE_SERVICE_ROLE_KEY` yalnızca sunucu tarafında kullanılmalıdır; hiçbir zaman `VITE_` önekiyle tanımlamayın.
+- Production ortamında Supabase RLS politikalarını ve migration'ların eksiksiz uygulandığını doğrulayın.
