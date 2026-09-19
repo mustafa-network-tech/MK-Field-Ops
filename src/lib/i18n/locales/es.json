@@ -21,6 +21,7 @@
     "saving": "Guardando…"
   },
   "auth": {
+    "notConfigured": "Inicio de sesión no disponible: Supabase no está configurado.",
     "login": "Iniciar sesión",
     "logout": "Cerrar sesión",
     "register": "Registrarse",
@@ -66,6 +67,7 @@
     "next": "Siguiente"
   },
   "onboarding": {
+    "paidSignupDisabled": "El registro de nuevas empresas no está disponible temporalmente.",
     "welcomeTitle": "MK-Ops",
     "tagline": "Multi-Tenant SaaS",
     "signIn": "Iniciar sesión",

@@ -1,30 +1,21 @@
+import { getRegistrationDraft, clearRegistrationDraft } from '../services/registrationDraft';
 /**
  * Workspace step after register: choose Create New Company or Join Existing.
  * Uses company name + 4-digit join code. Plan/billing use defaults (or ?plan= from register URL).
  */
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n/I18nContext';
 import { authService, toAuthErrorKey } from '@/features/auth/services/authService';
-import { supabase } from '@/lib/supabase/supabaseClient';
-import { createPendingSignupApi, PAID_SIGNUP_NETWORK_ERROR } from '@/lib/api/paidSignupApi';
-import { setPaidSignupSession, clearPaidSignupSession } from '@/lib/storage/paidSignupSession';
-import { setPendingNewCompanySignup } from '@/lib/storage/pendingNewCompanySignup';
 import styles from './Workspace.module.css';
 
 type WorkspaceMode = 'choose' | 'new' | 'existing';
-type PlanKey = 'starter' | 'professional' | 'enterprise';
-
-const DEFAULT_NEW_COMPANY_PLAN: PlanKey = 'professional';
 
 export function Workspace() {
   const { t } = useI18n();
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as { email?: string; password?: string; fullName?: string; plan?: string } | null;
-  const planFromRegister: PlanKey | null =
-    state?.plan && ['starter', 'professional', 'enterprise'].includes(state.plan) ? (state.plan as PlanKey) : null;
-  const resolvedPlan = planFromRegister ?? DEFAULT_NEW_COMPANY_PLAN;
+  const [state] = useState(getRegistrationDraft);
+  useEffect(() => () => clearRegistrationDraft(), []);
 
   const [mode, setMode] = useState<WorkspaceMode>('choose');
   const [companyName, setCompanyName] = useState('');
@@ -56,61 +47,7 @@ export function Workspace() {
 
   const handleCreateNew = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    setMessage('');
-    const name = companyName.trim();
-    const code = joinCode.trim();
-    if (!name) {
-      setError(t('validation.required'));
-      return;
-    }
-    if (!/^\d{4}$/.test(code)) {
-      setError(t('auth.joinCodeInvalid'));
-      return;
-    }
-    setLoading(true);
-    try {
-      if (supabase) {
-        clearPaidSignupSession();
-        const { pending_signup_id, signup_token } = await createPendingSignupApi({
-          full_name: fullName,
-          email,
-          password,
-          campaign_name: name,
-          campaign_code: code,
-        });
-        setPaidSignupSession({
-          pending_signup_id,
-          signup_token,
-          email,
-          password,
-          full_name: fullName,
-        });
-        const q = new URLSearchParams({
-          plan: resolvedPlan,
-          from: 'registration',
-          pending_signup_id: pending_signup_id,
-        });
-        navigate(`/plan-and-payment?${q.toString()}`, { replace: true });
-      } else {
-        setPendingNewCompanySignup({
-          email,
-          password,
-          fullName,
-          companyName: name,
-          joinCode: code,
-        });
-        navigate(`/plan-and-payment?plan=${resolvedPlan}&from=registration`, { replace: true });
-      }
-    } catch (err) {
-      if (err instanceof Error && err.message === PAID_SIGNUP_NETWORK_ERROR) {
-        setError(t('onboarding.edgeFunctionUnreachable'));
-      } else {
-        setError(err instanceof Error ? err.message : t('planChangePage.errorGeneric'));
-      }
-    } finally {
-      setLoading(false);
-    }
+    setError(t('onboarding.paidSignupDisabled'));
   };
 
   const handleJoinExisting = async (e: React.FormEvent) => {
@@ -140,6 +77,7 @@ export function Workspace() {
         setError(t(toAuthErrorKey(result.error)));
         return;
       }
+      clearRegistrationDraft();
       setMessage(t('auth.pendingCompanyManagerApproval'));
       setTimeout(() => navigate('/login', { replace: true }), 2500);
     } finally {
@@ -155,9 +93,10 @@ export function Workspace() {
 
         {mode === 'choose' && (
           <div className={styles.choose}>
-            <button type="button" className={styles.optionBtn} onClick={() => setMode('new')}>
+            <button type="button" className={styles.optionBtn} disabled>
               {t('onboarding.createNewCompany')}
             </button>
+            <p>{t('onboarding.paidSignupDisabled')}</p>
             <button type="button" className={styles.optionBtn} onClick={() => setMode('existing')}>
               {t('onboarding.joinExistingCompany')}
             </button>

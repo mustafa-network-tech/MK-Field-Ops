@@ -2,10 +2,322 @@
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.mk-ops.tr"
+        }
+      ],
+      "destination": "https://mk-ops.tr/:path*",
+      "permanent": true
+    },
+    {
+      "source": "/pricing",
+      "destination": "/#quote",
+      "permanent": true
+    }
+  ],
+  "headers": [
+    {
+      "source": "/login",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/register",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/workspace",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/forgot-password",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/reset-password",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/plan-and-payment",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/pending-join",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/super-admin",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/jobs",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/my-jobs",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/approvals",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/reports",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/delivery-notes",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/settings",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/payroll",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/audit-logs",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/management/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/team/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/app.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/((?!api/|sitemap\\.xml|robots\\.txt).*)",
-      "destination": "/index.html"
+      "source": "/cozumler/telekom-saha-takibi",
+      "destination": "/cozumler/telekom-saha-takibi/index.html"
+    },
+    {
+      "source": "/cozumler/gunluk-is-takibi",
+      "destination": "/cozumler/gunluk-is-takibi/index.html"
+    },
+    {
+      "source": "/cozumler/saha-onay-surecleri",
+      "destination": "/cozumler/saha-onay-surecleri/index.html"
+    },
+    {
+      "source": "/cozumler/hakedis-takibi",
+      "destination": "/cozumler/hakedis-takibi/index.html"
+    },
+    {
+      "source": "/cozumler/irsaliye-malzeme-takibi",
+      "destination": "/cozumler/irsaliye-malzeme-takibi/index.html"
+    },
+    {
+      "source": "/cozumler/operasyon-raporlama",
+      "destination": "/cozumler/operasyon-raporlama/index.html"
+    },
+    {
+      "source": "/cozumler/denetim-gunlugu",
+      "destination": "/cozumler/denetim-gunlugu/index.html"
+    },
+    {
+      "source": "/kullanim-kilavuzu",
+      "destination": "/kullanim-kilavuzu/index.html"
+    },
+    {
+      "source": "/gizlilik-politikasi",
+      "destination": "/gizlilik-politikasi/index.html"
+    },
+    {
+      "source": "/kullanim-sartlari",
+      "destination": "/kullanim-sartlari/index.html"
+    },
+    {
+      "source": "/geri-odeme-politikasi",
+      "destination": "/geri-odeme-politikasi/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/workspace",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/reset-password",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/plan-and-payment",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/pending-join",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/super-admin",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/jobs",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/my-jobs",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/approvals",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/reports",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/delivery-notes",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/settings",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/payroll",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/audit-logs",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/management/:path*",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/team/:path*",
+      "destination": "/app.html"
     }
   ]
 }

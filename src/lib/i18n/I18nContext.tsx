@@ -27,9 +27,10 @@ function getNested(obj: Record<string, unknown>, path: string): string | undefin
   return typeof current === 'string' ? current : undefined;
 }
 
-export function I18nProvider({ children }: { children: React.ReactNode }) {
+export function I18nProvider({ children, initialLocale }: { children: React.ReactNode; initialLocale?: Locale }) {
   const [locale, setLocaleState] = useState<Locale>(() => {
-    const saved = localStorage.getItem('locale') as Locale | null;
+    if (initialLocale) return initialLocale;
+    const saved = typeof localStorage === 'undefined' ? null : localStorage.getItem('locale') as Locale | null;
     const valid: Locale[] = ['en', 'tr', 'es', 'fr', 'de'];
     return saved && valid.includes(saved) ? saved : 'en';
   });

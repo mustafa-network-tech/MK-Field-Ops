@@ -3,7 +3,6 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n/I18nContext';
 import { useApp } from '@/app/providers/AppContext';
 import { authService, toAuthErrorKey } from '@/features/auth/services/authService';
-import { store } from '@/lib/storage/store';
 import styles from './Auth.module.css';
 
 export function Login() {
@@ -27,7 +26,7 @@ export function Login() {
         setError(t(toAuthErrorKey(result.error)));
         return;
       }
-      const loggedUser = store.getCurrentUser();
+      const loggedUser = authService.getVerifiedUser();
       setUser(loggedUser);
       if (loggedUser?.role === 'superAdmin') {
         navigate('/super-admin', { replace: true });

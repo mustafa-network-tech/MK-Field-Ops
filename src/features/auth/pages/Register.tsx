@@ -1,3 +1,4 @@
+import { setRegistrationDraft } from '../services/registrationDraft';
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useI18n } from '@/lib/i18n/I18nContext';
@@ -35,10 +36,8 @@ export function Register() {
     }
     setLoading(true);
     const fullName = `${first} ${last}`.trim();
-    navigate('/workspace', {
-      replace: false,
-      state: { email: normalizedEmail, password, fullName, plan: initialPlan },
-    });
+    setRegistrationDraft({ email: normalizedEmail, password, fullName, plan: initialPlan });
+    navigate('/workspace');
     setLoading(false);
   };
 

@@ -1,26 +1,10 @@
 import { store } from '@/lib/storage/store';
-import type { Role } from '@/shared/types';
-import { canPlanAddUser, planApprovedSeatCount } from '@/lib/permissions/planGating';
-import { getEffectivePlan } from '@/features/companies/services/subscriptionService';
+import type { Role, User } from '@/shared/types';
 import { supabase } from '@/lib/supabase/supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
-function hashPassword(p: string): string {
-  return btoa(encodeURIComponent(p));
-}
-
-function checkPassword(plain: string, hashed: string): boolean {
-  return hashPassword(plain) === hashed;
-}
-
 function normalizeEmailInput(value: string): string {
   return value.trim().toLowerCase();
-}
-
-function getSupabaseProjectRef(): string {
-  const raw = (import.meta.env.VITE_SUPABASE_URL as string | undefined)?.trim();
-  if (!raw) return 'unknown';
-  return raw.replace(/^https:\/\//, '').replace(/\.supabase\.co.*/, '');
 }
 
 /** Oturum metadata’sındaki şirket adı (store henüz dolmamışken üst çubuk için yedek). */
@@ -31,133 +15,50 @@ export function getCompanyNameFromUserMetadata(user: SupabaseUser | null | undef
   return raw || null;
 }
 
-function buildProfileFromAuthUser(user: SupabaseUser, fallbackEmail: string) {
-  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const role = typeof meta.role === 'string' ? meta.role : null;
-  const roleApprovalStatus =
-    typeof meta.role_approval_status === 'string'
-      ? meta.role_approval_status
-      : role === 'superAdmin'
-        ? 'approved'
-        : 'approved';
-  return {
-    id: user.id,
-    company_id: role === 'superAdmin' ? '' : typeof meta.company_id === 'string' ? meta.company_id : '',
-    role,
-    full_name: typeof meta.full_name === 'string' ? meta.full_name : null,
-    role_approval_status: roleApprovalStatus,
-    can_see_prices: null,
-    email: user.email ?? fallbackEmail,
-  };
+type Profile = {
+  id: string; company_id: string | null; role: string | null;
+  full_name: string | null; role_approval_status: string;
+  can_see_prices?: boolean | null; email?: string | null;
+};
+
+// Only a successfully authenticated identity and its DB row may establish authority.
+export function isApprovedProfile(profile: Profile | null, userId: string): profile is Profile {
+  if (!profile || profile.id !== userId || profile.role_approval_status !== 'approved') return false;
+  if (profile.role === 'superAdmin') return profile.company_id === null;
+  if (profile.role === null) return profile.company_id === null; // Detached user: PendingJoin only.
+  return ['companyManager', 'projectManager', 'teamLeader'].includes(profile.role)
+    && typeof profile.company_id === 'string' && profile.company_id.trim().length > 0;
 }
 
-function normalizeSessionProfile<T extends { role: string | null; company_id: string | null; role_approval_status: string }>(profile: T): T {
-  if (profile.role === 'superAdmin') {
-    return {
-      ...profile,
-      company_id: null,
-      role_approval_status: 'approved',
-    };
-  }
-  return profile;
+let verifiedUser: User | undefined;
+let sessionVersion = 0;
+const sessionListeners = new Set<() => void>();
+function notifySession() { sessionListeners.forEach(listener => listener()); }
+function clearSession() {
+  sessionVersion += 1;
+  verifiedUser = undefined;
+  store.clearAuthCache();
+  notifySession();
 }
-
-async function repairProfileConsistency(
-  profile: { id: string; company_id: string | null; role: string | null; full_name: string | null; role_approval_status: string; can_see_prices?: boolean | null; email?: string | null },
-  user: SupabaseUser,
-  fallbackEmail: string
-) {
-  if (!supabase) return normalizeSessionProfile(profile);
-  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const updates: Record<string, unknown> = {};
-  const roleFromMeta = typeof meta.role === 'string' ? meta.role : null;
-  const fullNameFromMeta = typeof meta.full_name === 'string' ? meta.full_name : null;
-
-  if (!profile.full_name && fullNameFromMeta) updates.full_name = fullNameFromMeta;
-  if (!profile.email && (user.email ?? fallbackEmail)) updates.email = user.email ?? fallbackEmail;
-
-  if (profile.role === 'superAdmin') {
-    if (profile.company_id !== null) updates.company_id = null;
-    if (profile.role_approval_status !== 'approved') updates.role_approval_status = 'approved';
-  } else {
-    // If company manager lost company binding after manual auth user cleanup, recover from owner relation.
-    if (!profile.company_id && (profile.role === 'companyManager' || roleFromMeta === 'companyManager')) {
-      const { data: ownedCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('owner_user_id', user.id)
-        .maybeSingle();
-      if (ownedCompany?.id) {
-        updates.company_id = ownedCompany.id;
-        if (!profile.role) updates.role = 'companyManager';
-        if (profile.role_approval_status !== 'approved') updates.role_approval_status = 'approved';
-      }
-    }
-  }
-
-  if (Object.keys(updates).length) {
-    await supabase.from('profiles').update(updates).eq('id', user.id);
-    const { data: refreshed } = await supabase
-      .from('profiles')
-      .select('id, company_id, role, full_name, role_approval_status, can_see_prices, email')
-      .eq('id', user.id)
-      .maybeSingle();
-    if (refreshed) return normalizeSessionProfile(refreshed);
-  }
-  return normalizeSessionProfile(profile);
+async function rejectSession(version: number) {
+  if (version !== sessionVersion) return;
+  clearSession();
+  try { await supabase?.auth.signOut({ scope: 'local' }); } catch { /* Already fail closed locally. */ }
 }
-
-async function fetchOrRepairProfile(user: SupabaseUser, fallbackEmail: string) {
+async function readProfile(userId: string): Promise<Profile | null> {
   if (!supabase) return null;
-  const profileSelect = 'id, company_id, role, full_name, role_approval_status, can_see_prices, email';
-  const { data: existing, error: existingError } = await supabase
-    .from('profiles')
-    .select(profileSelect)
-    .eq('id', user.id)
-    .maybeSingle();
-  if (!existingError && existing) return existing;
-
-  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
-  const role = typeof meta.role === 'string' ? meta.role : null;
-  const companyId = role === 'superAdmin' ? null : typeof meta.company_id === 'string' ? meta.company_id : null;
-  const fullName = typeof meta.full_name === 'string' ? meta.full_name : null;
-  const roleApprovalStatus =
-    typeof meta.role_approval_status === 'string'
-      ? meta.role_approval_status
-      : role === 'superAdmin'
-        ? 'approved'
-        : 'pending';
-
-  await supabase.from('profiles').upsert(
-    {
-      id: user.id,
-      company_id: companyId,
-      role,
-      full_name: fullName,
-      role_approval_status: roleApprovalStatus,
-      email: user.email ?? fallbackEmail,
-    },
-    { onConflict: 'id' }
-  );
-
-  const { data: repaired, error: repairedError } = await supabase
-    .from('profiles')
-    .select(profileSelect)
-    .eq('id', user.id)
-    .maybeSingle();
-  if (repairedError || !repaired) return null;
-  return normalizeSessionProfile(repaired);
+  const { data, error } = await supabase.from('profiles')
+    .select('id, company_id, role, full_name, role_approval_status, can_see_prices, email')
+    .eq('id', userId).maybeSingle();
+  return error ? null : data;
 }
-
-const normalize = (value: string) =>
-  value
-    .toLowerCase()
-    .replace(/ğ/g, 'g')
-    .replace(/ü/g, 'u')
-    .replace(/ş/g, 's')
-    .replace(/ı/g, 'i')
-    .replace(/ö/g, 'o')
-    .replace(/ç/g, 'c');
+function acceptProfile(profile: Profile, email: string) {
+  // Never inherit cached permission flags or credentials from a previous session.
+  const user = store.setUserFromProfile({ ...profile, company_id: profile.company_id ?? '',
+    can_see_prices: profile.can_see_prices === true }, email);
+  verifiedUser = { ...user };
+  notifySession();
+}
 
 export type AuthResult = { ok: boolean; error?: string };
 
@@ -190,57 +91,44 @@ export function toAuthErrorKey(error?: string): string {
 }
 
 export const authService = {
-  /** Login: uses Supabase Auth when configured, else local store. */
-  async login(email: string, password: string, companyId?: string): Promise<AuthResult> {
-    const normalizedEmail = normalizeEmailInput(email);
-    if (supabase) {
-      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizedEmail, password });
-      if (error) {
-        if (error.message.includes('Invalid login')) {
-          console.warn('[auth] signInWithPassword invalid credentials. Supabase ref:', getSupabaseProjectRef());
-          return { ok: false, error: 'auth.loginInvalidSupabase' };
-        }
-        return { ok: false, error: error.message };
+  getVerifiedUser(): User | undefined { return verifiedUser ? { ...verifiedUser } : undefined; },
+  subscribeSession(listener: () => void): () => void {
+    sessionListeners.add(listener);
+    return () => { sessionListeners.delete(listener); };
+  },
+  invalidateSession(): void { clearSession(); },
+
+  async login(email: string, password: string, _companyId?: string): Promise<AuthResult> {
+    clearSession();
+    const version = sessionVersion;
+    if (!supabase) return { ok: false, error: 'auth.notConfigured' };
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: normalizeEmailInput(email), password });
+      if (error || !data.user) {
+        await rejectSession(version);
+        return { ok: false, error: error?.message ?? 'auth.loginError' };
       }
-      const signedUser = data.user;
-      const userId = signedUser?.id;
-      if (!userId) return { ok: false, error: 'auth.loginError' };
-      const profile = await fetchOrRepairProfile(signedUser, normalizedEmail);
-      if (!profile) {
-        const profileFromMeta = buildProfileFromAuthUser(signedUser, normalizedEmail);
-        if (profileFromMeta.company_id) {
-          const metaCompanyName = getCompanyNameFromUserMetadata(signedUser);
-          if (metaCompanyName) store.ensureCompany(profileFromMeta.company_id, metaCompanyName);
-        }
-        store.setUserFromProfile(profileFromMeta, signedUser?.email ?? normalizedEmail);
-        return { ok: true };
-      }
-      const consistentProfile = await repairProfileConsistency(profile, signedUser, normalizedEmail);
-      if (consistentProfile.role !== 'superAdmin' && consistentProfile.role_approval_status !== 'approved') {
+      const profile = await readProfile(data.user.id);
+      if (version !== sessionVersion) return { ok: false, error: 'auth.loginError' };
+      if (!isApprovedProfile(profile, data.user.id)) {
+        await rejectSession(version);
         return { ok: false, error: 'auth.pendingApproval' };
       }
-      if (consistentProfile.company_id) {
-        const metaCompanyName = getCompanyNameFromUserMetadata(signedUser);
-        if (metaCompanyName) store.ensureCompany(consistentProfile.company_id, metaCompanyName);
+      if (profile.company_id) {
+        const { fetchCompanyDataFromSupabase } = await import('@/lib/supabase/supabaseSyncService');
+        if (version !== sessionVersion) return { ok: false, error: 'auth.loginError' };
+        await fetchCompanyDataFromSupabase(profile.company_id);
       }
-      store.setUserFromProfile(
-        { ...consistentProfile, company_id: consistentProfile.company_id ?? '' },
-        signedUser?.email ?? normalizedEmail
-      );
-      const { fetchCompanyDataFromSupabase } = await import('@/lib/supabase/supabaseSyncService');
-      await fetchCompanyDataFromSupabase(consistentProfile.company_id ?? '');
+      if (version !== sessionVersion) return { ok: false, error: 'auth.loginError' };
+      acceptProfile(profile, data.user.email ?? normalizeEmailInput(email));
       return { ok: true };
+    } catch {
+      await rejectSession(version);
+      return { ok: false, error: 'auth.loginError' };
     }
-    const users = companyId ? store.getUsers(companyId) : store.getUsers();
-    const user = users.find((u) => u.email.toLowerCase() === normalizedEmail);
-    if (!user || !checkPassword(password, user.passwordHash)) return { ok: false, error: 'auth.loginError' };
-    if (user.roleApprovalStatus !== 'approved') return { ok: false, error: 'auth.pendingApproval' };
-    store.setCurrentUserId(user.id);
-    if (user.companyId) store.isolateTenantData(user.companyId);
-    return { ok: true };
   },
 
-  /** New company: creator becomes company manager. Requires join code (4 digits) and plan. */
+  /** Paid onboarding is disabled until server-side payment verification exists. */
   async registerNewCompany(params: {
     email: string;
     password: string;
@@ -250,102 +138,8 @@ export const authService = {
     plan: 'starter' | 'professional' | 'enterprise';
     billingCycle?: 'monthly' | 'yearly';
   }): Promise<AuthResult> {
-    const { email, password, fullName, companyName, joinCode, plan, billingCycle = 'monthly' } = params;
-    const normalizedEmail = normalizeEmailInput(email);
-    const name = companyName.trim();
-    const code = joinCode.trim();
-    if (!/^\d{4}$/.test(code)) return { ok: false, error: 'auth.joinCodeInvalid' };
-
-    const companies = store.getCompanies();
-    const nameNorm = normalize(name);
-    if (!supabase && companies.some((c) => normalize(c.name) === nameNorm)) return { ok: false, error: 'auth.companyNameExists' };
-    if (store.getUserByEmail(normalizedEmail)) return { ok: false, error: 'auth.emailExists' };
-
-    if (supabase) {
-      const cId = crypto.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 7);
-      const { data: insertedCompany, error: insertCompanyError } = await supabase
-        .from('companies')
-        .insert({
-          id: cId,
-          name,
-          join_code: code,
-          plan,
-          billing_cycle: billingCycle,
-          plan_status: 'trial',
-          trial_end_date: trialEnd.toISOString().slice(0, 10),
-          language_code: 'en',
-          created_at: new Date().toISOString(),
-        })
-        .select('id, name')
-        .single();
-      if (insertCompanyError) {
-        console.error('[Supabase] companies INSERT failed:', {
-          code: insertCompanyError.code,
-          message: insertCompanyError.message,
-          details: insertCompanyError.details,
-          hint: insertCompanyError.hint,
-        });
-        if (insertCompanyError.code === '23505') return { ok: false, error: 'auth.companyNameExists' };
-        return { ok: false, error: insertCompanyError.message };
-      }
-      if (!insertedCompany) return { ok: false, error: 'auth.loginError' };
-      const planStart = new Date().toISOString();
-      const planEndDate = new Date();
-      if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
-      else planEndDate.setDate(planEndDate.getDate() + 30);
-      const planEnd = planEndDate.toISOString();
-      store.ensureCompany(insertedCompany.id, insertedCompany.name);
-      store.updateCompany(insertedCompany.id, { plan, plan_start_date: planStart, plan_end_date: planEnd }, insertedCompany.id);
-      if (plan === 'starter') store.ensureStarterDefaultProject(insertedCompany.id, plan);
-
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            company_id: insertedCompany.id,
-            company_name: name,
-            role: 'companyManager',
-            role_approval_status: 'approved',
-          },
-        },
-      });
-      if (signUpError) {
-        if (signUpError.message.includes('already registered')) return { ok: false, error: 'auth.emailExists' };
-        return { ok: false, error: signUpError.message };
-      }
-      const userId = authData.user?.id;
-      if (!userId) return { ok: false, error: 'auth.loginError' };
-      await supabase.from('companies').update({ owner_user_id: userId }).eq('id', insertedCompany.id);
-      if (authData.session) {
-        const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status').eq('id', userId).single();
-        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? normalizedEmail);
-      }
-      return { ok: true };
-    }
-
-    const company = store.addCompany(name);
-    const cId = company.id;
-    const planStart = new Date().toISOString();
-    const planEndDate = new Date();
-    if (billingCycle === 'yearly') planEndDate.setFullYear(planEndDate.getFullYear() + 1);
-    else planEndDate.setDate(planEndDate.getDate() + 30);
-    store.updateCompany(cId, { plan, plan_start_date: planStart, plan_end_date: planEndDate.toISOString() }, cId);
-    if (plan === 'starter') store.ensureStarterDefaultProject(cId, plan);
-    store.addUser({
-      companyId: cId,
-      email: normalizedEmail,
-      passwordHash: hashPassword(password),
-      fullName,
-      role: 'companyManager',
-      roleApprovalStatus: 'approved',
-    });
-    const newUser = store.getUsers(cId).find((u) => u.email === normalizedEmail)!;
-    store.setCurrentUserId(newUser.id);
-    return { ok: true };
+    void params;
+    return { ok: false, error: 'onboarding.paidSignupDisabled' };
   },
 
   /** Existing company: verify by company name + join code, create join request (pending). User not added until CM approves. */
@@ -385,8 +179,8 @@ export const authService = {
         options: {
           data: {
             full_name: fullName,
-            join_company_id: cId,
-            role_approval_status: 'pending',
+            join_company_name: name,
+            join_code: code,
           },
         },
       });
@@ -400,33 +194,13 @@ export const authService = {
       }
       const userId = authData.user?.id;
       if (!userId) return { ok: false, error: 'auth.loginError' };
-      if (authData.session) {
-        const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, can_see_prices').eq('id', userId).single();
-        if (profile) store.setUserFromProfile(profile, authData.user?.email ?? normalizedEmail);
-      }
+      // A signup session is not an approved application session.
+      clearSession();
+      if (authData.session) await supabase.auth.signOut({ scope: 'local' });
       return { ok: true };
     }
-
-    const companies = store.getCompanies();
-    const company = companies.find((c) => normalize(c.name) === normalize(name) && (c as { join_code?: string }).join_code === code);
-    if (!company) return { ok: false, error: 'auth.companyNotFound' };
-    const cId = company.id;
-    if (store.getUserByEmail(normalizedEmail, cId)) return { ok: false, error: 'auth.emailExists' };
-    const existingUsers = store.getUsers(cId);
-    const companyWithPlan = store.getCompany(cId, cId);
-    const seats = planApprovedSeatCount(existingUsers);
-    if (!canPlanAddUser(getEffectivePlan(companyWithPlan), seats)) {
-      return { ok: false, error: 'onboarding.userLimitReached' };
-    }
-    store.addUser({
-      companyId: cId,
-      email: normalizedEmail,
-      passwordHash: hashPassword(password),
-      fullName,
-      role: undefined,
-      roleApprovalStatus: 'pending',
-    });
-    return { ok: true };
+    clearSession();
+    return { ok: false, error: 'auth.notConfigured' };
   },
 
   /** Oturum açık, şirketi olmayan kullanıcı: mevcut şirkete katılım talebi gönderir. */
@@ -456,35 +230,45 @@ export const authService = {
   },
 
   logout(): void {
-    supabase?.auth.signOut();
-    store.setCurrentUserId(null);
+    clearSession();
+    void supabase?.auth.signOut({ scope: 'local' }).catch(() => {});
   },
 
-  /** Restore session from Supabase (call on app init). Returns user if session exists. */
   async restoreSession(): Promise<boolean> {
-    if (!supabase) return false;
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) return false;
-    const { data: profile } = await supabase.from('profiles').select('id, company_id, role, full_name, role_approval_status, email, can_see_prices').eq('id', session.user.id).single();
-    if (!profile) return false;
-    if (profile.company_id) {
-      const metaCompanyName = getCompanyNameFromUserMetadata(session.user);
-      if (metaCompanyName) store.ensureCompany(profile.company_id, metaCompanyName);
+    const version = ++sessionVersion;
+    if (!supabase) { clearSession(); return false; }
+    try {
+      store.clearLegacyCredentials();
+      // getUser verifies the JWT with Auth; getSession alone trusts browser storage.
+      const { data, error } = await supabase.auth.getUser();
+      if (version !== sessionVersion) return false;
+      if (error || !data.user) { await rejectSession(version); return false; }
+      const profile = await readProfile(data.user.id);
+      if (version !== sessionVersion) return false;
+      if (!isApprovedProfile(profile, data.user.id)) { await rejectSession(version); return false; }
+      if (profile.company_id && (!verifiedUser || verifiedUser.companyId !== profile.company_id)) {
+        const { fetchCompanyDataFromSupabase } = await import('@/lib/supabase/supabaseSyncService');
+        if (version !== sessionVersion) return false;
+        await fetchCompanyDataFromSupabase(profile.company_id);
+      }
+      if (version !== sessionVersion) return false;
+      acceptProfile(profile, data.user.email ?? '');
+      return true;
+    } catch {
+      await rejectSession(version);
+      return false;
     }
-    store.setUserFromProfile(profile, profile.email ?? session.user.email ?? '');
-    const { fetchCompanyDataFromSupabase } = await import('@/lib/supabase/supabaseSyncService');
-    if (profile.company_id) await fetchCompanyDataFromSupabase(profile.company_id);
-    return true;
   },
 
   /** Fetch profiles for company from Supabase (CM/PM only by RLS). Merge into store so pending users appear. */
   async fetchCompanyProfilesIntoStore(companyId: string): Promise<void> {
-    if (!supabase) return;
+    if (!supabase || verifiedUser?.companyId !== companyId) return;
+    const cacheVersion = store.getAuthCacheVersion();
     const { data: profiles } = await supabase
       .from('profiles')
       .select('id, company_id, role, full_name, role_approval_status, email, can_see_prices')
       .eq('company_id', companyId);
-    if (!profiles) return;
+    if (!profiles || cacheVersion !== store.getAuthCacheVersion()) return;
     profiles.forEach((p) => store.mergeUserFromProfile(p, p.email ?? ''));
   },
 

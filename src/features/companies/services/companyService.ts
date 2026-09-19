@@ -151,9 +151,10 @@ async function fetchCompanySnapshotRow(companyId: string): Promise<CompanySnapsh
  */
 export async function fetchCompanyLanguageFromSupabase(companyId: string): Promise<void> {
   if (!supabase) return;
+  const cacheVersion = store.getAuthCacheVersion();
   await applyPendingPlanIfDue(companyId);
   const data = await fetchCompanySnapshotRow(companyId);
-  if (!data) return;
+  if (!data || cacheVersion !== store.getAuthCacheVersion()) return;
 
   const language_code = normalizeLanguageCode(data.language_code);
   const plan: CompanyPlan | null = data.plan && ['starter', 'professional', 'enterprise'].includes(data.plan) ? (data.plan as CompanyPlan) : null;

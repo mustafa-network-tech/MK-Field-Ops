@@ -1,4 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/lib/supabase/supabaseClient';
 import { store } from '@/lib/storage/store';
 import { authService } from '@/features/auth/services/authService';
 import { ensurePendingUserNotifications } from '@/shared/services/activityNotificationService';
@@ -8,6 +9,7 @@ import type { Company } from '@/shared/types';
 
 type AppContextValue = {
   user: User | undefined;
+  authReady: boolean;
   company: Company | undefined;
   setUser: (u: User | undefined) => void;
   refreshUser: () => void;
@@ -19,22 +21,32 @@ type AppContextValue = {
 const AppContext = createContext<AppContextValue | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUserState] = useState<User | undefined>(() => store.getCurrentUser());
+  const [user, setUserState] = useState<User | undefined>();
+  const [authReady, setAuthReady] = useState(false);
   const [, setCompanyRefresh] = useState(0);
   const [profilesVersion, setProfilesVersion] = useState(0);
 
   useEffect(() => {
-    authService.restoreSession().then((restored) => {
-      if (restored) setUserState(store.getCurrentUser());
+    let alive = true;
+    const update = () => { if (alive) setUserState(authService.getVerifiedUser()); };
+    const unsubscribe = authService.subscribeSession(update);
+    void authService.restoreSession().finally(() => { if (alive) setAuthReady(true); });
+    const subscription = supabase?.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') authService.invalidateSession();
+      if (event === 'TOKEN_REFRESHED' || event === 'USER_UPDATED') {
+        // Do not call Auth methods inside the SDK's synchronous event lock.
+        window.setTimeout(() => { if (alive) void authService.restoreSession(); }, 0);
+      }
     });
+    return () => { alive = false; unsubscribe(); subscription?.data.subscription.unsubscribe(); };
   }, []);
 
-  const setUser = useCallback((u: User | undefined) => {
-    setUserState(u);
+  // Callers cannot elevate a session by passing a user from localStorage.
+  const setUser = useCallback((_u: User | undefined) => {
+    setUserState(authService.getVerifiedUser());
   }, []);
-
   const refreshUser = useCallback(() => {
-    setUserState(store.getCurrentUser());
+    void authService.restoreSession();
   }, []);
 
   const refreshCompany = useCallback(() => {
@@ -60,9 +72,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
     const syncFromCloud = async () => {
       try {
+        if (!await authService.restoreSession() || !alive) return;
+        if (authService.getVerifiedUser()?.companyId !== user.companyId) return;
+        const cacheVersion = store.getAuthCacheVersion();
         await fetchCompanyLanguageFromSupabase(user.companyId);
         const { fetchCompanyDataFromSupabase } = await import('@/lib/supabase/supabaseSyncService');
+        if (!alive || cacheVersion !== store.getAuthCacheVersion()) return;
         await fetchCompanyDataFromSupabase(user.companyId);
+        if (!alive || cacheVersion !== store.getAuthCacheVersion()) return;
         if (user.role === 'companyManager' || user.role === 'projectManager') {
           await authService.fetchCompanyProfilesIntoStore(user.companyId);
           setProfilesVersion((v) => v + 1);
@@ -115,8 +132,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [user?.companyId, user?.role]);
 
   const value = useMemo(
-    () => ({ user, company, setUser, refreshUser, refreshCompany, profilesVersion }),
-    [user, company, setUser, refreshUser, refreshCompany, profilesVersion]
+    () => ({ user, authReady, company, setUser, refreshUser, refreshCompany, profilesVersion }),
+    [user, authReady, company, setUser, refreshUser, refreshCompany, profilesVersion]
   );
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

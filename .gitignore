@@ -33,3 +33,6 @@ Thumbs.db
 
 # Supabase CLI (yerel sürüm önbelleği)
 supabase/.temp/
+
+# Public build-time renderer
+.prerender/

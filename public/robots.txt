@@ -2,4 +2,7 @@
 User-agent: *
 Allow: /
 
+# Private HTML and API responses use noindex headers/metadata.
+# Crawling stays allowed so crawlers can read those directives; auth is unchanged.
+
 Sitemap: https://mk-ops.tr/sitemap.xml

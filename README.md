@@ -123,6 +123,20 @@ npm run preview
 
 Build çıktısı `dist/` klasöründe oluşur. SPA yönlendirmeleri ve API route ayarları `vercel.json` içinde tanımlıdır.
 
+## Public ürün ve SEO katmanı
+
+Ürün içerikleri `src/features/product/content.ts` içinde tutulur. `npm run build`, mevcut istemci uygulamasını derledikten sonra yalnız public bileşenleri sunucu ortamında render eder. Ana sayfa, yedi çözüm sayfası ve dört mevcut bilgi/yasal sayfa için HTML ve sitemap üretilir. Build sırasında Supabase verisi veya kullanıcı oturumu okunmaz.
+
+- `/` mevcut davranışını korur: oturumsuz tanıtım, oturumlu dashboard. Ana sayfanın başlangıç HTML'i public içeriktir.
+- `/cozumler/*` sayfaları doğrudan açıldığında JavaScript gerektirmez.
+- Private route'lar Vercel'de `app.html` dosyasına gider; bu dosya boş React kökü ve noindex içerir. Auth guard'lar aynen çalışır.
+- Bilinmeyen URL'ler için genel SPA rewrite kaldırılmıştır; Vercel `404.html` çıktısını kullanır. Yeni private route eklerken Vercel allowlist'i de güncellenmelidir.
+- `npm run preview` Vite önizlemesidir; Vercel header, redirect ve private rewrite kurallarını uygulamaz. Hosting davranışı deploy/preview ortamında ayrıca doğrulanmalıdır.
+- Yeni çözüm için içerik kaydı, ilgili bağlantılar, `vercel.json` public rewrite ve `public/sitemap.xml` birlikte güncellenmelidir. Build çıktısındaki sitemap içerik kaydından üretilir; sahte lastmod tarihi yoktur.
+- `npm run typecheck` tip kontrolünü; build sonrasında `npm run test:seo` üretilen HTML, metadata, CSS eşleşmesi, schema, bağlantılar ve private shell kontrollerini çalıştırır. Projede henüz lint veya genel test script'i yoktur.
+
+Kaynak doğrulama ve sınırlamalar: [Ürün yetenek haritası](docs/PRODUCT-CAPABILITY-MAP.md), [SEO uygulama raporu](docs/SEO-IMPLEMENTATION-REPORT.md).
+
 ## Ek belgeler
 
 - [Kullanım kılavuzu](docs/KULLANIM-KILAVUZU.md)

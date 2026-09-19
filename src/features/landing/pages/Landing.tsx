@@ -5,14 +5,16 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import { useI18n } from '@/lib/i18n/I18nContext';
 import styles from './Landing.module.css';
+import { SolutionLinks } from '@/features/product/ProductPages';
+import { contact, contactUrl, solutions } from '@/features/product/content';
 
 const LOCALES = ['en', 'tr', 'es', 'fr', 'de'] as const;
 const LANDING_LOGO_SRC = '/landing-logo.png';
 const HERO_BG = '/image/hero.jpeg';
-const DEMO_URL = 'https://mkops-demo.vercel.app/login';
+const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+const DEMO_URL = contact.demo;
 
-const WHATSAPP_PHONE_E164 =
-  (import.meta.env.VITE_LANDING_WHATSAPP_E164 as string | undefined)?.trim().replace(/^\+/, '') || '905456597551';
+const WHATSAPP_PHONE_E164 = contact.phone;
 
 function buildWhatsAppUrl(phoneE164: string, text: string): string {
   const num = phoneE164.replace(/^\+/, '');
@@ -96,7 +98,7 @@ const TRUST_ITEMS = [
   'Hakediş Yönetimi',
   'Ekip Yönetimi',
   'Malzeme Takibi',
-  'İş Emirleri',
+  'Günlük İş Takibi',
   'Denetim',
   'Raporlama',
 ];
@@ -111,7 +113,7 @@ export function Landing() {
   const langMenuRef = useRef<HTMLUListElement>(null);
 
   const scrollToQuote = useCallback(() => {
-    document.getElementById('quote')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById('quote')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
   }, []);
 
   useEffect(() => {
@@ -123,7 +125,7 @@ export function Landing() {
   useEffect(() => {
     if (location.pathname === '/pricing' || location.hash === '#pricing' || location.hash === '#quote') {
       const el = document.getElementById('quote');
-      if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+      if (el) requestAnimationFrame(() => el.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' }));
     }
   }, [location.pathname, location.hash]);
 
@@ -136,7 +138,7 @@ export function Landing() {
     return () => document.removeEventListener('click', close);
   }, [langOpen]);
 
-  useLayoutEffect(() => {
+  useBrowserLayoutEffect(() => {
     if (!langOpen) { setLangMenuPos({}); return; }
     const positionMenu = () => {
       const wrap = langRef.current;
@@ -181,16 +183,18 @@ export function Landing() {
 
   return (
     <div className={styles.page}>
+      <a href="#main-content" className={styles.skipLink}>İçeriğe geç</a>
 
       {/* ── NAVBAR ── */}
       <header className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ''}`}>
         <div className={styles.navInner}>
           <a href="#hero" className={styles.logo}>
-            <img src={LANDING_LOGO_SRC} alt="MK-OPS" className={styles.logoImg} />
+            <img src={LANDING_LOGO_SRC} alt="MK-OPS" width="36" height="36" className={styles.logoImg} />
             <span className={styles.logoText}>MK-OPS</span>
           </a>
 
           <nav className={styles.navLinks} aria-label="Sayfa">
+            <a href="#solutions">Çözümler</a>
             <a href="#features">{t('landing.navFeatures') || 'Özellikler'}</a>
             <a href="#how-it-works">{t('landing.navHow')}</a>
             <a href="#quote">{t('landing.navQuote')}</a>
@@ -232,13 +236,14 @@ export function Landing() {
       </header>
 
       {/* ── HERO ── */}
+      <main id="main-content">
       <section id="hero" className={styles.hero}>
         <div className={styles.heroBg} style={{ backgroundImage: `url(${HERO_BG})` }} aria-hidden />
         <div className={styles.heroOverlay} aria-hidden />
         <div className={styles.heroInner}>
           <motion.div
             className={styles.heroContent}
-            initial="hidden"
+            initial={false}
             animate="visible"
             variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
           >
@@ -246,19 +251,19 @@ export function Landing() {
               Fiber · Telekom · Altyapı
             </motion.span>
             <motion.h1 className={styles.heroTitle} variants={fadeUp}>
-              Fiber Optik ve Saha Operasyonlarını<br />
-              <span className={styles.heroTitleAccent}>Tek Panelden Yönetin</span>
+              Saha Operasyon Yönetim Sistemi<br />
+              <span className={styles.heroTitleAccent}>MK OPS</span>
             </motion.h1>
             <motion.p className={styles.heroSubtitle} variants={fadeUp}>
-              MK-OPS; fiber optik, telekom, enerji ve altyapı ekipleri için geliştirilmiş modern saha operasyon yönetim platformudur. Hakediş, ekip yönetimi, iş emirleri, malzeme takibi ve raporlamayı tek sistemde yönetin.
+              MK OPS; telekom ve fiber altyapı ekiplerinin günlük iş, malzeme, onay ve hakediş kayıtlarını bir araya getirir. Proje ve ekip bazında yapılan işi kaydedin, onaylı üretimi dönem raporlarında değerlendirin.
             </motion.p>
             <motion.div className={styles.heroActions} variants={fadeUp}>
               <a href={DEMO_URL} target="_blank" rel="noopener noreferrer" className={styles.heroBtnPrimary}>
                 🚀 Canlı Demo
               </a>
-              <button type="button" className={styles.heroBtnSecondary} onClick={scrollToQuote}>
+              <a href="#quote" className={styles.heroBtnSecondary} onClick={scrollToQuote}>
                 📄 Teklif Al
-              </button>
+              </a>
               <Link to="/login" className={styles.heroBtnOutline}>
                 🔐 Giriş Yap
               </Link>
@@ -286,7 +291,7 @@ export function Landing() {
         <div className={styles.sectionInner}>
           <motion.div
             className={styles.sectionHeader}
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
@@ -301,7 +306,7 @@ export function Landing() {
               <motion.div
                 key={card.titleKey}
                 className={styles.featureCard}
-                initial="hidden"
+                initial={false}
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.2 }}
                 custom={i}
@@ -309,8 +314,8 @@ export function Landing() {
                 whileHover={{ y: -6, boxShadow: '0 20px 40px rgba(37,99,235,0.12)' }}
               >
                 <div className={styles.featureIcon}>{card.icon}</div>
-                <h3 className={styles.featureTitle}>{t(`landing.${card.titleKey}`) || card.titleKey}</h3>
-                <p className={styles.featureDesc}>{t(`landing.${card.descKey}`) || ''}</p>
+                <h3 className={styles.featureTitle}>{solutions[i + 1].title}</h3>
+                <p className={styles.featureDesc}>{solutions[i + 1].description}</p>
               </motion.div>
             ))}
           </div>
@@ -322,7 +327,7 @@ export function Landing() {
         <div className={styles.sectionInner}>
           <motion.div
             className={styles.sectionHeader}
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
@@ -339,7 +344,7 @@ export function Landing() {
               <motion.div
                 key={row.step}
                 className={styles.howCard}
-                initial="hidden"
+                initial={false}
                 whileInView="visible"
                 viewport={{ once: true, amount: 0.2 }}
                 custom={i}
@@ -354,97 +359,27 @@ export function Landing() {
         </div>
       </section>
 
-      {/* ── SCREENSHOTS ── */}
-      <section id="screenshots" className={styles.screenshotsSection}>
-        <div className={styles.sectionInner}>
-          <motion.div
-            className={styles.sectionHeader}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            variants={fadeUp}
-          >
-            <span className={styles.eyebrow}>Platform</span>
-            <h2 className={styles.sectionTitle}>MK-OPS'u İş Başında Görün</h2>
-            <p className={styles.sectionLead}>Modern ve sezgisel arayüz ile saha operasyonlarınızı kolayca yönetin.</p>
-          </motion.div>
-          <motion.div
-            className={styles.macbookMockup}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.2 }}
-            variants={fadeUp}
-          >
-            <div className={styles.macbookScreen}>
-              <div className={styles.macbookBar}>
-                <span className={styles.macbookDot} style={{ background: '#ff5f57' }} />
-                <span className={styles.macbookDot} style={{ background: '#ffbd2e' }} />
-                <span className={styles.macbookDot} style={{ background: '#28c840' }} />
-              </div>
-              <div className={styles.macbookContent}>
-                <div className={styles.mockDashboard}>
-                  <div className={styles.mockSidebar}>
-                    <div className={styles.mockSidebarLogo}>MK-OPS</div>
-                    {['Dashboard', 'İş Emirleri', 'Hakediş', 'Malzeme', 'Ekip', 'Raporlar'].map((item) => (
-                      <div key={item} className={styles.mockNavItem}>{item}</div>
-                    ))}
-                  </div>
-                  <div className={styles.mockMain}>
-                    <div className={styles.mockHeader}>
-                      <span className={styles.mockTitle}>Operasyon Paneli</span>
-                      <span className={styles.mockBadge}>Canlı</span>
-                    </div>
-                    <div className={styles.mockCards}>
-                      {[
-                        { label: 'Açık İş Emirleri', value: '24', color: '#2563eb' },
-                        { label: 'Tamamlanan', value: '187', color: '#10b981' },
-                        { label: 'Bekleyen Hakediş', value: '₺ 284K', color: '#f59e0b' },
-                        { label: 'Aktif Ekip', value: '12', color: '#8b5cf6' },
-                      ].map((c) => (
-                        <div key={c.label} className={styles.mockStatCard} style={{ borderTop: `3px solid ${c.color}` }}>
-                          <span className={styles.mockStatValue} style={{ color: c.color }}>{c.value}</span>
-                          <span className={styles.mockStatLabel}>{c.label}</span>
-                        </div>
-                      ))}
-                    </div>
-                    <div className={styles.mockChartArea}>
-                      <div className={styles.mockChartBar} style={{ height: '60%' }} />
-                      <div className={styles.mockChartBar} style={{ height: '80%' }} />
-                      <div className={styles.mockChartBar} style={{ height: '45%' }} />
-                      <div className={styles.mockChartBar} style={{ height: '90%' }} />
-                      <div className={styles.mockChartBar} style={{ height: '70%' }} />
-                      <div className={styles.mockChartBar} style={{ height: '55%' }} />
-                      <div className={styles.mockChartBar} style={{ height: '85%' }} />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className={styles.macbookBase} />
-            <div className={styles.macbookFoot} />
-          </motion.div>
-        </div>
-      </section>
+      {/* Verified product capabilities and solution cluster. */}
+      <SolutionLinks />
 
-      {/* ── CTA ── */}
       <section className={styles.ctaSection}>
         <div className={styles.sectionInner}>
           <motion.div
             className={styles.ctaContent}
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.3 }}
             variants={fadeUp}
           >
             <h2 className={styles.ctaTitle}>Saha Operasyonlarınızı Dijitalleştirmeye<br />Hazır mısınız?</h2>
-            <p className={styles.ctaDesc}>Bugün başlayın, saha verimliliğinizi hemen artırın.</p>
+            <p className={styles.ctaDesc}>Günlük iş, onay ve hakediş akışının operasyonunuza nasıl uyduğunu inceleyin.</p>
             <div className={styles.ctaActions}>
               <a href={DEMO_URL} target="_blank" rel="noopener noreferrer" className={styles.ctaBtnPrimary}>
                 🚀 Canlı Demo
               </a>
-              <button type="button" className={styles.ctaBtnSecondary} onClick={scrollToQuote}>
+              <a href="#quote" className={styles.ctaBtnSecondary} onClick={scrollToQuote}>
                 📄 Teklif Al
-              </button>
+              </a>
             </div>
           </motion.div>
         </div>
@@ -454,7 +389,7 @@ export function Landing() {
       <section id="quote" className={styles.quoteSection}>
         <div className={styles.sectionInner}>
           <motion.div
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.2 }}
             variants={fadeUp}
@@ -464,9 +399,10 @@ export function Landing() {
             <p className={styles.sectionLead}>{t('landing.quoteSubtitle')}</p>
           </motion.div>
           <motion.form
+            id="quote-form"
             className={styles.quoteForm}
             onSubmit={onQuoteSubmit}
-            initial="hidden"
+            initial={false}
             whileInView="visible"
             viewport={{ once: true, amount: 0.1 }}
             variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, delay: 0.15 } } }}
@@ -504,16 +440,18 @@ export function Landing() {
             </button>
             <p className={styles.quoteFormFootnote}>{t('landing.quoteFormFootnote')}</p>
           </motion.form>
+          <noscript><style>{'#quote-form { display: none; }'}</style><p><a href={contactUrl}>WhatsApp üzerinden ürün hakkında bilgi alın</a></p></noscript>
         </div>
       </section>
 
       {/* ── FOOTER ── */}
+      </main>
       <footer className={styles.footer}>
         <div className={styles.footerInner}>
           <div className={styles.footerTop}>
             <div className={styles.footerBrand}>
               <a href="#hero" className={styles.footerLogo}>
-                <img src={LANDING_LOGO_SRC} alt="MK-OPS" className={styles.footerLogoImg} />
+                <img src={LANDING_LOGO_SRC} alt="MK-OPS" width="28" height="28" loading="lazy" className={styles.footerLogoImg} />
                 <span>MK-OPS</span>
               </a>
               <p className={styles.footerTagline}>{t('landing.footerTagline')}</p>
@@ -524,7 +462,7 @@ export function Landing() {
                 <h4 className={styles.footerColTitle}>Platform</h4>
                 <a href="#features" className={styles.footerLink}>Özellikler</a>
                 <a href="#how-it-works" className={styles.footerLink}>{t('landing.navHow')}</a>
-                <a href="#screenshots" className={styles.footerLink}>Ekran Görüntüleri</a>
+                <a href="#solutions" className={styles.footerLink}>Çözümler</a>
               </div>
               <div className={styles.footerCol}>
                 <h4 className={styles.footerColTitle}>İletişim</h4>

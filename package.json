@@ -5,11 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build --manifest && vite build --ssr src/features/product/prerender.tsx --outDir .prerender && node scripts/prerender.mjs",
     "preview": "vite preview",
     "supabase:login": "supabase login",
     "supabase:link": "supabase link",
-    "deploy:functions": "supabase functions deploy create-pending-signup --no-verify-jwt && supabase functions deploy mock-payment-success --no-verify-jwt"
+    "deploy:functions": "supabase functions deploy create-pending-signup --no-verify-jwt && supabase functions deploy mock-payment-success --no-verify-jwt",
+    "typecheck": "tsc --noEmit",
+    "test:seo": "node --test scripts/seo.test.mjs",
+    "test:security": "node --test scripts/security.test.mjs scripts/security-db.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
@@ -23,6 +26,7 @@
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.8",
     "@types/react": "^18.2.55",
     "@types/react-dom": "^18.2.19",
     "@vitejs/plugin-react": "^4.2.1",

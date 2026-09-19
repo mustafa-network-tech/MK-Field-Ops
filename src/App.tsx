@@ -3,6 +3,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { I18nProvider } from '@/lib/i18n/I18nContext';
 import { AppProvider } from '@/app/providers/AppContext';
 import { AppRoutes } from '@/app/router/AppRoutes';
+import { RouteMetadata } from '@/features/product/RouteMetadata';
 
 function PageFallback() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
     <I18nProvider>
       <AppProvider>
         <BrowserRouter>
+          <RouteMetadata />
           <Suspense fallback={<PageFallback />}>
             <AppRoutes />
           </Suspense>

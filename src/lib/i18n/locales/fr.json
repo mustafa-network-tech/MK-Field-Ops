@@ -21,6 +21,7 @@
     "saving": "Enregistrement…"
   },
   "auth": {
+    "notConfigured": "Connexion indisponible : Supabase n’est pas configuré.",
     "login": "Connexion",
     "logout": "Déconnexion",
     "register": "S'inscrire",
@@ -66,6 +67,7 @@
     "next": "Suivant"
   },
   "onboarding": {
+    "paidSignupDisabled": "L’inscription de nouvelles entreprises est temporairement indisponible.",
     "welcomeTitle": "MK-Ops",
     "tagline": "Multi-Tenant SaaS",
     "signIn": "Connexion",

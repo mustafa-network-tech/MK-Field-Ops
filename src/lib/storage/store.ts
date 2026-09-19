@@ -22,6 +22,8 @@ import type {
   PayrollPeriodSettings,
 } from '@/shared/types';
 
+let authCacheVersion = 0;
+
 const STORAGE_KEYS = {
   companies: 'tf_companies',
   users: 'tf_users',
@@ -186,6 +188,26 @@ export const store = {
   getUserByEmail(email: string, companyId?: string): User | undefined {
     const list = companyId ? this.getUsers(companyId) : this.getUsers();
     return list.find((u) => u.email.toLowerCase() === email.toLowerCase());
+  },
+  getAuthCacheVersion(): number { return authCacheVersion; },
+  clearLegacyCredentials(): void {
+    const users = this.getUsers();
+    if (users.some(user => Boolean(user.passwordHash))) {
+      save(STORAGE_KEYS.users, users.map(user => ({ ...user, passwordHash: '' })));
+    }
+    for (const key of ['mkops_paid_signup_session_v1', 'mkfieldops_pending_new_company_v1']) {
+      try { sessionStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+    }
+  },
+  clearAuthCache(): void {
+    authCacheVersion += 1;
+    // Leave locale preferences and Supabase's own token lifecycle to their owners.
+    for (const key of [...Object.values(STORAGE_KEYS), 'tf_activity_notifications', 'tf_notified_pending_users']) {
+      try { localStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+    }
+    for (const key of ['mkops_paid_signup_session_v1', 'mkfieldops_pending_new_company_v1']) {
+      try { sessionStorage.removeItem(key); } catch { /* Storage may be unavailable. */ }
+    }
   },
   getCurrentUserId(): string | null {
     return localStorage.getItem(STORAGE_KEYS.currentUserId);

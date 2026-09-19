@@ -1,5 +1,5 @@
 import React, { lazy } from 'react';
-import { Routes, Route, Navigate, Outlet } from 'react-router-dom';
+import { Routes, Route, Navigate, Outlet, useParams } from 'react-router-dom';
 import { useApp } from '@/app/providers/AppContext';
 import { Layout } from '@/app/layouts/Layout';
 
@@ -28,8 +28,12 @@ const RefundPolicy = lazy(() => import('@/features/legal/pages/RefundPolicy').th
 const TermsOfUse = lazy(() => import('@/features/legal/pages/TermsOfUse').then((m) => ({ default: m.TermsOfUse })));
 const SuperAdmin = lazy(() => import('@/features/settings/pages/SuperAdmin').then((m) => ({ default: m.SuperAdmin })));
 
+const ProductPage = lazy(() => import('@/features/product/ProductPages').then(m => ({ default: m.ProductPage })));
+function SolutionRoute() { const { slug = '' } = useParams(); return <ProductPage slug={slug} />; }
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useApp();
+  const { user, authReady } = useApp();
+  if (!authReady) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'superAdmin') return <Navigate to="/super-admin" replace />;
   if (!user.companyId) return <Navigate to="/pending-join" replace />;
@@ -37,14 +41,16 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function SuperAdminRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useApp();
+  const { user, authReady } = useApp();
+  if (!authReady) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role !== 'superAdmin') return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function PendingJoinRoute() {
-  const { user } = useApp();
+  const { user, authReady } = useApp();
+  if (!authReady) return null;
   if (!user) return <Navigate to="/login" replace />;
   if (user.role === 'superAdmin') return <Navigate to="/super-admin" replace />;
   if (user.companyId) return <Navigate to="/" replace />;
@@ -52,13 +58,15 @@ function PendingJoinRoute() {
 }
 
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useApp();
+  const { user, authReady } = useApp();
+  if (!authReady) return null;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 }
 
 function RootRoute() {
-  const { user } = useApp();
+  const { user, authReady } = useApp();
+  if (!authReady) return null;
   if (!user) return <Landing />;
   return <Outlet />;
 }
@@ -66,6 +74,7 @@ function RootRoute() {
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="/cozumler/:slug" element={<SolutionRoute />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<PublicOnlyRoute><Register /></PublicOnlyRoute>} />
       <Route path="/workspace" element={<PublicOnlyRoute><Workspace /></PublicOnlyRoute>} />
@@ -95,7 +104,7 @@ export function AppRoutes() {
           <Route path="audit-logs" element={<AuditLogs />} />
         </Route>
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<ProductPage slug="" />} />
     </Routes>
   );
 }

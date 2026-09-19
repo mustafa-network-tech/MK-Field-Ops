@@ -475,6 +475,7 @@ export async function upsertJob(j: JobRecord): Promise<{ ok: boolean; error?: st
 export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{ ok: boolean; error?: string }> {
   if (!supabase || !companyId) return { ok: false, error: 'Not configured or no company' };
 
+  const cacheVersion = store.getAuthCacheVersion();
   try {
     const { fetchCompanyLanguageFromSupabase } = await import('@/features/companies/services/companyService');
     await fetchCompanyLanguageFromSupabase(companyId);
@@ -529,6 +530,7 @@ export async function fetchCompanyDataFromSupabase(companyId: string): Promise<{
     const jobs = (jobsRes.data ?? []).map(mapJob);
     const materialStock = (materialStockRes.data ?? []).map(mapMaterialStockItem);
 
+    if (cacheVersion !== store.getAuthCacheVersion()) return { ok: false, error: 'Session changed' };
     store.replaceCompanyDataFromSupabase(companyId, {
       campaigns,
       vehicles,

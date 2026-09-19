@@ -21,6 +21,7 @@
     "saving": "Kaydediliyor…"
   },
   "auth": {
+    "notConfigured": "Giriş kullanılamıyor: Supabase yapılandırması eksik.",
     "login": "Giriş",
     "logout": "Çıkış",
     "register": "Kayıt Ol",
@@ -66,6 +67,7 @@
     "next": "İleri"
   },
   "onboarding": {
+    "paidSignupDisabled": "Yeni şirket kaydı geçici olarak kullanılamıyor.",
     "welcomeTitle": "MK-Ops",
     "tagline": "Çok Kiracılı SaaS",
     "signIn": "Giriş Yap",
